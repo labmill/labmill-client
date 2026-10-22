@@ -1,0 +1,29 @@
+name: Docs build
+
+# Builds the docs strictly as a check. They are published at
+# https://client.labmill.org/ (not from here yet).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      - name: Install zensical
+        run: uv tool install zensical
+      - name: Build the docs (strict)
+        run: zensical build --strict

@@ -1,0 +1,10 @@
+{
+  "model": "opus",
+  "env": {
+    "GOTOOLCHAIN": "auto",
+    "AWS_REGION": "us-west-2"
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  }
+}

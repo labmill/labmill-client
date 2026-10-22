@@ -1,0 +1,63 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+!coverage.go
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
+/site/
+/bin/
+/dist/
+tmp/
+/labmill
+/labmill.exe
+# Windows resource object of the desktop app (make gui-windows writes it)
+/cmd/labmill-gui/*.syso
+
+# files the owner asked to move out of the way (kept, not deleted)
+/.trash/
+# moved here instead of deleting (owner rule: mv, never rm; dated subfolders)
+deleted/
+
+# owner test code (local only)
+/samples/
+
+# Site profiles other than the public generic one never go into this
+# repository: only README, the Go embed file and sites/generic are tracked.
+/sites/*
+!/sites/README.md
+!/sites/embed.go
+!/sites/generic/
+
+# Agent worktrees for parallel loop work (Agent isolation: worktree)
+/.claude/worktrees/
+
+# Owner-local material kept out of git (live tests of researchers' work, results)
+/temp/
+/labmill-gui

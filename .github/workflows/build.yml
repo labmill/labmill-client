@@ -1,0 +1,186 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tui:
+    name: Labmill ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+      - run: go version
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          ext=""; [ "$GOOS" = windows ] && ext=".exe"
+          mkdir -p dist
+          go build -trimpath -ldflags "-s -w" -o "dist/labmill-${GOOS}-${GOARCH}${ext}" ./cmd/labmill
+          cd dist && sha256sum labmill-* > "labmill-${GOOS}-${GOARCH}.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: labmill-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 1 || 14 }}
+
+  gui-windows:
+    name: labmill-gui windows/amd64 (cross)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+      - run: go version
+      - run: make gui-windows
+      - name: Checksum
+        run: |
+          mkdir -p dist
+          cp bin/cross/labmill-gui.exe dist/labmill-gui-windows-amd64.exe
+          cd dist && sha256sum labmill-gui-windows-amd64.exe > labmill-gui-windows-amd64.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: labmill-gui-windows-amd64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 1 || 14 }}
+
+  gui-linux:
+    name: labmill-gui linux/amd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+      - run: go version
+      - name: Install webkit2gtk and xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+      - run: make gui-linux
+      - name: Self-test under xvfb
+        # Not a gate yet: a headless runner may lack a tray host or GL.
+        continue-on-error: true
+        run: xvfb-run -a dbus-run-session -- make gui-selftest
+      - name: Checksum
+        run: |
+          mkdir -p dist
+          cp bin/labmill-gui dist/labmill-gui-linux-amd64
+          cd dist && sha256sum labmill-gui-linux-amd64 > labmill-gui-linux-amd64.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: labmill-gui-linux-amd64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 1 || 14 }}
+
+  gui-macos:
+    name: labmill-gui macOS/arm64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+      - run: go version
+      - name: Build
+        env:
+          CGO_ENABLED: "1"
+        run: |
+          mkdir -p dist
+          go build -tags desktop,production -o dist/labmill-gui-darwin-arm64 ./cmd/labmill-gui
+          cd dist && shasum -a 256 labmill-gui-darwin-arm64 > labmill-gui-darwin-arm64.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: labmill-gui-darwin-arm64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/v') && 1 || 14 }}
+
+  gui-windows-selftest:
+    name: labmill-gui self-test on Windows
+    runs-on: windows-latest
+    # Not a gate yet: needs a desktop session and WebView2 on the runner.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go version
+      - name: Build
+        shell: bash
+        run: |
+          go run ./cmd/labmill-winres -arch amd64 -o cmd/labmill-gui/rsrc_windows_amd64.syso
+          go build -tags desktop,production -trimpath -ldflags "-H windowsgui -s -w" -o labmill-gui.exe ./cmd/labmill-gui
+      - name: Self-test
+        shell: pwsh
+        run: |
+          $env:LABMILL_GUI_SELFTEST = "1"
+          $p = Start-Process -FilePath .\labmill-gui.exe -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); Write-Error "self-test timed out"; exit 2 }
+          Write-Host "exit status: $($p.ExitCode)"
+          exit $p.ExitCode
+
+  release:
+    name: Draft release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [tui, gui-windows, gui-linux, gui-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Combined checksums
+        run: |
+          mkdir release
+          find artifacts -type f ! -name '*.sha256' -exec cp {} release/ \;
+          cat artifacts/*.sha256 > release/SHA256SUMS
+          cat release/SHA256SUMS
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --draft --verify-tag --generate-notes release/*

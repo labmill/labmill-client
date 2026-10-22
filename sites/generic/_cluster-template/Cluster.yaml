@@ -1,0 +1,36 @@
+# Template for a cluster folder, sites/<domain>/<cluster>/ (docs/dev/sites.md).
+# Copy this folder into a site profile and rename it after the cluster
+# (lowercase letters, digits and '-'). Labmill ignores folders whose name starts
+# with '_', so this template is never loaded; it is here so that every build,
+# even one with only the generic profile, has a file for each pattern in
+# sites/embed.go.
+#
+# The keys up to transfer are the template entry first-run setup writes to
+# clusters.yaml (same keys and rules as there); ssh_host and files_host name
+# hosts from the site's Site.yaml. A Cluster.yaml with only comments declares
+# no template (for a cluster whose login host isn't confirmed yet).
+name: bigcluster
+type: slurm
+ssh_host: ex-login             # a host alias from ../Site.yaml
+files_host: ""                 # optional transfer-host alias
+transfer: sftp
+# order: 0                     # optional: lower first among the site's
+#                              #   clusters; ties by folder name
+# Optional placement facts (omit what you don't know):
+#   preemptible:               # a low-priority partition/QOS with a requeue option
+#     partition: preempt
+#     qos: ""                  #   e.g. lowprio
+#     requeue: true            #   submit with --requeue
+#     fallback_partition: ""   #   non-preemptible partition after failed attempts; "" = the default
+#   local_scratch:             # node-local disk on the compute nodes
+#     path: /tmp               #   or $TMPDIR
+#     env_var: TMPDIR          #   the variable the site sets for it
+#     size_gb: 400
+#   global_scratch:            # shared scratch mounted on the compute nodes
+#     path: /scratch/<group>   #   <placeholder> = the user's own part
+#     purge_days: 90
+
+# Terms that identify this cluster and must never appear in the public
+# generic skills (at least 3 characters).
+forbidden_terms:
+  - bigcluster-scratch

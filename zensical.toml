@@ -1,0 +1,43 @@
+[project]
+site_name = "Labmill client"
+site_description = "A chat front end that runs your research jobs on Slurm clusters."
+site_url = "https://client.labmill.org/"
+nav = [
+  { "Home" = "index.md" },
+  { "User guide" = [
+    "user/index.md",
+    "user/first-run.md",
+    "user/first-job.md",
+    "user/desktop-app.md",
+    "user/settings.md",
+    "user/keys.md",
+    "user/terminal.md",
+    "user/claude-code.md",
+    "user/updates.md",
+    "user/voice.md",
+  ] },
+  { "Developers" = [
+    "dev/index.md",
+    "dev/architecture.md",
+    "dev/ssh.md",
+    "dev/tui.md",
+    "dev/gui.md",
+    "dev/voice.md",
+    "dev/testing.md",
+    "dev/security.md",
+    "dev/sites.md",
+    "dev/knowledge-placement.md",
+    "dev/ci.md",
+  ] },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "content.code.copy",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.sections",
+  "navigation.top",
+  "search.highlight",
+]

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>labmill</title>
+<link rel="stylesheet" href="vendor/xterm/xterm.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>labmill</h1>
+    <p id="status" class="muted"></p>
+    <!-- The Settings page (M29): shown once Labmill is ready (or failed). -->
+    <!-- The Terminal view (M62.2, terminal.js): shown once Labmill is ready. -->
+    <button type="button" id="terminal-open" class="term-open" aria-controls="terminal" aria-expanded="false" title="Open a terminal on a cluster's login node" hidden>Terminal</button>
+    <button type="button" id="settings-open" class="gear" aria-label="Settings" title="Settings" aria-controls="settings" aria-expanded="false" hidden>&#9881;</button>
+  </header>
+
+  <!-- The startup splash (M26): visible on the first paint, before any
+       script runs; the hourglass is pure CSS (static when the OS asks for
+       reduced motion). app.js puts the startup steps into #starting-text. -->
+  <section id="starting" class="panel center" data-splash="1">
+    <div class="hourglass" aria-hidden="true"></div>
+    <p id="starting-text" role="status" aria-live="polite">Starting labmill&hellip;</p>
+    <p id="starting-wait" class="muted" hidden></p>
+  </section>
+
+  <section id="fatal" class="panel center" role="alert" hidden>
+    <h2>Labmill could not start</h2>
+    <p id="fatal-text" class="pre"></p>
+  </section>
+
+  <section id="setup" class="panel" hidden>
+    <h2>Welcome to labmill</h2>
+    <p>Labmill needs your institution and your cluster account name to set up your logins. Nothing leaves this computer yet.</p>
+    <p id="setup-note" class="muted" hidden></p>
+    <form id="setup-form" autocomplete="off">
+      <label for="setup-site">Your home institution</label>
+      <select id="setup-site" name="site"></select>
+      <div id="setup-hosts" hidden>
+        <label for="setup-login">Cluster login host</label>
+        <input id="setup-login" name="login" type="text" spellcheck="false" autocapitalize="none" maxlength="253" placeholder="login.example.edu" aria-describedby="setup-login-hint">
+        <p id="setup-login-hint" class="muted">The host name you would type after ssh. It tells Labmill which institution is your home.</p>
+      </div>
+      <div id="setup-user-block">
+        <label for="setup-user">Cluster username</label>
+        <input id="setup-user" name="username" type="text" spellcheck="false" autocapitalize="none" maxlength="32" required aria-describedby="setup-hint setup-error">
+        <p id="setup-hint" class="muted">Lowercase letters, digits, dots, dashes and underscores.</p>
+      </div>
+      <p id="setup-error" class="error" role="alert"></p>
+      <button type="submit" class="primary" id="setup-submit">Continue</button>
+    </form>
+  </section>
+
+  <!-- The Settings page (M29, settings.js): the section list on the left,
+       the section on the right. -->
+  <section id="settings" class="panel" aria-labelledby="settings-title" hidden>
+    <div class="settings-head">
+      <button type="button" id="settings-back">&larr; Back to chat</button>
+      <h2 id="settings-title">Settings</h2>
+    </div>
+    <p id="settings-restart" class="settings-banner" role="status" hidden></p>
+    <div class="settings-body">
+      <nav aria-label="Settings sections"><div id="settings-nav" role="tablist" aria-orientation="vertical" aria-label="Settings sections"></div></nav>
+      <div id="settings-pane" role="tabpanel"></div>
+    </div>
+  </section>
+
+  <!-- The Terminal view (M62.2, terminal.js): tabs of xterm.js terminals on the
+       login nodes. It is the user's own shell; nothing typed or shown here
+       goes to the assistant. Hidden terminals keep running. -->
+  <section id="terminal" class="panel" aria-labelledby="terminal-title" hidden>
+    <div class="terminal-head">
+      <button type="button" id="terminal-back">&larr; Back to chat</button>
+      <h2 id="terminal-title">Terminal</h2>
+      <label for="terminal-cluster" class="sr-only">Cluster</label>
+      <select id="terminal-cluster"></select>
+      <button type="button" id="terminal-new" class="primary">New terminal</button>
+      <button type="button" id="terminal-system" title="Open your computer's own terminal program on this cluster" hidden>Open in system terminal</button>
+    </div>
+    <p id="terminal-note" class="muted">This is your own shell on the login node, signed in with your existing login. Nothing you type or see here is sent to Labmill's assistant.</p>
+    <p id="terminal-error" class="error" role="alert" hidden></p>
+    <div id="terminal-tabs" role="tablist" aria-label="Open terminals"></div>
+    <div id="terminal-views"></div>
+  </section>
+
+  <main id="main" hidden>
+    <section class="chat" aria-label="Chat">
+      <!-- "Approve everything automatically" (M43.2): shown for as long as the setting is on. -->
+      <div id="autoapprove-banner" role="status" hidden>
+        <span id="autoapprove-banner-text">Auto-approve is on &mdash; Labmill approves every step for you.</span>
+        <button type="button" id="autoapprove-off">Turn off</button>
+      </div>
+      <div id="log" role="log" aria-live="polite" aria-label="Conversation" tabindex="0"></div>
+      <!-- The to-do list (M28, update_todos): collapsible, hidden when empty. -->
+      <section id="todos" hidden aria-label="To-do list">
+        <button type="button" id="todos-toggle" aria-expanded="true" aria-controls="todos-list"><span class="todos-caret" aria-hidden="true">&#9662;</span> <span id="todos-title">To-do</span></button>
+        <span id="todos-live" class="sr-only" role="status" aria-live="polite"></span>
+        <ul id="todos-list"></ul>
+      </section>
+      <!-- Shown from Send until the reply text starts (M26): what the turn is
+           doing now, and how long it has been working after 5 s. -->
+      <div id="working" hidden>
+        <span class="hourglass small" aria-hidden="true"></span>
+        <span id="working-text" role="status" aria-live="polite">Working&hellip;</span>
+        <span id="working-time" class="muted"></span>
+      </div>
+      <div id="queued" hidden aria-live="polite">
+        <span class="queued-label">Queued, sent when this reply ends:</span>
+        <span id="queued-text"></span>
+        <button type="button" id="queued-remove" aria-label="Remove the queued message">Remove</button>
+      </div>
+      <div id="xfer" hidden role="status" aria-label="Transfer progress">
+        <progress id="xfer-bar" max="100" value="0"></progress>
+        <span id="xfer-text"></span>
+      </div>
+      <p id="progress" class="muted" aria-live="polite"></p>
+      <form id="chat-form">
+        <p id="folder-error" class="error" role="alert" hidden></p>
+        <!-- The chat input box (M24): the + folder menu at its upper left, the
+             chosen folders as chips above the text, and the only drop target. -->
+        <div id="composer">
+          <div class="plus-wrap">
+            <button type="button" id="folder-add" aria-label="Add folder" title="Add a data or code folder" aria-haspopup="menu" aria-expanded="false" aria-controls="folder-menu">+</button>
+            <div id="folder-menu" class="folder-menu" role="menu" aria-label="Folders" hidden></div>
+          </div>
+          <div id="folder-chips" role="group" aria-label="Your folders" hidden></div>
+          <div id="drop-choice" role="group" aria-labelledby="drop-choice-label" hidden>
+            <span id="drop-choice-label">Dropped <span id="drop-choice-name" class="mono"></span>:</span>
+            <button type="button" id="drop-data" data-drop-kind="data">Add as data folder</button>
+            <button type="button" id="drop-code" data-drop-kind="code">Add as code folder</button>
+            <button type="button" id="drop-cancel" class="chip-x" aria-label="Don't add the dropped folder" title="Don't add it">&times;</button>
+          </div>
+          <label for="input" class="sr-only">Message to labmill</label>
+          <textarea id="input" rows="3" placeholder="Describe what you want to compute. Enter sends, Shift+Enter adds a line. + adds your data or code folder."></textarea>
+        </div>
+        <div class="row">
+          <div class="checks">
+            <label class="autoapprove" for="autoapprove" title="Labmill approves every step without asking. Key or token file reads, questions and logins still ask."><input type="checkbox" id="autoapprove"> Approve everything automatically</label>
+            <label class="autoapprove" for="autodownload" title="When a job you submitted finishes, Labmill brings its results to your results folder by itself (up to 2 GB)."><input type="checkbox" id="autodownload"> Download results automatically</label>
+          </div>
+          <span id="spinner" class="spinner" hidden role="status" aria-label="Working"></span>
+          <button type="button" id="cancel" hidden>Cancel</button>
+          <button type="submit" id="send" class="primary">Send</button>
+        </div>
+      </form>
+    </section>
+    <!-- The divider (M51.1, app.js): drag it, or use Left/Right/Home/End; double-click resets. -->
+    <div id="divider" class="divider" role="separator" aria-orientation="vertical" aria-label="Resize the jobs panel" aria-controls="jobs" tabindex="0"></div>
+    <aside class="jobs" id="jobs" aria-label="Jobs">
+      <h2>Jobs</h2>
+      <p id="jobs-empty" class="muted">No jobs yet.</p>
+      <p id="jobs-error" class="error" hidden></p>
+      <table id="jobs-table" hidden>
+        <thead><tr><th scope="col">Name</th><th scope="col">Cluster</th><th scope="col">State</th><th scope="col">Updated</th></tr></thead>
+        <tbody id="jobs-body"></tbody>
+      </table>
+    </aside>
+  </main>
+</div>
+
+<div id="overlay" hidden>
+  <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-desc"></div>
+</div>
+<script src="md.js"></script>
+<script src="app.js"></script>
+<script src="settings.js"></script>
+<script src="vendor/xterm/xterm.js"></script>
+<script src="vendor/xterm/addon-fit.js"></script>
+<script src="terminal.js"></script>
+</body>
+</html>
