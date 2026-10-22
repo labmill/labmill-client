@@ -1,0 +1,299 @@
+:root {
+  --bg: #f6f7f9; --panel: #fff; --fg: #1b1f24; --muted: #667085; --line: #d6dae1;
+  --accent: #2459d6; --accent-fg: #fff; --danger: #b42318; --user: #e8effe; --code: #f0f2f5;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --panel: #1c2027; --fg: #e6e9ee; --muted: #98a2b3; --line: #343a45;
+    --accent: #6b94f5; --accent-fg: #0b1220; --danger: #f97066; --user: #25324f; --code: #12151a;
+  }
+}
+* { box-sizing: border-box; }
+/* Sizes are in rem, so they follow the OS/webview font size and zoom. */
+html { font-size: 100%; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 0.9375rem/1.5 system-ui, sans-serif; }
+.mono, code, pre { font-family: var(--mono); }
+#app { display: flex; flex-direction: column; height: 100%; padding: 12px; gap: 10px; }
+header { display: flex; align-items: baseline; gap: 12px; }
+h1 { font-size: 1.125rem; margin: 0; }
+h2 { font-size: 1rem; margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); min-height: 1.4em; }
+.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[hidden] { display: none !important; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.center { text-align: center; }
+#setup { max-width: 480px; margin: 40px auto; }
+#setup select, #setup-hosts input { margin-bottom: 10px; }
+label { display: block; font-weight: 600; margin-bottom: 4px; }
+input[type=text], input[type=password], input[type=url], select, textarea {
+  width: 100%; font: inherit; color: inherit; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+textarea { resize: vertical; }
+button {
+  font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 14px; cursor: pointer;
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 10px minmax(14rem, var(--jobs-w, 40%)); gap: 0; }
+/* The divider between chat and jobs (M51.1): a 10 px grab strip with a thin line in the middle. */
+.divider { cursor: col-resize; touch-action: none; position: relative; outline-offset: -2px; }
+.divider::after { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 2px; border-radius: 1px; background: var(--line); }
+.divider:hover::after, .divider.dragging::after, .divider:focus-visible::after { background: var(--accent); }
+.chat, .jobs { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 0; display: flex; flex-direction: column; }
+.jobs { overflow: auto; }
+#log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px; }
+.msg { white-space: pre-wrap; overflow-wrap: anywhere; padding: 8px 12px; border-radius: 8px; max-width: 92%; font-size: 1rem; }
+.msg.user { background: var(--user); align-self: flex-end; }
+.msg.assistant { background: var(--code); align-self: flex-start; }
+.msg.tool { color: var(--muted); font-size: 0.875rem; background: none; padding: 0 4px; }
+.msg.err { color: var(--danger); }
+/* A background job notice (the job monitor): a small line, not a bubble. */
+.msg.system { align-self: stretch; max-width: none; background: none; color: var(--accent); font-size: 0.875rem; padding: 2px 8px; border-left: 3px solid var(--accent); }
+/* The to-do list (M28): one line per item, glyph by state. */
+#todos { margin-top: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
+#todos-toggle { display: flex; align-items: baseline; gap: 6px; padding: 1px 6px; font-size: 0.8125rem; background: none; border: 0; color: var(--muted); cursor: pointer; }
+#todos-list { list-style: none; margin: 4px 0 0; padding: 0; max-height: 9em; overflow-y: auto; }
+#todos-list li { display: flex; gap: 8px; align-items: baseline; padding: 1px 0; }
+#todos-list .todo-glyph { flex: none; width: 1.2em; text-align: center; }
+#todos-list li[data-status="completed"] { color: var(--muted); }
+#todos-list li[data-status="completed"] .todo-text { text-decoration: line-through; }
+#todos-list li[data-status="in_progress"] { font-weight: 600; }
+/* The message waiting for the running reply. */
+#queued { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; padding: 4px 8px; border: 1px dashed var(--line); border-radius: 8px; font-size: 0.875rem; }
+#queued .queued-label { color: var(--muted); flex: none; }
+#queued-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#queued button { flex: none; padding: 1px 8px; font-size: 0.8125rem; }
+#xfer { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.8125rem; }
+#xfer-bar { flex: none; width: 140px; }
+#xfer-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.msg.xfercmd { align-self: stretch; max-width: none; background: none; color: var(--muted); font: 0.8125rem/1.4 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; padding: 2px 8px; border-left: 3px solid var(--line); }
+#progress { min-height: 1.4em; margin: 6px 0; font-size: 0.8125rem; }
+/* The chat input box (M24): the + folder menu at its upper left, the chosen
+   folders as chips above the text. The box is the only Wails drop target
+   (the property is inherited by its children); app.js ignores drops
+   anywhere else. */
+#composer { --wails-drop-target: drop; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; row-gap: 4px; align-items: start;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+#composer:focus-within { border-color: var(--accent); }
+#composer.wails-drop-target-active { border-color: var(--accent); background: var(--user); }
+#composer > :not(.plus-wrap) { grid-column: 2; }
+#composer textarea { border: 0; background: transparent; padding: 3px 2px; min-height: 3.5em; }
+/* The box's border shows the focus of the text area. */
+#composer textarea:focus-visible { outline: none; }
+.plus-wrap { grid-column: 1; grid-row: 1; position: relative; }
+#folder-add { width: 1.875rem; height: 1.875rem; padding: 0; border-radius: 50%; font-size: 1.25rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+#folder-add[aria-expanded="true"] { border-color: var(--accent); background: var(--user); }
+/* The menu opens upwards, over the conversation. */
+.folder-menu { position: absolute; bottom: calc(100% + 4px); left: 0; z-index: 5; min-width: 16rem; max-width: min(32rem, 80vw); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.folder-menu button { text-align: left; border: 0; padding: 4px 8px; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.folder-menu button[data-action="recent"] { font-family: var(--mono); font-size: 0.8125rem; }
+.folder-menu button:hover, .folder-menu button:focus { background: var(--user); }
+.folder-menu .menu-sep { border-top: 1px solid var(--line); margin: 2px 0; }
+#folder-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 3px; }
+.chip { display: inline-flex; align-items: center; gap: 2px; min-width: 0; max-width: 100%; padding: 0 2px 0 8px; border: 1px solid var(--accent); border-radius: 999px; background: var(--panel); font-size: 0.8125rem; }
+.chip-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip-kind { font-weight: 600; }
+.chip-path { font-family: var(--mono); color: var(--muted); }
+.chip-x { flex: none; border: 0; background: none; padding: 0 6px; font-size: 0.9375rem; line-height: 1.4; border-radius: 999px; }
+.chip-x:hover, .chip-x:focus { background: var(--user); }
+#drop-choice { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.8125rem; }
+#drop-choice > button:not(.chip-x) { padding: 1px 10px; font-size: 0.8125rem; }
+#drop-choice-name { font-size: 0.8125rem; }
+#folder-error { margin: 0 0 6px; font-size: 0.875rem; }
+.open-folder { align-self: flex-start; padding: 2px 10px; font-size: 0.8125rem; }
+
+/* Rendered Markdown (md.js) in assistant messages. */
+.msg.md { white-space: normal; min-width: 0; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p, .md ul, .md ol, .md blockquote, .md pre, .md .md-table { margin: 0 0 0.6em; }
+.md ul, .md ol { padding-left: 1.5em; }
+.md li > p { margin: 0 0 0.3em; }
+.md .md-h { margin: 0.8em 0 0.4em; line-height: 1.3; }
+.md h3 { font-size: 1.2rem; }
+.md h4 { font-size: 1.08rem; }
+.md h5 { font-size: 1rem; }
+.md code { font-size: 0.875rem; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0 0.25em; overflow-wrap: anywhere; }
+.md pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; }
+.md pre code { background: none; border: 0; padding: 0; overflow-wrap: normal; white-space: pre; }
+.md blockquote { border-left: 3px solid var(--line); padding-left: 0.8em; color: var(--muted); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 0.8em 0; }
+.md .md-table { overflow-x: auto; }
+.md table { width: auto; font-size: 0.875rem; }
+.md th, .md td { border: 1px solid var(--line); overflow-wrap: normal; }
+
+/* Tool notes: one collapsed line each; the full text in monospace when expanded. */
+details.tool { align-self: stretch; color: var(--muted); font-size: 0.875rem; padding: 0 4px; min-width: 0; }
+details.tool > summary { cursor: pointer; list-style: none; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+details.tool > summary::-webkit-details-marker { display: none; }
+details.tool > summary::before { content: "\25B8\00A0"; }
+details.tool[open] > summary::before { content: "\25BE\00A0"; }
+details.tool.empty > summary, details.tool.pending > summary { cursor: default; }
+details.tool.empty > summary::before, details.tool.pending > summary::before { content: "\2022\00A0"; }
+details.tool.err > summary { color: var(--danger); white-space: normal; overflow-wrap: anywhere; }
+details.tool > pre { font-size: 0.875rem; color: var(--fg); background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 4px 0 0; max-height: 50vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+#chat-form .row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+
+/* The hourglass (M26): two CSS triangles in a frame; the sand drains from
+   the top one into the bottom one, then the glass turns over. It needs no
+   script, so the startup splash shows it on the first paint. */
+.hourglass {
+  --hg-w: 2rem; --hg-h: 2.75rem; --hg-b: 3px;
+  position: relative; flex: none; width: var(--hg-w); height: var(--hg-h); margin: 8px auto 14px;
+  border-top: var(--hg-b) solid var(--muted); border-bottom: var(--hg-b) solid var(--muted); border-radius: 2px;
+  animation: hg-turn 3s ease-in-out infinite;
+}
+.hourglass::before, .hourglass::after {
+  content: ""; position: absolute; left: 0; width: 0; height: 0;
+  border-left: calc(var(--hg-w) / 2) solid transparent; border-right: calc(var(--hg-w) / 2) solid transparent;
+}
+.hourglass::before { top: 0; border-top: calc((var(--hg-h) - 2 * var(--hg-b)) / 2) solid var(--accent); animation: hg-top 3s ease-in-out infinite; }
+.hourglass::after { bottom: 0; border-bottom: calc((var(--hg-h) - 2 * var(--hg-b)) / 2) solid var(--accent); opacity: .35; animation: hg-bottom 3s ease-in-out infinite; }
+.hourglass.small { --hg-w: 0.75rem; --hg-h: 1rem; --hg-b: 2px; margin: 0; }
+@keyframes hg-turn { 0%, 42% { transform: rotate(0deg); } 50%, 92% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
+@keyframes hg-top { 0% { opacity: 1; } 42%, 50% { opacity: .2; } 92%, 100% { opacity: 1; } }
+@keyframes hg-bottom { 0% { opacity: .2; } 42%, 50% { opacity: 1; } 92%, 100% { opacity: .2; } }
+/* Reduced motion: a still hourglass (sand on top). */
+@media (prefers-reduced-motion: reduce) {
+  .hourglass, .hourglass::before, .hourglass::after { animation: none; }
+}
+#starting { margin: 40px auto; max-width: 480px; }
+#starting-text { font-size: 1rem; }
+#starting-wait { font-size: 0.875rem; }
+/* The "Working…" row under the conversation (from Send until the reply starts). */
+#working { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 2px 6px; font-size: 0.875rem; color: var(--muted); }
+#working-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#working-time { flex: none; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+/* The job table never breaks words: long cells end in an ellipsis (full text in the tooltip). */
+#jobs-table { table-layout: fixed; }
+#jobs-table th, #jobs-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#jobs-table th:nth-child(1) { width: 38%; }
+#jobs-table th:nth-child(2) { width: 22%; }
+#jobs-table th:nth-child(3) { width: 18%; }
+#jobs-table th:nth-child(4) { width: 22%; }
+#jobs-table .mono { color: var(--muted); font-size: 0.75rem; }
+/* Job buttons: a second row under the job, which may wrap. */
+#jobs-table tr.has-actions td { border-bottom: none; }
+#jobs-table tr.job-actions td { white-space: normal; overflow: visible; padding-top: 0; }
+#jobs-table tr.job-actions button { padding: 1px 8px; font-size: 0.75rem; margin: 0 4px 2px 0; }
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 16px; }
+#dialog { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; width: min(640px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+/* Only the body scrolls: the title and the buttons stay reachable. */
+#dialog .dlg-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+#dialog .warn { color: var(--danger); font-weight: 600; margin: 0; }
+#dialog h2 { margin: 0; }
+#dialog pre, #dialog textarea { font: 0.8125rem/1.4 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 0; overflow: auto; max-height: 40vh; min-height: 6em; flex: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+#dialog textarea { height: 40vh; }
+#dialog .buttons { flex: none; display: flex; justify-content: flex-end; gap: 8px; }
+/* Choice dialog (ask_user): one button per option, number + label + description. */
+#dialog .choices { display: flex; flex-direction: column; gap: 6px; }
+#dialog button.choice { display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%; padding: 8px 12px; }
+#dialog button.choice:focus-visible, #dialog button.choice:focus { border-color: var(--accent); background: var(--user); }
+#dialog .choice-num { flex: none; font-family: var(--mono); color: var(--muted); min-width: 1.2em; }
+#dialog .choice-text { display: flex; flex-direction: column; min-width: 0; }
+#dialog .choice-label { font-weight: 600; overflow-wrap: anywhere; }
+#dialog .choice-desc { color: var(--muted); font-size: 0.875rem; overflow-wrap: anywhere; }
+@media (max-width: 760px) { main { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr 160px; gap: 10px; } .divider { display: none; } }
+/* Copy buttons: on every code block in the chat, and in the SSH key dialog. */
+.md-codewrap { position: relative; }
+.md-codewrap > button.copy { position: absolute; top: 4px; right: 4px; padding: 1px 8px; font-size: 0.75rem; font-family: system-ui, sans-serif; opacity: 0.85; }
+.md-codewrap > button.copy:hover, .md-codewrap > button.copy:focus-visible { opacity: 1; }
+.md-codewrap > pre { padding-right: 4.5rem; }
+/* The SSH key dialog: the key in its own code field, Copy next to it. */
+#dialog .login-url-row { display: flex; gap: 8px; align-items: flex-start; }
+#dialog code.login-url { flex: 1; min-width: 0; display: block; font: 0.8125rem/1.4 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-all; user-select: all; cursor: text; }
+#dialog .login-url-row > button.copy { flex: none; }
+#dialog .login-status { min-height: 1.4em; margin: 0; font-size: 0.875rem; }
+/* The Settings page (M29): the gear in the header, the section list on the
+   left and the section on the right; it scrolls inside the window. */
+header .gear { margin-left: auto; padding: 2px 10px; font-size: 1.125rem; line-height: 1.2; }
+header .gear[aria-expanded="true"] { border-color: var(--accent); background: var(--user); }
+#settings { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; }
+.settings-head { display: flex; align-items: center; gap: 12px; }
+.settings-head h2 { margin: 0; }
+.settings-banner { margin: 0; padding: 6px 10px; border: 1px solid var(--accent); border-radius: 6px; background: var(--user); font-size: 0.875rem; }
+.settings-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr); gap: 16px; }
+#settings-nav { display: flex; flex-direction: column; gap: 2px; }
+.settings-tab { text-align: left; border-color: transparent; background: none; padding: 6px 10px; }
+.settings-tab[aria-selected="true"] { background: var(--user); border-color: var(--accent); font-weight: 600; }
+.settings-tab:hover { border-color: var(--line); }
+#settings-pane { min-height: 0; overflow: auto; padding: 0 4px 12px 0; }
+.settings-h { font-size: 1.0625rem; margin: 0 0 10px; }
+.settings-h2 { font-size: 0.9375rem; margin: 18px 0 6px; }
+.settings-more-plan { margin-top: 6px; }
+.settings-more-plan ul { margin: 4px 0 8px; padding-left: 1.2rem; }
+#settings-pane h4 { font-size: 0.9375rem; margin: 14px 0 6px; }
+.settings-form { display: flex; flex-direction: column; gap: 4px; max-width: 36rem; }
+.settings-form .field { margin-bottom: 6px; }
+.settings-form input[type=number] { width: 8rem; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.settings-form input:disabled { opacity: .7; }
+.field-hint { font-size: 0.8125rem; margin: 2px 0 0; }
+.field-error { color: var(--danger); font-size: 0.875rem; margin: 2px 0 0; min-height: 0; }
+.field-error:empty { display: none; }
+[aria-invalid="true"] { border-color: var(--danger) !important; }
+.settings-s3 { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 6px 0; }
+.settings-s3 legend { font-weight: 600; padding: 0 4px; }
+.settings-form .buttons, #settings-pane .buttons { display: flex; justify-content: flex-end; gap: 8px; margin: 6px 0; }
+#settings-pane .buttons.left { justify-content: flex-start; }
+.settings-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; max-width: 48rem; }
+.settings-item { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; }
+.settings-list.compact .settings-item { padding: 2px 8px; }
+.settings-item-text { flex: 1; min-width: 12rem; overflow-wrap: anywhere; }
+.settings-item-buttons { display: flex; gap: 6px; }
+.settings-item-buttons button, .settings-list.compact button { padding: 2px 10px; font-size: 0.875rem; }
+.settings-confirm { flex-basis: 100%; display: flex; align-items: center; gap: 8px; font-size: 0.875rem; }
+button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.settings-status { min-height: 1.4em; font-size: 0.875rem; margin: 6px 0; }
+.settings-check { display: flex; align-items: center; gap: 8px; }
+.settings-check label { margin: 0; font-weight: 600; }
+.settings-url { overflow-wrap: anywhere; user-select: all; }
+.settings-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0 0 8px; font-size: 0.875rem; }
+.settings-dl dt { color: var(--muted); }
+.settings-dl dd { margin: 0; overflow-wrap: anywhere; }
+.settings-dl code { font-size: 0.8125rem; }
+.settings-checks { margin: 0 0 8px; padding-left: 1.2em; font-size: 0.875rem; }
+.settings-folder { margin-bottom: 10px; }
+.settings-folder code { overflow-wrap: anywhere; }
+.settings-diag { font-size: 0.8125rem; background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow: auto; }
+@media (max-width: 760px) { .settings-body { grid-template-columns: minmax(0, 1fr); } #settings-nav { flex-direction: row; flex-wrap: wrap; } }
+
+/* "Approve everything automatically" (M43.2): the checkbox beside Send and the banner while it is on. */
+#chat-form .row .checks { margin-right: auto; display: flex; flex-wrap: wrap; align-items: center; column-gap: 16px; row-gap: 2px; }
+#chat-form .row .autoapprove { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; color: var(--muted); }
+#chat-form .row .autoapprove input { width: auto; margin: 0; }
+#autoapprove-banner { display: flex; align-items: center; gap: 12px; padding: 6px 10px; margin-bottom: 6px; border: 1px solid var(--danger); border-left-width: 4px; border-radius: 6px; background: var(--panel); font-size: 0.875rem; font-weight: 600; }
+#autoapprove-banner[hidden] { display: none; }
+#autoapprove-banner span { flex: 1; }
+
+/* The Terminal view (M62.2). */
+header .term-open { margin-left: auto; padding: 2px 10px; }
+header .term-open + .gear { margin-left: 0; }
+header .term-open[aria-expanded="true"] { border-color: var(--accent); background: var(--user); }
+#terminal { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; }
+.terminal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.terminal-head h2 { margin: 0; }
+.terminal-head select { width: auto; min-width: 10rem; }
+#terminal-note { margin: 0; font-size: 0.875rem; }
+#terminal-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.term-tab { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.term-tab[aria-selected="true"] { border-color: var(--accent); background: var(--user); }
+.term-tab button { border: none; background: none; padding: 3px 8px; }
+.term-tab .term-x { padding: 3px 6px; color: var(--muted); }
+.term-ended .term-label { font-style: italic; color: var(--muted); }
+#terminal-views { flex: 1; min-height: 12rem; position: relative; }
+.term-view { position: absolute; inset: 0; background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 6px; overflow: hidden; }
+.term-view .xterm { height: 100%; }

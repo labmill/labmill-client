@@ -1,0 +1,17 @@
+# The generic profile, for an institution that has no profile of its own
+# ("My institution isn't listed" in first-run setup). It is the one profile
+# in this repository, so every build has at least one.
+# Schema: docs/dev/sites.md.
+domain: generic
+name: My institution isn't listed
+skill: site-generic
+docs_url: ""
+broker_url: ""
+two_factor:
+  help: ""
+  url: ""
+s3_credentials_on_cluster: true
+# No hosts or clusters: first-run setup asks for the login host and
+# builds them from the answers.
+hosts: []
+clusters: []
