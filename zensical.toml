@@ -13,6 +13,7 @@ nav = [
     "user/data-transfer.md",
     "user/settings.md",
     "user/failed-jobs.md",
+    "user/account.md",
     "user/privacy.md",
     "user/faq.md",
     "user/troubleshooting.md",

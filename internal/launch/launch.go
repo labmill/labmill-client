@@ -691,6 +691,12 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	endStep = startup.Span("build: job monitor start")
 	mon.start(nil)
 	endStep()
+	stopUpload := startUploader(db, func(name string) string {
+		c, _ := cfg.Cluster(name)
+		return clusterSite(st, c, others).Name
+	}, func(line string) {
+		appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{line})
+	})
 	startup.Mark("build: done")
 	report(StartReady)
 	rt := &Runtime{
@@ -701,6 +707,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		conns:   conns,
 		close: func() error {
 			stopSync()
+			stopUpload()
 			mon.Close() // first: it uses the connections and the store
 			conns.closeAll()
 			return db.Close()

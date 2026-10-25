@@ -710,10 +710,10 @@
     var gear = document.getElementById('settings-open');
     check(!!gear && !gear.hidden && gear.getAttribute('aria-label') === 'Settings' && gear.type === 'button', 'the header has a Settings (gear) button');
     gear.click();
-    await waitFor('the Settings page', function () { return !document.getElementById('settings').hidden && document.querySelectorAll('#settings-nav [role=tab]').length === 6; });
+    await waitFor('the Settings page', function () { return !document.getElementById('settings').hidden && document.querySelectorAll('#settings-nav [role=tab]').length === 7; });
     check(document.getElementById('main').hidden, 'the chat is hidden while Settings is open');
     var tabNames = Array.prototype.map.call(document.querySelectorAll('#settings-nav [role=tab]'), function (b) { return b.textContent; });
-    check(tabNames.join('|') === 'Institution|Clusters|SSH connections|Folders|App|About & diagnostics', 'the section list has the six sections in order (' + tabNames.join(', ') + ')');
+    check(tabNames.join('|') === 'Institution|Clusters|SSH connections|Folders|App|Labmill account|About & diagnostics', 'the section list has the seven sections in order (' + tabNames.join(', ') + ')');
     function selTab() { return document.querySelector('#settings-nav [aria-selected=true]'); }
     function paneTitle() { var h = document.querySelector('#settings-pane .settings-h'); return h ? h.textContent : ''; }
     function statusText() { var s = document.getElementById('settings-status'); return s ? s.textContent : ''; }
@@ -807,6 +807,28 @@
     document.getElementById('settings-reset-notices').click();
     await waitFor('the tips reset', function () { return statusText().indexOf('will show again') !== -1; });
     check(true, 'Start in the tray went on and off and the one-time tips were reset');
+
+    // Labmill account: not connected at first; a wrong token is refused
+    // under the field; the right one connects (a fake account in Go); the
+    // token never shows on the page; Disconnect ends the link.
+    document.getElementById('settings-tab-account').click();
+    await waitFor('the account section', function () { return document.getElementById('set-f-token'); });
+    check(document.getElementById('settings-account').textContent.indexOf('Not connected') !== -1 && document.getElementById('set-f-token').type === 'password',
+      'the account section says not connected and asks for the token in a password field');
+    document.getElementById('set-f-token').value = 'lmt_wrongwrongwrongwrongwrong';
+    document.querySelector('#settings-account-form [data-role=save]').click();
+    await waitFor('the refused token', function () { return document.getElementById('set-f-token-err').textContent !== ''; });
+    check(document.getElementById('set-f-token-err').textContent.indexOf('did not accept') !== -1, 'a wrong token shows an error under the field');
+    document.getElementById('set-f-token').value = 'lmt_selftestselftestselftest01';
+    document.querySelector('#settings-account-form [data-role=save]').click();
+    await waitFor('the connect', function () { return document.getElementById('settings-account-disconnect'); });
+    check(statusText().indexOf('Self Test') !== -1 && document.getElementById('settings-pane').textContent.indexOf('lmt_selftest') === -1,
+      'the right token connects, and the page never shows it');
+    document.getElementById('settings-account-check').click();
+    await waitFor('the check', function () { return statusText().indexOf('Connected as Self Test') !== -1; });
+    document.getElementById('settings-account-disconnect').click();
+    await waitFor('the disconnect', function () { return document.getElementById('set-f-token') && statusText().indexOf('Disconnected') !== -1; });
+    check(true, 'Check connection and Disconnect work');
 
     // About & diagnostics.
     document.getElementById('settings-tab-about').click();

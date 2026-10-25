@@ -109,6 +109,8 @@ type JobFilter struct {
 	States     []JobState // empty means any
 	ActiveOnly bool       // exclude terminal states
 	Limit      int        // 0 means no limit
+	// UpdatedSince, when set, keeps only jobs saved at or after it.
+	UpdatedSince time.Time
 }
 
 // ErrNotFound is returned (wrapped) for a missing job.
@@ -135,7 +137,7 @@ func DefaultPath() (string, error) {
 }
 
 // schemaVersion is the user_version this build writes.
-const schemaVersion = 3
+const schemaVersion = 4
 
 // migrations[i] upgrades a database from version i to i+1.
 var migrations = []string{
@@ -184,6 +186,19 @@ var migrations = []string{
 	// 3: the results of the job were downloaded (kept apart from the state,
 	// so a failed job that was downloaded can still show as failed).
 	`ALTER TABLE jobs ADD COLUMN downloaded INTEGER NOT NULL DEFAULT 0;`,
+	// 4: the queue of job reports for the user's Labmill account (uploads.go).
+	`CREATE TABLE uploads (
+		job_id     INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+		remote_id  TEXT NOT NULL,
+		ref        TEXT NOT NULL UNIQUE, -- client_job_ref sent to the API
+		cluster    TEXT NOT NULL,
+		payload    TEXT NOT NULL,        -- the report (JSON) without hpc_system_id
+		attempts   INTEGER NOT NULL DEFAULT 0,
+		next_at    INTEGER NOT NULL,     -- unix nanoseconds; no send before
+		sent_at    INTEGER NOT NULL DEFAULT 0,
+		last_error TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (job_id, remote_id)
+	);`,
 }
 
 // WAL mode needs shared memory and file locking, so the database must live on
@@ -475,6 +490,10 @@ func (s *Store) Jobs(ctx context.Context, f JobFilter) ([]Job, error) {
 			}
 		}
 		where = append(where, "state NOT IN ("+strings.Join(term, ",")+")")
+	}
+	if !f.UpdatedSince.IsZero() {
+		where = append(where, "updated_at >= ?")
+		args = append(args, ts(f.UpdatedSince))
 	}
 	if len(where) > 0 {
 		q += " WHERE " + strings.Join(where, " AND ")

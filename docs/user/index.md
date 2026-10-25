@@ -61,4 +61,5 @@ Your password and two-factor code are typed into Labmill's sign-in box, used for
 - [Install](install.md): download Labmill for macOS, Windows or Linux.
 - [Your first job](first-job.md): a full walkthrough.
 - [Clusters and sign-in](clusters.md), [Data transfer and checks](data-transfer.md), [Failed jobs](failed-jobs.md).
+- [Connect the client to your Labmill account](account.md) (optional).
 - [Privacy](privacy.md), [FAQ](faq.md), [Troubleshooting](troubleshooting.md), [Contact](contact.md).
