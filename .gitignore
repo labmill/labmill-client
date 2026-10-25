@@ -62,6 +62,5 @@ deleted/
 /temp/
 /labmill-gui
 
-# Developer and agent notes: kept on the server, not in the public copy
-/CLAUDE.md
+# Claude Code agent settings: kept on the server, not in the public copy
 /.claude/
