@@ -53,6 +53,13 @@ This page lists the protections that exist in the code today, with where to find
 - By default the client calls the Anthropic Messages API with the user's own `ANTHROPIC_API_KEY`. The key is read from the environment, kept in memory only and never written to disk. The SDK is built with `WithoutEnvironmentDefaults`, so `ANTHROPIC_BASE_URL` and other `ANTHROPIC_*` variables can't send the key somewhere else. (`internal/launch/model.go`)
 - When a broker is configured (`broker_url` in `Site.yaml` or `LABMILL_BROKER_URL`), the client sends model calls there with the bearer token from `LABMILL_BROKER_TOKEN`. The broker client requires an `https` base URL (plain `http` only for loopback), ignores `ANTHROPIC_*` environment variables, and treats a stream that ends without `message_stop` as an error. (`internal/broker`)
 
+## Labmill account link
+
+- Off until the user pastes a program token (`labmill login` reads it from stdin, hidden on a terminal, never from argv; the GUI uses a password field). `account.Login` checks the form (`lmt_`, printable, under 100 characters) and calls `GET /api/me` before it saves anything; a refused token is not saved.
+- The token is kept in `account.json` next to `clusters.yaml`, written atomically with mode 0600 (`config.WriteFile`). This is the one secret the client keeps on disk; the client has no OS key store. It is never logged, put in `labmill.log`, shown on the Settings page or printed by `whoami`. `labmill logout` deletes the file.
+- The account URL is `https://app.labmill.org`, or `LABMILL_ACCOUNT_URL` (https, plain http only for loopback, as the broker). Redirects are not followed, so the bearer header can't go to another host.
+- What is sent and what never is: see [Architecture](architecture.md#job-records-for-the-labmill-account). Only jobs that end after the link was made are sent.
+
 ## Downloaded know-how and results
 
 - **Skill bundles from a broker** are used only after the version hash and every file's SHA-256 check out, are written atomically, and are never mixed mid-session; a failed check falls back to the embedded copy. The user's override folder always wins, so a bundle can't replace the user's own skills. (`internal/launch/knowledge.go`, `internal/knowledge`)

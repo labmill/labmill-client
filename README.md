@@ -39,7 +39,8 @@ Both modes share the same core, so a job started in one can be watched from the 
 - **Why did it fail?** For a failed job the assistant collects the facts (state, exit code, memory and time used, the end of the log) and names the cause. Labmill remembers the cause on your computer only.
 - **Long transfers survive.** Your computer doesn't go to sleep during a transfer, and a broken transfer starts again by itself, up to three times.
 - **Results are checked.** Downloads are compared with checksums computed on the cluster. A file that doesn't match is kept under a `.mismatch` name, never overwritten.
-- **Your accounts, your login.** Labmill has no accounts of its own. You sign in with your existing cluster account, including any two-factor step. Passwords and two-factor codes are never written to disk.
+- **Your accounts, your login.** Labmill needs no account of its own. You sign in with your existing cluster account, including any two-factor step. Passwords and two-factor codes are never written to disk.
+- **Optional Labmill account.** `labmill login` (or Settings > Labmill account) connects the client to app.labmill.org with a program token. Then a record of each finished job (state, times, resources, partition, modules) goes to your account; never scripts, data, code, names or logs.
 - **One binary.** Nothing to install on the cluster and nothing left running when you're done, except a small SSH helper that holds your login and exits about 10 minutes after you stop.
 
 ## Build from source

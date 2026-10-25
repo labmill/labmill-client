@@ -7,7 +7,9 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/gui"
 	"labmill-client/internal/launch"
 	"labmill-client/internal/settings"
@@ -276,3 +278,70 @@ func (s *SettingsAPI) OpenLogsFolder() error {
 // Diagnostics returns the "Copy diagnostics" text (settings.View.Diagnostics:
 // no secrets, no tokens, no keys, no user names).
 func (s *SettingsAPI) Diagnostics() string { return s.Get().Diagnostics() }
+
+// AccountView is the Labmill account section: never the token.
+type AccountView struct {
+	Linked bool   `json:"linked"`
+	URL    string `json:"url"`   // the account's web address
+	Since  string `json:"since"` // when the link was made (local time)
+	Error  string `json:"error"` // account.json can't be read
+}
+
+func (s *SettingsAPI) accountPath() string {
+	return filepath.Join(filepath.Dir(s.svc.Paths.Config), "account.json")
+}
+
+// AccountStatus reads the saved link (local file only, no network).
+func (s *SettingsAPI) AccountStatus() AccountView {
+	base, _ := account.BaseURL()
+	l, ok, err := account.Load(s.accountPath())
+	if err != nil {
+		return AccountView{URL: base, Error: err.Error()}
+	}
+	if !ok {
+		return AccountView{URL: base}
+	}
+	return AccountView{Linked: true, URL: l.URL, Since: l.LinkedAt.Local().Format("2006-01-02 15:04")}
+}
+
+// AccountConnect checks a pasted program token with the account and saves
+// it. The click on Connect is the user's consent to send job reports.
+func (s *SettingsAPI) AccountConnect(token string) settings.Result {
+	base, err := account.BaseURL()
+	if err == nil {
+		var me account.Me
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		me, err = account.Login(ctx, s.accountPath(), base, token, nil, time.Now())
+		if err == nil {
+			return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Connected to the Labmill account of " + accountName(me) + ". Jobs that end from now on are sent to it."}
+		}
+	}
+	return settings.Result{Errors: []settings.FieldError{{Field: "token", Message: err.Error()}}}
+}
+
+// AccountCheck asks the account who the saved token belongs to.
+func (s *SettingsAPI) AccountCheck() settings.Result {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	me, _, err := account.Whoami(ctx, s.accountPath(), nil)
+	if err != nil {
+		return settings.Result{Error: err.Error(), Errors: []settings.FieldError{}}
+	}
+	return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Connected as " + accountName(me) + "."}
+}
+
+// AccountDisconnect deletes the saved token; nothing is sent after this.
+func (s *SettingsAPI) AccountDisconnect() settings.Result {
+	if err := account.Remove(s.accountPath()); err != nil {
+		return settings.Result{Error: err.Error(), Errors: []settings.FieldError{}}
+	}
+	return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Disconnected. Labmill sends nothing to a Labmill account now."}
+}
+
+func accountName(me account.Me) string {
+	if me.DisplayName != "" {
+		return me.DisplayName
+	}
+	return me.PersonID
+}

@@ -4,7 +4,10 @@
 Slurm clusters only.
 
 **Do I need an account with Labmill?**
-No. You use your own cluster account and your own Anthropic API key.
+No. You use your own cluster account and your own Anthropic API key. A Labmill account at app.labmill.org is optional.
+
+**Is the client linked to my Labmill account?**
+Only if you connect it. Make a program token at app.labmill.org and run `labmill login`, or paste it in **Settings > Labmill account**. Then Labmill sends a record of each job that ends: state, times, resources, partition and software modules. It never sends job scripts, data files, program code, names or log lines. See [Connect the client to your Labmill account](account.md).
 
 **Does Labmill cost money?**
 [CHECK: price of the client and of the Anthropic API use. Write this when the owner decides.]

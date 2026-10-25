@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"slices"
@@ -189,6 +191,15 @@ func (t *selfTest) settingsPaths() settings.Paths {
 func (t *selfTest) wireSettings(s *SettingsAPI) {
 	t.settingsSvc = s.svc
 	s.brokerURL = func() string { return selfBrokerURL }
+	// A fake Labmill account on loopback for the account section.
+	acct := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/me" || r.Header.Get("Authorization") != "Bearer lmt_selftestselftestselftest01" {
+			http.Error(w, "sign in first", http.StatusUnauthorized)
+			return
+		}
+		w.Write([]byte(`{"person_id":"p1","role":"user","display_name":"Self Test"}`))
+	}))
+	os.Setenv("LABMILL_ACCOUNT_URL", acct.URL)
 	s.loggedIn = func() ([]string, bool) { return []string{"selftest-login"}, true }
 	s.setStartInTray = func(on bool) error {
 		t.mu.Lock()

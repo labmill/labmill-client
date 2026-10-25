@@ -35,6 +35,7 @@
     { id: 'ssh', label: 'SSH connections' },
     { id: 'folders', label: 'Folders' },
     { id: 'app', label: 'App' },
+    { id: 'account', label: 'Labmill account' },
     { id: 'about', label: 'About & diagnostics' }
   ];
 
@@ -145,7 +146,7 @@
     var s = SECTIONS.filter(function (x) { return x.id === state.section; })[0];
     pane.appendChild(el('h3', 'settings-h', s.label));
     ({ institution: renderInstitution, clusters: renderClusters, ssh: renderSSH, folders: renderFolders,
-      app: renderApp, about: renderAbout })[s.id](pane, v);
+      app: renderApp, account: renderAccount, about: renderAbout })[s.id](pane, v);
     if (!focusTab && keepId && $(keepId)) $(keepId).focus();
     hooks.renders++;
   }
@@ -609,6 +610,48 @@
   }
 
   // ---- App -------------------------------------------------------------------
+  // ---- Labmill account ---------------------------------------------------
+  // The token is typed into a password field and goes only to Go
+  // (AccountConnect); the page never shows a saved token.
+  function renderAccount(pane) {
+    var box = el('div');
+    box.id = 'settings-account';
+    pane.appendChild(box);
+    statusLine(pane);
+    api().AccountStatus().then(function (a) {
+      box.textContent = '';
+      if (a.error) box.appendChild(el('p', 'error', a.error));
+      if (a.linked) {
+        box.appendChild(el('p', '', 'Connected to ' + a.url + ' since ' + a.since + '. When a job ends, Labmill sends its record to your account: the cluster, the state, the times, the resources asked for, the partition and the software modules. It never sends job scripts, data files, program code, folder or job names, or log lines.'));
+        var row = el('div', 'buttons');
+        var check = btn('Check connection', '', function () {
+          api().AccountCheck().then(function (r) { setStatus(r.ok ? r.message : r.error, !r.ok); }, function (e) { setStatus(errText(e), true); });
+        });
+        check.id = 'settings-account-check';
+        var off = btn('Disconnect', 'danger', function () {
+          api().AccountDisconnect().then(function (r) { setStatus(r.ok ? r.message : r.error, !r.ok); render(false); }, function (e) { setStatus(errText(e), true); });
+        });
+        off.id = 'settings-account-disconnect';
+        row.appendChild(check); row.appendChild(off);
+        box.appendChild(row);
+        return;
+      }
+      box.appendChild(el('p', '', 'Not connected. Labmill sends nothing to a Labmill account. To connect, make a program token at ' + a.url + ' (Settings > Program tokens) and paste it here.'));
+      var form = el('form');
+      form.id = 'settings-account-form';
+      form.addEventListener('submit', function (e) { e.preventDefault(); });
+      var inp = field(form, { label: 'Program token', key: 'token', type: 'password', placeholder: 'lmt_…',
+        hint: 'Kept on this computer only, in a file that only you can read.' });
+      formButtons(form, 'Connect', function () {
+        api().AccountConnect(inp.value).then(function (r) {
+          if (r.ok) { inp.value = ''; setStatus(r.message, false); render(false); return; }
+          showErrors(form, r.errors);
+        }, function (e) { setStatus(errText(e), true); });
+      });
+      box.appendChild(form);
+    }, function (e) { setStatus(errText(e), true); });
+  }
+
   function renderApp(pane, v) {
     var row = el('div', 'settings-check');
     var cb = el('input');

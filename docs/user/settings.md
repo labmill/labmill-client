@@ -4,7 +4,7 @@ The desktop app has a Settings page where you can see and change everything Labm
 
 The sections are listed on the left. With the keyboard, use the arrow keys (and Home or End) to move through the list; each section opens as you reach it, and Tab moves into it.
 
-Settings never shows or stores a password, a sign-in code, a key or a token.
+Settings never shows or stores a password, a sign-in code or a key. The one exception is the optional **Labmill account** section: it keeps the program token you paste there, in a file only you can read, and never shows it again. See [Connect the client to your Labmill account](account.md).
 
 ## Safety switches at a glance
 

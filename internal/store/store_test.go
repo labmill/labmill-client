@@ -317,7 +317,7 @@ func TestMigrateV1ToV2KeepsJobs(t *testing.T) {
 		t.Fatalf("jobs after upgrade = %+v, %v", jobs, err)
 	}
 	var v int
-	if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != schemaVersion || schemaVersion != 3 {
+	if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != schemaVersion || schemaVersion != 4 {
 		t.Errorf("user_version = %d, %v", v, err)
 	}
 	if jobs[0].Downloaded {

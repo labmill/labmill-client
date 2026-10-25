@@ -4,6 +4,7 @@
 //
 //	Labmill                          start the terminal interface (first run: setup)
 //	labmill version                  print the version
+//	labmill login | logout | whoami  connect to a Labmill account (token on stdin)
 //	Labmill shell [--dir <folder>] <cluster>
 //	                               a terminal on the cluster's login node (no new sign-in)
 //	labmill ssh-helper               run the shared SSH connection helper (started automatically)
@@ -54,6 +55,8 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		return 0
 	case "shell":
 		return launch.RunShell(ctx, args[1:], stdin, stdout, stderr)
+	case "login", "logout", "whoami":
+		return runAccount(ctx, args[0], stdin, stdout, stderr)
 	}
 	if launch.HelperSubcommand(args) {
 		return launch.RunSubcommand(ctx, args, stdin, stdout, stderr)
@@ -70,6 +73,9 @@ Usage:
   labmill version        print the version
   Labmill shell <cluster>  open a terminal on the cluster's login node
                          (--dir <folder> starts in that folder)
+  labmill login          connect to your Labmill account (paste a program token)
+  labmill logout         disconnect; nothing is sent after this
+  labmill whoami         show the connected account and the job reports
   labmill help           show this help
 
 Internal commands (used by Labmill itself):

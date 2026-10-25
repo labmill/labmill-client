@@ -25,6 +25,7 @@ Everything is implemented except the "Hey Labmill" voice feature and the headles
 | `internal/app` | The typed tools, the system prompt, local privacy rules and approval integrity; `Workspace` (the user's chosen code and data folders, `CheckFolder`, `workspace.json`). |
 | `internal/stall` | Runs a blocking file operation in a goroutine with a time limit and a cap on abandoned ones, so a stalled mount or cloud placeholder can't hang `find_local_data` or `preview_file`. |
 | `internal/store` | SQLite job state shared by all processes. |
+| `internal/account` | Optional link to the user's Labmill account: the program token in `account.json` (`labmill login`/`logout`/`whoami`, GUI Settings > Labmill account), the API client (`GET /api/me`, `GET /api/systems`, `POST /api/jobs`) and the `Uploader` that sends finished-job records from the store's `uploads` queue. See "Job records for the Labmill account" below. |
 | `internal/sshx` | Go-native SSH: login dialog flow (password, Duo), host keys, ProxyJump, connection helper, key setup, `Exec` (ssh-exec), interactive shell. `sshx/sshtest` is the in-process test server. |
 | `internal/backend` | Backend interface, `JobSpec` validation, `Quote`/`SplitWords`, `SSHRunner`. `backend/slurm` implements it. |
 | `internal/transfer` | Staging manifest and rclone-based upload/download over the helper connection. |
@@ -105,7 +106,15 @@ rclone is linked in as a library (`internal/transfer`); no `rclone` binary is ru
 
 Every fenced code block in the GUI chat also has a Copy button (`md.js` `copyButton`, aria-label "Copy", attached with `addEventListener`; the CSP still allows no inline handlers).
 
-## Store
+## Job records for the Labmill account
+
+`launch.Build` starts `account.Uploader` (`internal/launch/upload.go`) next to the job monitor; `Runtime.Close` stops it before the store closes. Every 60 s a pass reads `account.json`; with no file it does nothing (no request, no queue row). Otherwise it:
+
+1. **Queues.** Each job in `completed`, `fetched`, `failed` or `canceled` with a remote ID, saved after `LinkedAt`, whose last final `state` event is not before `LinkedAt`, and with no `uploads` row for its `(job_id, remote_id)`, gets one row: a random `client_job_ref` (`lmc-` + 32 hex) and the report (`account.BuildReport`) as JSON. A resubmitted job (new remote ID) is a new report.
+2. **Sends.** Due rows (`next_at` passed, not sent) go to `POST /api/jobs` with `hpc_system_id` filled in: `GET /api/systems?q=<cluster>` and the one entry with the same name and the institution of the cluster's site profile (cached per process). Success marks the row sent. A failure sets `next_at` by `account.Backoff` (1 min doubling, at most 6 h); a 400 stops the row (`store.Never`); a 401/403 stops the pass, so the rows wait for a new token. The API stores a `client_job_ref` once, so two Labmill processes sending the same row make one job.
+
+The report has only scheduler facts: Slurm state (the raw state of a failed job such as `TIMEOUT` or `OUT_OF_MEMORY`, else `FAILED`; `CANCELLED`; `COMPLETED`), the failure category for time-out and out of memory, submit/start/end times and queue wait from the `state` events, `req` (cpu, mem, gpu, gpu_type, time, nodes) and the partition from the draft's `spec` event, and module names (`ecosystem: module`; a module given as a path is left out). It never holds the script, command, environment, job name, folders, venv/conda/container names, log lines or the failure memory, so no free text needs redaction; the tests assert this.
+
 
 `internal/store` is one SQLite database (pure-Go driver, WAL mode, 5 second busy timeout) at `$XDG_STATE_HOME/labmill/labmill.db`, falling back to `~/.local/state/labmill/labmill.db`. The TUI, GUI and headless agent all open it, so there is no daemon. A job has a `JobState` (draft, staging, uploading, submitted, pending, running, completed, fetched, failed, canceled), the approved script, a manifest of staged files (path, size, SHA-256) and an append-only event history. `UpdateJob` runs in one transaction and records state changes as events. Schema changes are migrations tracked with `PRAGMA user_version`; a database from a newer Labmill is refused. The scheduler remains the source of truth for live status.
 
