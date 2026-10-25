@@ -1,0 +1,147 @@
+name: Release
+
+# Builds the release files for a v* tag and makes a draft release. The full
+# tests ran on the Labmill server before the tag was made; here each binary
+# gets only a smoke test (--version) on its own platform. The owner checks
+# the draft and publishes it by hand. Action versions are pinned by commit.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  cli:
+    name: labmill (all platforms, CGO_ENABLED=0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist
+          for t in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+            os=${t%/*}; arch=${t#*/}; ext=""; [ "$os" = windows ] && ext=".exe"
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -X main.version=$GITHUB_REF_NAME" \
+              -o "dist/labmill-$os-$arch$ext" ./cmd/labmill
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cli
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 1
+
+  cli-smoke:
+    name: labmill smoke ${{ matrix.file }}
+    needs: cli
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest, file: labmill-linux-amd64 }
+          - { runner: ubuntu-24.04-arm, file: labmill-linux-arm64 }
+          - { runner: macos-latest, file: labmill-darwin-arm64 }
+          - { runner: macos-15-intel, file: labmill-darwin-amd64 }
+          - { runner: windows-latest, file: labmill-windows-amd64.exe }
+          - { runner: windows-11-arm, file: labmill-windows-arm64.exe }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: cli
+      - name: --version
+        shell: bash
+        run: |
+          chmod +x "${{ matrix.file }}"
+          out="$(./${{ matrix.file }} --version)"; echo "$out"
+          [ "$out" = "Labmill $GITHUB_REF_NAME" ]
+
+  gui:
+    name: labmill-gui ${{ matrix.file }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest, file: labmill-gui-linux-amd64, tags: "desktop,production,webkit2_41" }
+          - { runner: ubuntu-24.04-arm, file: labmill-gui-linux-arm64, tags: "desktop,production,webkit2_41" }
+          - { runner: macos-latest, file: labmill-gui-darwin-arm64, tags: "desktop,production" }
+          - { runner: windows-latest, file: labmill-gui-windows-amd64.exe, tags: "desktop,production" }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Install webkit2gtk
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p dist
+          flags="-s -w -X main.version=$GITHUB_REF_NAME"
+          if [ "$RUNNER_OS" = Windows ]; then
+            go run ./cmd/labmill-winres -arch amd64 -o cmd/labmill-gui/rsrc_windows_amd64.syso
+            flags="-H windowsgui $flags"
+          else
+            export CGO_ENABLED=1
+          fi
+          go build -tags "${{ matrix.tags }}" -trimpath -ldflags "$flags" -o "dist/${{ matrix.file }}" ./cmd/labmill-gui
+      - name: --version
+        shell: bash
+        run: |
+          out="$(./dist/${{ matrix.file }} --version | cat)"; echo "$out"
+          [ "$out" = "Labmill $GITHUB_REF_NAME" ]
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gui-${{ matrix.file }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Draft release
+    needs: [cli-smoke, gui]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the draft release
+      id-token: write # build provenance attestation
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          path: release
+          merge-multiple: true
+      - name: SHA256SUMS
+        working-directory: release
+        run: |
+          sha256sum labmill-* > SHA256SUMS
+          cat SHA256SUMS
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
+        with:
+          subject-path: release/labmill-*
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'EOF'
+          Check the downloads against `SHA256SUMS`. The binaries are not signed.
+
+          **macOS:** the desktop app is not signed or notarized yet, so macOS blocks it on the first start. After you download it, run `xattr -d com.apple.quarantine labmill-gui-darwin-arm64` and `chmod +x labmill-gui-darwin-arm64`, or Control-click the file, choose **Open**, and confirm.
+          EOF
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --draft --verify-tag --notes-file notes.md --generate-notes release/*

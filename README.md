@@ -6,7 +6,7 @@
 
 **Labmill client** is a conversational front end to your Slurm clusters. You tell it in plain language what you want to compute. It finds the data on your computer, stages it, sends it to the cluster, writes and submits the job script, watches the job and brings the results back.
 
-Labmill client is a fresh copy of the yeetl client and supports **Slurm only**. Documentation and downloads: <https://client.labmill.org/>.
+Labmill client is a fresh copy of the yeetl client and supports **Slurm only**. Documentation: <https://docs.labmill.org/>. Downloads: [GitHub Releases](https://github.com/labmill/labmill-client/releases) (check them against `SHA256SUMS`).
 
 Labmill is for researchers who already run their code on their own Mac, Windows or Linux computer, often on a single GPU, and now need more. You don't need to know the cluster or the terminal. You say what you want to run in a chat.
 
@@ -111,7 +111,11 @@ Labmill's know-how is written as Claude Code skills: the generic `slurm-user` an
 
 ## Documentation
 
-The user guide and the developer pages are in `docs/` (build them with `make docs`) and online at <https://client.labmill.org/>.
+The user guide and the developer pages are in `docs/` (build them with `make docs`) and online at <https://docs.labmill.org/>.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Pull requests are tested by hand on our own server.
 
 ## License
 

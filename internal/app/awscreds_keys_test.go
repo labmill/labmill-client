@@ -10,7 +10,7 @@ import (
 	"labmill-client/internal/agent"
 )
 
-const typedKeyID = "AKIAABCDEFGHIJKLMNOP"
+const typedKeyID = "AKIAIOSFODNN7EXAMPLE" // AWS documentation example
 
 func typedRun(t *testing.T, answers []string, perr error) (res string, err error, sr *stdinRunner, p agent.Proposal, fields []PromptField) {
 	t.Helper()

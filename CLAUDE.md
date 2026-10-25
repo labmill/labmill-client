@@ -6,7 +6,7 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 Labmill client: a single Go binary (`labmill`, TUI) plus a Wails desktop app (`labmill-gui`), a conversational front end to **Slurm** clusters. It is a fresh copy of the yeetl client and supports Slurm only. The user describes a compute task; Labmill finds the local data, stages it with a manifest (paths, sizes, checksums), transfers it, picks a cluster, writes and submits an `sbatch` script, monitors the job and pulls results back. It wraps the user's existing cluster account: no accounts or API of its own.
 
-- `README.md` is user-facing function only. Architecture and rules live here and in `docs/dev/` (package table, request flow and tools: `docs/dev/architecture.md`). Docs are written with Zensical (`zensical.toml`, pages in `docs/`, published at `https://client.labmill.org/`).
+- `README.md` is user-facing function only. Architecture and rules live here and in `docs/dev/` (package table, request flow and tools: `docs/dev/architecture.md`). Docs are written with Zensical (`zensical.toml`, pages in `docs/`, published at `https://docs.labmill.org/`).
 - **Model access:** the agent loop runs in the client. By default it calls the Anthropic Messages API with the user's `ANTHROPIC_API_KEY` (read from the environment, never written to disk; planning turns `claude-opus-5-5`, others `claude-sonnet-5-5`; `LABMILL_MODEL` overrides both). An optional broker is used when `broker_url` (Site.yaml) or `LABMILL_BROKER_URL` is set, with the token from `LABMILL_BROKER_TOKEN`.
 - **Files:** config `~/.config/labmill/clusters.yaml`, SSH settings `~/.ssh/config.d/labmill`, results `~/labmill-results`, job state in local SQLite. Go module path `labmill-client`.
 
