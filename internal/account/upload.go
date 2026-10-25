@@ -29,9 +29,12 @@ type Uploader struct {
 	// name), to find its HPC system in the API. nil or "" matches by the
 	// cluster name alone when that is unique.
 	Institution func(cluster string) string
-	HTTP        *http.Client     // nil: default
-	Now         func() time.Time // nil: time.Now
-	Every       time.Duration    // 0: 60 s
+	// Ref gives the login host and site domain of a cluster for
+	// GET /api/systems/resolve. nil: the cluster name alone.
+	Ref   func(cluster string) SystemRef
+	HTTP  *http.Client     // nil: default
+	Now   func() time.Time // nil: time.Now
+	Every time.Duration    // 0: 60 s
 	// OnError, if set, gets a failed pass's error in Run (once while it repeats).
 	OnError func(error)
 
@@ -185,14 +188,30 @@ func (u *Uploader) send(ctx context.Context, c *Client, up store.Upload) error {
 	return c.SendJob(ctx, rep)
 }
 
-// system finds the API's id of cluster: the listed system with the same
-// name (and the same institution when Institution names one).
+// system finds the API's id of cluster: GET /api/systems/resolve (login
+// host, name, site domain); when that has no single answer (400, 404, 409,
+// or an older server), the listed system with the same name (and the same
+// institution when Institution names one).
 func (u *Uploader) system(ctx context.Context, c *Client, cluster string) (string, error) {
 	u.mu.Lock()
 	id, ok := u.systems[cluster]
 	u.mu.Unlock()
 	if ok {
 		return id, nil
+	}
+	ref := SystemRef{Name: cluster}
+	if u.Ref != nil {
+		ref = u.Ref(cluster)
+	}
+	s, err := c.Resolve(ctx, ref)
+	var se *StatusError
+	if err == nil && s.ID != "" {
+		u.remember(cluster, s.ID)
+		return s.ID, nil
+	}
+	// 400 too: a host the server refuses must not stop the report (send treats 400 as final).
+	if err != nil && !(errors.As(err, &se) && (se.Code == http.StatusBadRequest || se.Code == http.StatusNotFound || se.Code == http.StatusConflict)) {
+		return "", err
 	}
 	list, err := c.Systems(ctx, cluster)
 	if err != nil {
@@ -211,13 +230,17 @@ func (u *Uploader) system(ctx context.Context, c *Client, cluster string) (strin
 	if len(match) != 1 {
 		return "", fmt.Errorf("the Labmill account doesn't know the cluster %s yet (%d matches)", cluster, len(match))
 	}
+	u.remember(cluster, match[0])
+	return match[0], nil
+}
+
+func (u *Uploader) remember(cluster, id string) {
 	u.mu.Lock()
+	defer u.mu.Unlock()
 	if u.systems == nil {
 		u.systems = map[string]string{}
 	}
-	u.systems[cluster] = match[0]
-	u.mu.Unlock()
-	return match[0], nil
+	u.systems[cluster] = id
 }
 
 // Queue counts the reports: sent, waiting, and refused by the API.

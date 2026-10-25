@@ -32,6 +32,7 @@ import (
 	"labmill-client/internal/transfer"
 	"labmill-client/skills"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/app"
 	"labmill-client/internal/backend"
@@ -694,6 +695,15 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	stopUpload := startUploader(db, func(name string) string {
 		c, _ := cfg.Cluster(name)
 		return clusterSite(st, c, others).Name
+	}, func(name string) account.SystemRef {
+		c, _ := cfg.Cluster(name)
+		ref := account.SystemRef{Name: name, Domain: clusterSite(st, c, others).Domain}
+		if paths, err := sshconfig.DefaultPaths(); err == nil && c.SSHHost != "" {
+			if h, _, err := sshconfig.Lookup(paths, c.SSHHost); err == nil {
+				ref.Host = h.HostName
+			}
+		}
+		return ref
 	}, func(line string) {
 		appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{line})
 	})

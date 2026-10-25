@@ -221,6 +221,27 @@ func (c *Client) Systems(ctx context.Context, q string) ([]System, error) {
 	return out, err
 }
 
+// SystemRef is what the client knows of a cluster: its login host (the ssh
+// HostName), its name and the site domain. Empty fields are left out.
+type SystemRef struct {
+	Host, Name, Domain string
+}
+
+// Resolve calls GET /api/systems/resolve. A 404 (no match, or a server
+// without the route) and a 409 (more than one match) come back as
+// *StatusError.
+func (c *Client) Resolve(ctx context.Context, ref SystemRef) (System, error) {
+	q := url.Values{}
+	for k, v := range map[string]string{"host": ref.Host, "name": ref.Name, "domain": ref.Domain} {
+		if v != "" {
+			q.Set(k, v)
+		}
+	}
+	var out System
+	err := c.do(ctx, http.MethodGet, "/api/systems/resolve?"+q.Encode(), nil, &out)
+	return out, err
+}
+
 // SendJob calls POST /api/jobs with one report.
 func (c *Client) SendJob(ctx context.Context, j JobIn) error {
 	return c.do(ctx, http.MethodPost, "/api/jobs", j, nil)

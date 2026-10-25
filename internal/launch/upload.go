@@ -13,7 +13,7 @@ import (
 // account is linked (labmill login). A failed pass goes to labmill.log once
 // while it repeats; the token is never in it. The returned func stops it and
 // waits, so the store can close after it.
-func startUploader(db *store.Store, institution func(cluster string) string, logLine func(string)) func() {
+func startUploader(db *store.Store, institution func(cluster string) string, ref func(cluster string) account.SystemRef, logLine func(string)) func() {
 	path, err := account.Path()
 	if err != nil || db == nil {
 		return func() {}
@@ -23,7 +23,7 @@ func startUploader(db *store.Store, institution func(cluster string) string, log
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		(&account.Uploader{Store: db, LinkPath: path, Institution: institution,
+		(&account.Uploader{Store: db, LinkPath: path, Institution: institution, Ref: ref,
 			OnError: func(err error) { logLine("job reports not sent: " + err.Error()) }}).Run(ctx)
 	}()
 	return func() { cancel(); wg.Wait() }
