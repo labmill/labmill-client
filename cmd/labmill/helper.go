@@ -27,6 +27,9 @@ Tip: tell me where your data lives with ` + "`/data <folder>`" + ` and, if you h
 // printed to stderr in plain language (exit 1).
 func runTUI(ctx context.Context, stderr io.Writer) int {
 	launch.Version = version
+	if _, err := launch.ImportYeetl(); err != nil {
+		fmt.Fprintf(stderr, "Labmill: %v\n", err)
+	}
 	bridge := tui.NewBridge()
 	rt, err := launch.Build(ctx, bridge, askSetup)
 	if err != nil {

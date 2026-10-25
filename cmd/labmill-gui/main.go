@@ -774,6 +774,10 @@ func needsSetup() bool {
 func main() {
 	startup.Mark("gui: main() entered (time zero to here: on Windows loader and package init; elsewhere only init after the startup package)")
 	launch.Version = version
+	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "version") {
+		fmt.Printf("Labmill %s\n", version) // the release smoke test
+		return
+	}
 	if timingMode(os.Getenv("LABMILL_GUI_SELFTEST") == "1") {
 		selfTestRunID() // fixes the single-instance name before HOME changes
 		timingHome()    // before anything reads a per-user folder
@@ -787,6 +791,9 @@ func main() {
 		code := launch.RunSubcommand(ctx, os.Args[1:], os.Stdin, os.Stdout, os.Stderr)
 		stop()
 		os.Exit(code)
+	}
+	if os.Getenv("LABMILL_GUI_SELFTEST") != "1" {
+		launch.ImportYeetl() // best effort: a failure only means the first-run setup starts
 	}
 
 	// The start splash (M53.1), as early as possible: on Windows the tray's

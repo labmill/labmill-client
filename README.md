@@ -77,6 +77,8 @@ The first time Labmill connects, it asks for your password in its own sign-in bo
 
 Results go to `~/labmill-results/<job name>` by default.
 
+**Coming from yeetl?** On its first start, Labmill copies a yeetl setup that it can read (Slurm clusters only): `~/.config/yeetl/clusters.yaml` and `~/.ssh/config.d/yeetl`. yeetl's files stay as they are. The old `YEETL_MODEL`, `YEETL_BROKER_URL` and `YEETL_BROKER_TOKEN` variables still work when the `LABMILL_` variable is not set.
+
 ## Configuration
 
 Clusters are defined in `~/.config/labmill/clusters.yaml`:

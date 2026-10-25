@@ -560,7 +560,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	}()
 	if st.BrokerURL == "" {
 		// No broker: the Anthropic Messages API with the user's own key.
-		if dm, err := newDirectModel(os.Getenv("ANTHROPIC_API_KEY"), os.Getenv); err != nil {
+		if dm, err := newDirectModel(os.Getenv("ANTHROPIC_API_KEY"), config.Getenv); err != nil {
 			model = unavailableModel{errors.New("Labmill has no assistant yet: set ANTHROPIC_API_KEY to your own Anthropic API key, then restart labmill")}
 		} else {
 			model = dm

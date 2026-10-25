@@ -488,3 +488,15 @@ func (c *Config) Cluster(name string) (Cluster, bool) {
 	}
 	return Cluster{}, false
 }
+
+// Getenv is os.Getenv with the yeetl name as a fallback: for LABMILL_X it
+// returns $YEETL_X when $LABMILL_X is empty (Labmill was copied from yeetl).
+func Getenv(name string) string {
+	if v := os.Getenv(name); v != "" {
+		return v
+	}
+	if rest, ok := strings.CutPrefix(name, "LABMILL_"); ok {
+		return os.Getenv("YEETL_" + rest)
+	}
+	return ""
+}

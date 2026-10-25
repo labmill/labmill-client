@@ -7,13 +7,13 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 
 	"labmill-client/internal/broker"
+	"labmill-client/internal/config"
 )
 
 // Model choice when the client calls the Anthropic Messages API itself
@@ -103,7 +103,7 @@ func setModel(r *http.Request, model anthropic.Model) error {
 // envToken is the broker's bearer token (a broker.TokenSource) when a broker
 // is configured: LABMILL_BROKER_TOKEN. There is no sign-in of its own yet.
 func envToken(context.Context) (string, error) {
-	if t := strings.TrimSpace(os.Getenv("LABMILL_BROKER_TOKEN")); t != "" {
+	if t := strings.TrimSpace(config.Getenv("LABMILL_BROKER_TOKEN")); t != "" {
 		return t, nil
 	}
 	return "", errors.New("no broker token: set LABMILL_BROKER_TOKEN")

@@ -23,7 +23,6 @@ import (
 	"io"
 	"io/fs"
 	"net/url"
-	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -808,7 +807,7 @@ func defaultOf(list []Site) Site {
 // applyEnv applies environment overrides: LABMILL_BROKER_URL replaces
 // BrokerURL when set.
 func applyEnv(s Site) Site {
-	if u := strings.TrimSpace(os.Getenv("LABMILL_BROKER_URL")); u != "" {
+	if u := strings.TrimSpace(config.Getenv("LABMILL_BROKER_URL")); u != "" {
 		s.BrokerURL = u
 	}
 	return s

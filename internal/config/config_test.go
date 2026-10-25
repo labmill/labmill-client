@@ -317,3 +317,15 @@ func TestREADMEExampleParses(t *testing.T) {
 		t.Errorf("README example: %v", err)
 	}
 }
+
+func TestGetenvYeetlFallback(t *testing.T) {
+	t.Setenv("LABMILL_MODEL", "")
+	t.Setenv("YEETL_MODEL", "old")
+	if got := Getenv("LABMILL_MODEL"); got != "old" {
+		t.Errorf("fallback: got %q", got)
+	}
+	t.Setenv("LABMILL_MODEL", "new")
+	if got := Getenv("LABMILL_MODEL"); got != "new" {
+		t.Errorf("LABMILL_ wins: got %q", got)
+	}
+}

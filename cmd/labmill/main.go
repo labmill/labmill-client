@@ -63,12 +63,12 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 }
 
 // usage is the help text.
-const usage = `labmill - describe it, yeet it, compute it
+const usage = `labmill - describe it, send it, compute it
 
 Usage:
-  Labmill                start Labmill
+  labmill                start Labmill
   labmill version        print the version
-  Labmill shell <cluster>  open a terminal on the cluster's login node
+  labmill shell <cluster>  open a terminal on the cluster's login node
                          (--dir <folder> starts in that folder)
   labmill help           show this help
 
