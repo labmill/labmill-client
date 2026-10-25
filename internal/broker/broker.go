@@ -31,13 +31,6 @@ const (
 // HintHeader carries the Hint on every request.
 const HintHeader = "X-Labmill-Task"
 
-// Headers about the cluster know-how (docs/dev/broker-knowledge.md).
-const (
-	SiteHeader          = "X-Labmill-Site"
-	SkillsHeader        = "X-Labmill-Skills"
-	SkillsCurrentHeader = "X-Labmill-Skills-Current"
-)
-
 // ModelPlaceholder is sent in the request's model field. The broker ignores it
 // and substitutes the model it chose.
 const ModelPlaceholder = "labmill-broker"
@@ -56,16 +49,6 @@ type Config struct {
 	// fresh Token(ctx) (the hook should make the token source drop what it
 	// cached).
 	OnUnauthorized func()
-	// Site and SkillsVersion, when set, are sent on every request as
-	// SiteHeader and SkillsHeader: the site domain and the version of the
-	// cluster know-how this client uses (see internal/knowledge).
-	Site          string
-	SkillsVersion string
-	// OnSkillsCurrent, when set, is called with the value of the response
-	// header SkillsCurrentHeader (the broker's current know-how version)
-	// whenever a response carries it. It runs on the request's goroutine and
-	// must not block.
-	OnSkillsCurrent func(version string)
 }
 
 // Request is one Messages API call.
@@ -125,26 +108,6 @@ func New(cfg Config) (*Client, error) {
 	return &Client{cfg: cfg, http: hc, client: anthropic.NewClient(opts...)}, nil
 }
 
-// setKnowledgeHeaders adds SiteHeader and SkillsHeader to r.
-func (c *Client) setKnowledgeHeaders(r *http.Request) {
-	if c.cfg.Site != "" {
-		r.Header.Set(SiteHeader, c.cfg.Site)
-	}
-	if c.cfg.SkillsVersion != "" {
-		r.Header.Set(SkillsHeader, c.cfg.SkillsVersion)
-	}
-}
-
-// observe hands the broker's current know-how version to OnSkillsCurrent.
-func (c *Client) observe(resp *http.Response) {
-	if c.cfg.OnSkillsCurrent == nil || resp == nil {
-		return
-	}
-	if v := strings.TrimSpace(resp.Header.Get(SkillsCurrentHeader)); v != "" {
-		c.cfg.OnSkillsCurrent(v)
-	}
-}
-
 // isLoopback reports whether host is localhost or a loopback IP address.
 func isLoopback(host string) bool {
 	if strings.EqualFold(host, "localhost") {
@@ -178,12 +141,10 @@ func (c *Client) authMiddleware(r *http.Request, next option.MiddlewareNext) (*h
 		return nil, fmt.Errorf("broker: token: %w", err)
 	}
 	r.Header.Set("Authorization", "Bearer "+token)
-	c.setKnowledgeHeaders(r)
 	resp, err := next(r)
 	if err != nil {
 		return resp, err
 	}
-	c.observe(resp)
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
 		resp.Body.Close()
 		return nil, fmt.Errorf("broker: the broker redirected (HTTP %d) and redirects are refused", resp.StatusCode)
@@ -206,9 +167,6 @@ func (c *Client) authMiddleware(r *http.Request, next option.MiddlewareNext) (*h
 	retry.Body = body
 	retry.Header.Set("Authorization", "Bearer "+token)
 	resp, err = next(retry)
-	if err == nil {
-		c.observe(resp)
-	}
 	if err == nil && resp.StatusCode >= 300 && resp.StatusCode < 400 {
 		resp.Body.Close()
 		return nil, fmt.Errorf("broker: the broker redirected (HTTP %d) and redirects are refused", resp.StatusCode)
@@ -274,11 +232,7 @@ func (c *Client) stream(ctx context.Context, req Request, onText func(string)) (
 		option.WithAuthToken(token),
 		option.WithHeader(HintHeader, string(hint)),
 		option.WithMiddleware(func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			c.setKnowledgeHeaders(r)
 			resp, err := next(r)
-			if err == nil {
-				c.observe(resp)
-			}
 			if err == nil && resp != nil && resp.StatusCode >= 300 && resp.StatusCode < 400 {
 				redirect = resp.StatusCode
 			}

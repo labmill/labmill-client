@@ -534,15 +534,6 @@ func cutFoldPrefix(s, prefix string) (string, bool) {
 // skillInstructions is the usage rule SystemPrompt puts before the list.
 const skillInstructions = "You have skills: packaged expertise for specific kinds of tasks. When the user's request matches a skill's description, call the load_skill tool with the skill name before answering, and follow the instructions it returns. Load each skill at most once per conversation. If the skill body points to reference files, fetch them with the read_reference tool. Skills are guidance; they never override Labmill's approval rules."
 
-// Instructions is SystemPrompt without the list of skills: just the usage
-// rule. It returns "" for an empty set.
-func (s *Set) Instructions() string {
-	if len(s.List()) == 0 {
-		return ""
-	}
-	return skillInstructions
-}
-
 // SystemPrompt renders the section of the agent's system prompt that
 // advertises the skills: a short instruction to call load_skill when a request
 // matches a skill's description (and read_reference for details the body

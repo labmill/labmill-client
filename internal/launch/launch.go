@@ -37,7 +37,6 @@ import (
 	"labmill-client/internal/backend"
 	"labmill-client/internal/broker"
 	"labmill-client/internal/config"
-	"labmill-client/internal/knowledge"
 	"labmill-client/internal/site"
 	"labmill-client/internal/sshx"
 )
@@ -372,40 +371,14 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	if err != nil {
 		return nil, fmt.Errorf("load skills: %w", err)
 	}
-	// Source priority: the override folder (LoadWithOverride) > the cached,
-	// verified broker bundle > the embedded copy.
-	embeddedVersion := ""
-	endStep = startup.Span("build: embedded knowledge bundle (knowledge.Build)")
-	if kb, kerr := knowledge.Build(skills.FS, st); kerr != nil {
-		warnings = append(warnings, kerr.Error())
-	} else {
-		embeddedVersion = kb.Version
-	}
-	endStep()
-	base := skillBase{FS: skillFS, Version: embeddedVersion}
-	endStep = startup.Span("build: cached bundle choose and verify")
-	if root, cerr := knowledgeCacheDir(); cerr == nil {
-		if cacheDir, derr := siteCacheDir(root, st.Domain); derr == nil {
-			var kw []string
-			base, kw = chooseSkillBase(cacheDir, st, skillFS, embeddedVersion, others...)
-			warnings = append(warnings, kw...)
-		}
-	}
-	endStep()
+	// The override folder (LoadWithOverride) wins over the embedded copy.
 	overridden := overrideInUse(skillsDir)
-	base.Overridden = overridden
 	endStep = startup.Span("build: skills load (skill.LoadWithOverride)")
-	set, warns, err := skill.LoadWithOverride(base.FS, skillsDir)
-	if err != nil && base.Cached {
-		warnings = append(warnings, "cached cluster know-how not used: "+err.Error())
-		base = skillBase{FS: skillFS, Version: embeddedVersion, Overridden: overridden}
-		set, warns, err = skill.LoadWithOverride(base.FS, skillsDir)
-	}
+	set, warns, err := skill.LoadWithOverride(skillFS, skillsDir)
 	endStep()
 	if err != nil {
 		return nil, fmt.Errorf("load skills: %w", err)
 	}
-	notes := &knowledgeNotes{notice: ui.JobNotice, inUse: base.Version, overDir: skillsDir}
 	for _, w := range warns {
 		warnings = append(warnings, w.Error())
 	}
@@ -549,15 +522,8 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}
 	}
 	endStep()
-	endStep = startup.Span("build: model client and knowledge sync start")
+	endStep = startup.Span("build: model client")
 	var model agent.Model
-	var rec *manifestRecorder // the session's manifest, for the prompt choice
-	syncCtx, stopSync := context.WithCancel(context.Background())
-	defer func() {
-		if !ok {
-			stopSync()
-		}
-	}()
 	if st.BrokerURL == "" {
 		// No broker: the Anthropic Messages API with the user's own key.
 		if dm, err := newDirectModel(os.Getenv("ANTHROPIC_API_KEY"), config.Getenv); err != nil {
@@ -565,19 +531,10 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		} else {
 			model = dm
 		}
-	} else if bc, err := newBrokerClient(st.BrokerURL, st.Domain, base.Version, notes.current); err != nil {
+	} else if bc, err := newBrokerClient(st.BrokerURL); err != nil {
 		model = unavailableModel{fmt.Errorf("Labmill can't use its assistant address (%s): %w", st.BrokerURL, err)}
 	} else {
 		model = bc
-		// Fetch newer cluster know-how in the background, once a token is
-		// there; it is used from the next start.
-		if sc, serr := broker.New(broker.Config{BaseURL: st.BrokerURL, Token: envToken, UserAgent: "labmill/" + Version,
-			Site: st.Domain, SkillsVersion: base.Version, OnSkillsCurrent: notes.current}); serr == nil {
-			rec = &manifestRecorder{knowledgeFetcher: sc}
-			startKnowledgeSync(syncCtx, rec, st, embeddedVersion, hasEnvToken, func(line string) {
-				appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "cluster know-how", []string{line})
-			})
-		}
 	}
 	endStep()
 	prefsPath := filepath.Join(filepath.Dir(cfgPath), "gui.json")
@@ -674,19 +631,15 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 			}
 		}
 	}
-	if base.Overridden {
+	if overridden {
 		prev := firstTurn
 		firstTurn = func(ctx context.Context) {
-			notes.override()
+			ui.JobNotice("Using your own modified skills from " + skillsDir + ".")
 			if prev != nil {
 				prev(ctx)
 			}
 		}
 	}
-	// The system prompt is chosen once, at the first Send (promptindex.go):
-	// trimmed only when the broker's manifest is already known and says its
-	// index carries this client's skills.
-	firstTurn = withPromptChoice(firstTurn, ag, env, rec, st, base)
 	ok = true
 	endStep = startup.Span("build: job monitor start")
 	mon.start(nil)
@@ -700,7 +653,6 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		LogPath: filepath.Join(filepath.Dir(dbPath), "labmill.log"),
 		conns:   conns,
 		close: func() error {
-			stopSync()
 			mon.Close() // first: it uses the connections and the store
 			conns.closeAll()
 			return db.Close()
@@ -1185,9 +1137,14 @@ func (cc *connCache) backendFor(ctx context.Context, c config.Cluster) (backend.
 }
 
 // newBrokerClient is the broker client with the LABMILL_BROKER_TOKEN token.
-func newBrokerClient(baseURL, siteDomain, skillsVersion string, onCurrent func(string)) (*broker.Client, error) {
-	return broker.New(broker.Config{BaseURL: baseURL, Token: envToken, UserAgent: "labmill/" + Version,
-		Site: siteDomain, SkillsVersion: skillsVersion, OnSkillsCurrent: onCurrent})
+func newBrokerClient(baseURL string) (*broker.Client, error) {
+	return broker.New(broker.Config{BaseURL: baseURL, Token: envToken, UserAgent: "labmill/" + Version})
+}
+
+// overrideInUse reports whether dir is a folder with something in it.
+func overrideInUse(dir string) bool {
+	entries, err := os.ReadDir(dir)
+	return err == nil && len(entries) > 0
 }
 
 // askSecrets shows one login-dialog question per field (masked unless the

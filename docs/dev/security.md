@@ -53,9 +53,8 @@ This page lists the protections that exist in the code today, with where to find
 - By default the client calls the Anthropic Messages API with the user's own `ANTHROPIC_API_KEY`. The key is read from the environment, kept in memory only and never written to disk. The SDK is built with `WithoutEnvironmentDefaults`, so `ANTHROPIC_BASE_URL` and other `ANTHROPIC_*` variables can't send the key somewhere else. (`internal/launch/model.go`)
 - When a broker is configured (`broker_url` in `Site.yaml` or `LABMILL_BROKER_URL`), the client sends model calls there with the bearer token from `LABMILL_BROKER_TOKEN`. The broker client requires an `https` base URL (plain `http` only for loopback), ignores `ANTHROPIC_*` environment variables, and treats a stream that ends without `message_stop` as an error. (`internal/broker`)
 
-## Downloaded know-how and results
+## Downloaded results
 
-- **Skill bundles from a broker** are used only after the version hash and every file's SHA-256 check out, are written atomically, and are never mixed mid-session; a failed check falls back to the embedded copy. The user's override folder always wins, so a bundle can't replace the user's own skills. (`internal/launch/knowledge.go`, `internal/knowledge`)
 - **Downloaded results** are compared with `sha256sum` run on the cluster over the transfer connection. A differing file is renamed `<name>.mismatch` and never deleted; where the check can't run, the result says the files were checked by size only. (`internal/transfer/verify.go`)
 
 ## rclone isolation

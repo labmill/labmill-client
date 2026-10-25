@@ -105,16 +105,12 @@ func TestAddClusterReusedEntryAccount(t *testing.T) {
 
 func TestHomeMissingInPrompt(t *testing.T) {
 	info := SiteInfo{Name: "Home University", Skill: "site-home-example-edu"}
-	for _, index := range []bool{false, true} {
-		if got := siteSection(info, index); strings.Contains(got, "not set up yet") {
-			t.Errorf("brokerIndex=%v: mentions missing clusters without any:\n%s", index, got)
-		}
+	if got := siteSection(info); strings.Contains(got, "not set up yet") {
+		t.Errorf("mentions missing clusters without any:\n%s", got)
 	}
 	info.HomeMissing = []HomeCluster{{Name: "extra", Type: "slurm"}, {Name: "gpu2", Type: "slurm"}}
 	want := "Also available at your institution, not set up yet: extra (Slurm), gpu2 (Slurm). Add one (add_cluster with your own institution as site) only when the user asks for it by name or clearly needs it; never as a default.\n"
-	for _, index := range []bool{false, true} {
-		if got := siteSection(info, index); !strings.Contains(got, want) {
-			t.Errorf("brokerIndex=%v: section lacks the line:\n%s", index, got)
-		}
+	if got := siteSection(info); !strings.Contains(got, want) {
+		t.Errorf("section lacks the line:\n%s", got)
 	}
 }

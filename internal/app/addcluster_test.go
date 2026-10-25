@@ -162,16 +162,14 @@ func TestOtherSitesInPrompt(t *testing.T) {
 			{Name: "Far University", Domain: "far.example.org", Skill: "site-far-example-org", Clusters: []string{"farone", "fartwo"}},
 			{Name: "Else College", Domain: "else.example.net"},
 		}}
-	for _, index := range []bool{false, true} {
-		got := siteSection(info, index)
-		for _, want := range []string{"Far University (far.example.org): clusters farone, fartwo; site skill \"site-far-example-org\"", "Else College (else.example.net)", "add_cluster", "explicitly", "own institution is the default"} {
-			if !strings.Contains(got, want) {
-				t.Errorf("brokerIndex=%v: section lacks %q:\n%s", index, want, got)
-			}
+	got := siteSection(info)
+	for _, want := range []string{"Far University (far.example.org): clusters farone, fartwo; site skill \"site-far-example-org\"", "Else College (else.example.net)", "add_cluster", "explicitly", "own institution is the default"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("section lacks %q:\n%s", want, got)
 		}
 	}
 	info.Others = nil
-	if got := siteSection(info, false); strings.Contains(got, "Other institutions") || strings.Contains(got, "add_cluster") {
+	if got := siteSection(info); strings.Contains(got, "Other institutions") || strings.Contains(got, "add_cluster") {
 		t.Errorf("section mentions other institutions without any:\n%s", got)
 	}
 }

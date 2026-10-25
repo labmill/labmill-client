@@ -344,8 +344,8 @@ const (
 	RoutineMaxTokens = 8192
 )
 
-// CompactionBeta is the Anthropic beta Labmill's compaction uses (the
-// broker's allowlist forwards it to Bedrock as anthropic_beta).
+// CompactionBeta is the Anthropic beta Labmill's compaction uses (a broker
+// must forward it).
 const CompactionBeta = anthropic.AnthropicBetaCompact2026_09_04
 
 // SkillTools returns the two read-only tools that expose a skill set to

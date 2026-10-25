@@ -108,9 +108,3 @@ func envToken(context.Context) (string, error) {
 	}
 	return "", errors.New("no broker token: set LABMILL_BROKER_TOKEN")
 }
-
-// hasEnvToken reports whether envToken would succeed now.
-func hasEnvToken() bool {
-	_, err := envToken(context.Background())
-	return err == nil
-}

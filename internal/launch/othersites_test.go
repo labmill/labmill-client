@@ -241,7 +241,7 @@ func TestSiteInfoOtherInstitutions(t *testing.T) {
 	}
 }
 
-func TestSessionSkillsHaveOtherSiteAndBundleOverlay(t *testing.T) {
+func TestSessionSkillsHaveOtherSite(t *testing.T) {
 	home, far := fixtureSite(t), farSite(t)
 	all, err := site.SkillsFSAll(genericWith("g"), home, []site.Site{far})
 	if err != nil {
@@ -255,34 +255,6 @@ func TestSessionSkillsHaveOtherSiteAndBundleOverlay(t *testing.T) {
 		if _, ok := set.Get(n); !ok {
 			t.Errorf("skill %s missing", n)
 		}
-	}
-	// A cached bundle has the home skill only: the other skill is overlaid
-	// from the embedded copy, and the bundle wins for names it has.
-	emb, _ := buildBundle(t, "old body")
-	newer, raw := buildBundle(t, "new body")
-	f := &fakeKnowledge{manifest: newer.Manifest(), raw: raw}
-	dir := filepath.Join(t.TempDir(), "knowledge")
-	if ok, err := syncKnowledge(context.Background(), f.serve(t), home, emb.Version, dir); err != nil || !ok {
-		t.Fatalf("sync = %v %v", ok, err)
-	}
-	base, logs := chooseSkillBase(dir, home, all, emb.Version, far)
-	if !base.Cached || base.Version != newer.Version || len(logs) != 0 {
-		t.Fatalf("base = %+v %v", base, logs)
-	}
-	set, _, err = skill.LoadWithOverride(base.FS, filepath.Join(t.TempDir(), "none"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	a, ok := set.Get("alpha")
-	if txt, _ := set.LoadSkillResult(a.Name); !ok || !strings.Contains(txt, "new body") {
-		t.Errorf("bundle skill not used: %q", txt)
-	}
-	fs, ok := set.Get("site-far-example-org")
-	if !ok {
-		t.Fatal("other site skill missing from the cached session")
-	}
-	if len(fs.References) == 0 {
-		t.Error("other site skill lost its references")
 	}
 }
 
@@ -379,5 +351,11 @@ func TestHomeClientLockedCachedAndOwnAlias(t *testing.T) {
 	cc.homeSSHHosts = []string{"other"}
 	if got, _ := cc.homeClientLocked(context.Background(), p, "site-login", host); got != nil {
 		t.Error("used an alias of another host")
+	}
+}
+
+func genericWith(body string) fstest.MapFS {
+	return fstest.MapFS{
+		"alpha/SKILL.md": {Data: []byte("---\nname: alpha\ndescription: Alpha skill.\n---\n" + body + "\n")},
 	}
 }

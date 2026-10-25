@@ -299,20 +299,8 @@ func Tools(env *Env) []agent.Tool {
 //   - skillToolMap: how the shell steps and Claude Code tools the skills
 //     mention map to Labmill's typed tools (the skills stay unmodified).
 //
-// Output is deterministic for a given Env (prompt-cache friendly). It is the
-// full prompt; see SystemPromptFor for the variant that leaves out what the
-// broker's knowledge index carries.
-func SystemPrompt(env *Env) string { return SystemPromptFor(env, false) }
-
-// SystemPromptFor is SystemPrompt with the choice of the broker-index
-// variant. With brokerIndex true it leaves out what the broker's index block
-// already puts into every request (the skill list from Skills.SystemPrompt
-// and the facts part of the site section) and keeps the instruction to load
-// the site skill, so nothing reaches the model twice. The caller passes true
-// only when it knows the broker sends the index for the very skills this
-// client loaded (docs/dev/broker-knowledge.md, "No duplicate knowledge").
-// The skill tool map stays in both variants.
-func SystemPromptFor(env *Env, brokerIndex bool) string {
+// Output is deterministic for a given Env (prompt-cache friendly).
+func SystemPrompt(env *Env) string {
 	var b strings.Builder
 	b.WriteString(`You are Labmill, an assistant that helps a researcher run their code on a compute cluster. The user works on their own laptop and is new to clusters. Talk in plain language, keep answers short, and explain cluster terms (partition, GPU node, job queue) the first time you use them.
 
@@ -351,18 +339,12 @@ Rules you must follow:
 		}
 	}
 	b.WriteString("\n")
-	b.WriteString(siteSection(env.Site, brokerIndex))
+	b.WriteString(siteSection(env.Site))
 	if env.Skills != nil {
 		if sp := env.Skills.SystemPrompt(); sp != "" {
 			b.WriteString("\n")
-			if brokerIndex {
-				// The broker's index lists the skills; the usage rule stays.
-				b.WriteString(env.Skills.Instructions())
-				b.WriteString("\n\nThe available skills are listed in the cluster know-how index above.\n")
-			} else {
-				b.WriteString(sp)
-				b.WriteString("\n")
-			}
+			b.WriteString(sp)
+			b.WriteString("\n")
 			b.WriteString(skillToolMap)
 		}
 	}
@@ -370,17 +352,9 @@ Rules you must follow:
 }
 
 // siteSection renders the system prompt's paragraph about the user's
-// institution and its site skill. With brokerIndex the broker's index block
-// carries the institution, its documentation URL and the facts, so only the
-// instruction to load the site skill stays.
-func siteSection(s SiteInfo, brokerIndex bool) string {
+// institution and its site skill.
+func siteSection(s SiteInfo) string {
 	var b strings.Builder
-	if brokerIndex && s.Skill != "" && !s.Generic {
-		fmt.Fprintf(&b, "The cluster know-how index above names this institution's site skill %q: load it with load_skill whenever you need a site-specific fact (host names, accounts, partitions, storage folders, software, proxy quirks, sign-in), and never guess one.\n", s.Skill)
-		b.WriteString(othersSection(s.Others))
-		b.WriteString(homeMissingSection(s.HomeMissing))
-		return b.String()
-	}
 	if s.Name != "" {
 		fmt.Fprintf(&b, "The user's institution: %s.\n", s.Name)
 	}

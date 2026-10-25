@@ -18,8 +18,7 @@ Everything is implemented except the "Hey Labmill" voice feature and the headles
 | `skills` | Embedded generic skills (`SKILL.md` + `references/`): `slurm-user` and `research-computing`. `slurm-user` started as a sync of an upstream skill set; both come from yeetl, and Labmill is now the master copy (`skills/SOURCE.md`). Every site fact lives in `sites/`. Also `tools/*` helper files, readable but never run. |
 | `sites` | Embedded site profiles. Only `generic/` is in this repository: a site skill (`SKILL.md` + `References/`), a machine-readable `Site.yaml` and a cluster template. See [Sites](sites.md). |
 | `internal/skill` | Skill runtime: loading, override directory, `load_skill`/`read_reference` tools. |
-| `internal/broker` | Client for an optional Claude broker (streaming Messages API with a bearer token). |
-| `internal/knowledge` | Builds the **bundle** (the generic skills plus one site's skill, exactly `Site.SkillsFS`), its version hash, the deterministic gzip'd tar, the manifest and the cached prompt index. The client uses it to verify and load bundles from a broker. |
+| `internal/broker` | Client for an optional Claude broker (streaming Messages API with a bearer token, task hint in `X-Labmill-Task`). Labmill runs no broker yet. |
 | `internal/rules` | The decisions the laptop makes without the model, as pure functions with no I/O: today the Slurm placement facts (`SlurmHints`). `internal/app` calls it; an import-graph test keeps SSH, UI and site code out. |
 | `internal/agent` | The agent loop, typed-tool registry, approval interface. |
 | `internal/app` | The typed tools, the system prompt, local privacy rules and approval integrity; `Workspace` (the user's chosen code and data folders, `CheckFolder`, `workspace.json`). |
@@ -121,10 +120,6 @@ Skills are Anthropic/Claude Code-format directories: `SKILL.md` (YAML frontmatte
 - **Progressive disclosure.** The system prompt (`Set.SystemPrompt`) lists only each skill's name and description. Claude pulls in a skill's body with the `load_skill` tool and individual reference files with `read_reference`; both come from `agent.SkillTools(set)`. Both are read-only and need no approval. `Set.Preamble` is put on top of every loaded skill to say that shell instructions must be carried out with Labmill's typed tools, never by installing software.
 - **Skills are guidance only.** They never override the approval rules.
 
-## Know-how from a broker
-
-When a broker is configured, it can serve newer skill bundles (`internal/launch/knowledge.go`): once per session, in the background, the client fetches the manifest, downloads a newer bundle, verifies the version hash and every file's sha256, and stores it under `os.UserCacheDir()/labmill/knowledge/<domain>/<version>/` with a `current` pointer. Bundles are swapped only at startup. Skill source priority: the override folder (`~/.config/labmill/skills`, always wins), the verified cached bundle, the embedded copy. Without a broker, or offline, the embedded copy is used.
-
 ### Key-only SSH hosts
 
 A host with `auth: key` in `Site.yaml` (schema in [Sites](sites.md)) accepts SSH keys only. The pieces:
@@ -153,4 +148,4 @@ Labmill keeps SSH settings in OpenSSH format, so a user who later opens a termin
 ## Dependency direction
 
 
-`cmd/labmill` → (`tui`, `app`, `site`) → `agent` → (`skill`, `broker`, `backend`, `transfer`, `store`, `knowledge`, `rules`) → (`sshx`, `config`, `sshconfig`). `cmd/labmill` and `cmd/labmill-gui` wire the pieces together through `launch`; `app` takes everything through the `app.Env` function fields. `rules` has no internal dependencies on the heavy packages. Every backend, transfer target and the model client has an interface, so tests use in-process fakes and need no network.
+`cmd/labmill` → (`tui`, `app`, `site`) → `agent` → (`skill`, `broker`, `backend`, `transfer`, `store`, `rules`) → (`sshx`, `config`, `sshconfig`). `cmd/labmill` and `cmd/labmill-gui` wire the pieces together through `launch`; `app` takes everything through the `app.Env` function fields. `rules` has no internal dependencies on the heavy packages. Every backend, transfer target and the model client has an interface, so tests use in-process fakes and need no network.
