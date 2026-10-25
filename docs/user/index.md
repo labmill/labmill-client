@@ -55,3 +55,10 @@ Your password and two-factor code are typed into Labmill's sign-in box, used for
 6. [Using the cluster from a terminal later](terminal.md)
 7. [Using the same know-how in Claude Code](claude-code.md)
 8. [Know-how updates](updates.md)
+
+## Where to go next
+
+- [Install](install.md): download Labmill for macOS, Windows or Linux.
+- [Your first job](first-job.md): a full walkthrough.
+- [Clusters and sign-in](clusters.md), [Data transfer and checks](data-transfer.md), [Failed jobs](failed-jobs.md).
+- [Privacy](privacy.md), [FAQ](faq.md), [Troubleshooting](troubleshooting.md), [Contact](contact.md).

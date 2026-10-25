@@ -6,6 +6,18 @@ The sections are listed on the left. With the keyboard, use the arrow keys (and 
 
 Settings never shows or stores a password, a sign-in code, a key or a token.
 
+## Safety switches at a glance
+
+| Switch | Default | What it does |
+|---|---|---|
+| Run commands on the cluster without asking | off | Labmill runs commands on the cluster without showing them first. |
+| Approve everything automatically | off | Labmill approves every step. Secret-file reads, questions and logins still ask. |
+| Download results automatically | off | Labmill brings results of finished jobs to your computer. |
+| Notify me when a job ends | on | The desktop app shows a notification. |
+| Email me when a Slurm job ends | off | Labmill adds an email request to the job script. |
+
+Details for each switch are below. See also [Privacy](privacy.md).
+
 ## Institution
 
 Shows the institution Labmill is set up for, and its documentation address (as text: copy it into your browser). Choose another institution from the list and click **Save**. Your clusters and connections stay as they are; the institution decides which help and skills Labmill uses.
