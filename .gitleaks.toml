@@ -4,4 +4,4 @@ useDefault = true
 
 [allowlist]
 description = "Vendored third-party code (minified xterm.js matches generic-api-key)"
-paths = ['''^cmd/labmill-gui/frontend/vendor/''']
+paths = ['''(^|/)cmd/labmill-gui/frontend/vendor/''']
