@@ -4,4 +4,4 @@ Labmill client is for researchers who already run their code on their own Mac or
 
 Labmill client works with Slurm clusters. It uses your own cluster account and your own Anthropic API key.
 
-Labmill is under active development. See the [user guide](user/index.md) for what works today, and the [developer pages](dev/index.md) if you want to build it or change it.
+Labmill is under active development. To get started, read [Install](user/install.md) and [Your first job](user/first-job.md). See the [user guide](user/index.md) for what works today, and the [developer pages](dev/index.md) if you want to build it or change it.
