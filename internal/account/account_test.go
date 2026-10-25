@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,9 @@ type fakeAPI struct {
 	jobFails int // answer 500 to this many job posts first
 	jobCode  int // when set, answer every job post with it
 	requests int
+	// resolve answers GET /api/systems/resolve; nil: 404 (an older server).
+	resolve  func(q url.Values) (int, any)
+	resolved []url.Values
 }
 
 func (f *fakeAPI) handler(t *testing.T) http.Handler {
@@ -48,6 +52,15 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 				{ID: "ffffffff-bbbb-cccc-dddd-eeeeeeeeeeee", Name: "bigcluster", Institution: "Other College"},
 				{ID: "99999999-bbbb-cccc-dddd-eeeeeeeeeeee", Name: "bigcluster2", Institution: "Example University"},
 			})
+		case "GET /api/systems/resolve":
+			f.resolved = append(f.resolved, r.URL.Query())
+			if f.resolve == nil {
+				http.NotFound(w, r)
+				return
+			}
+			code, body := f.resolve(r.URL.Query())
+			w.WriteHeader(code)
+			json.NewEncoder(w).Encode(body)
 		case "POST /api/jobs":
 			if r.Header.Get("Content-Type") != "application/json" {
 				t.Errorf("content type %q", r.Header.Get("Content-Type"))
@@ -391,5 +404,71 @@ func TestBuildReportStates(t *testing.T) {
 	}
 	if _, ok := BuildReport(store.Job{State: store.StateCanceled}, nil, "r"); ok {
 		t.Error("a never-submitted job made a report")
+	}
+}
+
+func TestResolveFirstThenSearch(t *testing.T) {
+	const resolved = "12345678-bbbb-cccc-dddd-eeeeeeeeeeee"
+	ref := func(string) SystemRef {
+		return SystemRef{Host: "login1.example.edu", Name: "bigcluster", Domain: "example.edu"}
+	}
+	for _, c := range []struct {
+		what   string
+		code   int
+		body   any
+		inst   string
+		wantID string // "" means nothing sent
+	}{
+		{"resolve match", 200, System{ID: resolved, Name: "bigcluster", Institution: "Example University"}, "", resolved},
+		{"409 falls back to the search", 409, map[string]any{"candidates": []System{{ID: "a"}, {ID: "b"}}}, "Example University", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"},
+		{"404 falls back to the search", 404, "no system matches", "Example University", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"},
+		{"400 falls back to the search", 400, "bad field: host", "Example University", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"},
+		{"409 and an ambiguous search: the report waits", 409, map[string]any{"candidates": []System{}}, "", ""},
+		{"500: the report waits, no search", 500, "lookup failed", "Example University", ""},
+	} {
+		t.Run(c.what, func(t *testing.T) {
+			f := &fakeAPI{resolve: func(url.Values) (int, any) { return c.code, c.body }}
+			srv := httptest.NewServer(f.handler(t))
+			defer srv.Close()
+			st := newStore(t)
+			p := link(t, srv.URL, time.Now().Add(-time.Minute))
+			addJob(t, st, store.StateCompleted, "")
+			u := &Uploader{Store: st, LinkPath: p, Ref: ref, Institution: func(string) string { return c.inst }}
+			n, _ := u.Pass(context.Background())
+			if len(f.resolved) != 1 || f.resolved[0].Get("host") != "login1.example.edu" ||
+				f.resolved[0].Get("name") != "bigcluster" || f.resolved[0].Get("domain") != "example.edu" {
+				t.Fatalf("resolve query: %v", f.resolved)
+			}
+			if c.wantID == "" {
+				if n != 0 {
+					t.Fatalf("sent %d", n)
+				}
+				if _, waiting, _, _, _ := Queue(context.Background(), st); waiting != 1 {
+					t.Errorf("waiting %d, want 1", waiting)
+				}
+				return
+			}
+			if n != 1 || !strings.Contains(f.jobs[0], `"hpc_system_id":"`+c.wantID+`"`) {
+				t.Fatalf("sent %d: %v", n, f.jobs)
+			}
+			// The answer is kept: a second report needs no second lookup.
+			addJob(t, st, store.StateFailed, "")
+			if n, err := u.Pass(context.Background()); n != 1 || err != nil || len(f.resolved) != 1 {
+				t.Errorf("second pass: %d %v, %d lookups", n, err, len(f.resolved))
+			}
+		})
+	}
+}
+
+func TestResolveQueryLeavesOutEmptyFields(t *testing.T) {
+	f := &fakeAPI{resolve: func(url.Values) (int, any) { return 200, System{ID: "x"} }}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	c := &Client{URL: srv.URL, Token: goodToken}
+	if s, err := c.Resolve(context.Background(), SystemRef{Name: "bigcluster"}); err != nil || s.ID != "x" {
+		t.Fatalf("resolve: %+v %v", s, err)
+	}
+	if q := f.resolved[0]; len(q) != 1 || q.Get("name") != "bigcluster" {
+		t.Errorf("query %v", q)
 	}
 }
