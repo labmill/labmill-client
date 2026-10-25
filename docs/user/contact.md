@@ -11,3 +11,5 @@ Please tell us:
 Do not send passwords, API keys or private keys by email.
 
 The privacy policy is at <https://labmill.org/privacy/>. Releases and downloads are at <https://github.com/labmill/labmill-client/releases>.
+
+To contribute code, read [CONTRIBUTING.md](https://github.com/labmill/labmill-client/blob/main/CONTRIBUTING.md). We test pull requests by hand.

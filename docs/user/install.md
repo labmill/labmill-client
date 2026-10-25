@@ -18,17 +18,15 @@ Go to the [Labmill releases page](https://github.com/labmill/labmill-client/rele
 | Windows (64 bit, Intel or AMD) | `labmill-gui-windows-amd64.exe` | `labmill-windows-amd64.exe` |
 | Windows on Arm | not built | `labmill-windows-arm64.exe` |
 | Linux (64 bit, Intel or AMD) | `labmill-gui-linux-amd64` | `labmill-linux-amd64` |
-| Linux on Arm | not built | `labmill-linux-arm64` |
+| Linux on Arm | `labmill-gui-linux-arm64` | `labmill-linux-arm64` |
 
-The release also has a file `SHA256SUMS`. To check a download, compute its SHA-256 checksum and compare it with the line for your file.
+The release also has a file `SHA256SUMS`. It is the only checksum file: there is no `.sha256` file for each download. To check a download, compute its SHA-256 checksum and compare it with the line for your file.
 
 ```
 sha256sum labmill-linux-amd64        # Linux
 shasum -a 256 labmill-darwin-arm64   # macOS
 certutil -hashfile labmill-windows-amd64.exe SHA256   # Windows
 ```
-
-[CHECK: the file names above come from the build workflow. Confirm them against the first published release. The first release may use other names or add installers.]
 
 Labmill is one file. There is no installer yet. Put the file in a folder you keep, for example `~/bin` or `C:\Tools`.
 
@@ -51,11 +49,13 @@ The Labmill programs are not signed by Apple at first. macOS blocks them the fir
    ```
 3. Start it: `./labmill-gui-darwin-arm64`.
 
+Instead of steps 2 and 3, you can Control-click the file in Finder, choose **Open**, and confirm.
+
 If macOS still says that it cannot check the program, open **System Settings > Privacy & Security**, scroll down, and click **Open Anyway** next to the message about Labmill. Then start the program again and confirm.
 
 Do the same steps for `labmill-darwin-arm64` (or `-amd64`) if you want the terminal app. Run it as `./labmill-darwin-arm64`. Rename it to `labmill` and put it in a folder on your PATH, and you can start it by typing `labmill`.
 
-[CHECK: the macOS desktop app is a plain program file, not a `.app` bundle or a `.dmg`. Update this section when a signed bundle is published.]
+The macOS desktop app is a plain program file, not a `.app` bundle or a `.dmg`.
 
 ## Windows
 
