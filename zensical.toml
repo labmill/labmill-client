@@ -1,7 +1,7 @@
 [project]
 site_name = "Labmill client"
 site_description = "A chat front end that runs your research jobs on Slurm clusters."
-site_url = "https://client.labmill.org/"
+site_url = "https://docs.labmill.org/"
 nav = [
   { "Home" = "index.md" },
   { "User guide" = [
