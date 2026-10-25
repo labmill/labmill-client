@@ -7,7 +7,7 @@ Slurm clusters only.
 No. You use your own cluster account and your own Anthropic API key.
 
 **Does Labmill cost money?**
-[CHECK: price of the client and of the Anthropic API use. Write this when the owner decides.]
+The client is free. It will be open source under the MIT license when it is published. Anthropic bills the API use on your own key. A Labmill account on labmill.org is optional: it costs 6 USD a month, or 35 USD a month for a fully private account (redacted job facts do not help other researchers), plus tax where it applies. See [labmill.org/pricing](https://labmill.org/pricing/).
 
 **Does it send my data to Claude?**
 No. Claude sees file names, sizes, short previews and small samples. Files go to the cluster only after you approve. See [Privacy](privacy.md).
