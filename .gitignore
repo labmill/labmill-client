@@ -61,3 +61,7 @@ deleted/
 # Owner-local material kept out of git (live tests of researchers' work, results)
 /temp/
 /labmill-gui
+
+# Developer and agent notes: kept on the server, not in the public copy
+/CLAUDE.md
+/.claude/
