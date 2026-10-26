@@ -13,6 +13,10 @@ concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# The version the binaries report: the tag for a release, else dev-<commit>.
+env:
+  VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('dev-{0}', github.sha) }}
+
 jobs:
   tui:
     name: Labmill ${{ matrix.goos }}/${{ matrix.goarch }}
@@ -39,7 +43,7 @@ jobs:
         run: |
           ext=""; [ "$GOOS" = windows ] && ext=".exe"
           mkdir -p dist
-          go build -trimpath -ldflags "-s -w" -o "dist/labmill-${GOOS}-${GOARCH}${ext}" ./cmd/labmill
+          go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o "dist/labmill-${GOOS}-${GOARCH}${ext}" ./cmd/labmill
           cd dist && sha256sum labmill-* > "labmill-${GOOS}-${GOARCH}.sha256"
       - uses: actions/upload-artifact@v4
         with:
@@ -123,7 +127,7 @@ jobs:
           CGO_ENABLED: "1"
         run: |
           mkdir -p dist
-          go build -tags desktop,production -o dist/labmill-gui-darwin-arm64 ./cmd/labmill-gui
+          go build -tags desktop,production -ldflags "-X main.version=$VERSION" -o dist/labmill-gui-darwin-arm64 ./cmd/labmill-gui
           cd dist && shasum -a 256 labmill-gui-darwin-arm64 > labmill-gui-darwin-arm64.sha256
       - uses: actions/upload-artifact@v4
         with:
@@ -150,7 +154,7 @@ jobs:
         shell: bash
         run: |
           go run ./cmd/labmill-winres -arch amd64 -o cmd/labmill-gui/rsrc_windows_amd64.syso
-          go build -tags desktop,production -trimpath -ldflags "-H windowsgui -s -w" -o labmill-gui.exe ./cmd/labmill-gui
+          go build -tags desktop,production -trimpath -ldflags "-H windowsgui -s -w -X main.version=$VERSION" -o labmill-gui.exe ./cmd/labmill-gui
       - name: Self-test
         shell: pwsh
         run: |
@@ -162,7 +166,11 @@ jobs:
 
   release:
     name: Draft release
-    if: startsWith(github.ref, 'refs/tags/v')
+    # The macOS GUI may be missing: GitHub's macOS arm64 runners are often full (2026-10-26). The release then has
+    # every other file, and the macOS GUI is added later by hand.
+    if: >-
+      always() && startsWith(github.ref, 'refs/tags/v') && needs.tui.result == 'success'
+      && needs.gui-windows.result == 'success' && needs.gui-linux.result == 'success'
     needs: [tui, gui-windows, gui-linux, gui-macos]
     runs-on: ubuntu-latest
     permissions:
