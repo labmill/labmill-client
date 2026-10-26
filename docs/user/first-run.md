@@ -8,7 +8,9 @@ Labmill's assistant is Claude. Labmill talks to Claude with your own Anthropic A
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-On Windows, set it as a user environment variable (Settings, search for "environment variables"). Labmill reads the key from the environment only. It never writes the key to disk. Without a key, Labmill starts but tells you that it has no assistant yet.
+On Windows, set it as a user environment variable (Settings, search for "environment variables"). Labmill reads the key from the environment only. It never writes the key to disk.
+
+Your own key is optional, and it is the private choice: with it, Labmill talks to Anthropic directly and nothing goes through Labmill. Without a key, a client that is connected to a Labmill account (`labmill login`, see [Connect the client to your Labmill account](account.md)) uses the **Labmill test relay**: its requests to Claude go through app.labmill.org, which uses Labmill's own Anthropic key. The relay is for testing only, for invited testers, with a daily limit. The relay does not store your requests. The status line shows which one Labmill uses: `assistant: own key` or `assistant: Labmill test relay`. With neither a key nor an account, Labmill starts but tells you that it has no assistant yet.
 
 Planning turns use a larger Claude model and the other turns a faster one. To use one model for all turns, set `LABMILL_MODEL` (for example `LABMILL_MODEL=claude-sonnet-5-5`).
 

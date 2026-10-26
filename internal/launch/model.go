@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 
+	"labmill-client/internal/account"
+	"labmill-client/internal/agent"
 	"labmill-client/internal/broker"
 )
 
@@ -113,4 +116,46 @@ func envToken(context.Context) (string, error) {
 func hasEnvToken() bool {
 	_, err := envToken(context.Background())
 	return err == nil
+}
+
+// The model paths shown in the status line ("assistant: ...").
+const (
+	PathOwnKey = "own key"            // ANTHROPIC_API_KEY, straight to Anthropic
+	PathRelay  = "Labmill test relay" // no key, a linked Labmill account
+	PathBroker = "broker"             // broker_url or LABMILL_BROKER_URL
+	PathNone   = "none"
+)
+
+// noModelMsg is the chat answer when no path works.
+const noModelMsg = "Labmill has no assistant yet: set ANTHROPIC_API_KEY to your own Anthropic API key, or run labmill login, then restart labmill"
+
+// chooseModel picks the model when no broker is configured. The user's own
+// ANTHROPIC_API_KEY comes first, exactly as before: requests go straight to
+// Anthropic and the key never goes to Labmill (the private choice). Without
+// a key, a computer linked to a Labmill account (labmill login, account.json
+// at linkPath) uses the Labmill test relay: the broker protocol against
+// <account URL>/api/model with the program token (owner decision
+// 2026-10-26; testing only, invited testers). Else a model that explains
+// what is missing.
+func chooseModel(key string, getenv func(string) string, linkPath string) (agent.Model, string) {
+	if dm, err := newDirectModel(key, getenv); err == nil {
+		return dm, PathOwnKey
+	}
+	if linkPath == "" {
+		return unavailableModel{errors.New(noModelMsg)}, PathNone
+	}
+	l, ok, err := account.Load(linkPath)
+	if err != nil {
+		return unavailableModel{fmt.Errorf("Labmill can't use the test relay: %w", err)}, PathNone
+	}
+	if !ok {
+		return unavailableModel{errors.New(noModelMsg)}, PathNone
+	}
+	tok := l.Token
+	bc, err := broker.New(broker.Config{BaseURL: strings.TrimRight(l.URL, "/") + "/api/model", UserAgent: "labmill/" + Version,
+		Token: func(context.Context) (string, error) { return tok, nil }})
+	if err != nil {
+		return unavailableModel{fmt.Errorf("Labmill can't use the test relay: %w", err)}, PathNone
+	}
+	return bc, PathRelay
 }
