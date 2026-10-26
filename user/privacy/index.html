@@ -1429,12 +1429,13 @@
 <li>Your Labmill program token, if you connect an account. It is kept in <code>account.json</code>, which only your user account can read.</li>
 </ul>
 <h2 id="what-goes-to-claude">What goes to Claude<a class="headerlink" href="#what-goes-to-claude" title="Permanent link">&para;</a></h2>
-<p>Labmill's assistant is Claude. Labmill sends to the Anthropic API (or to the broker, if you set one):</p>
+<p>Labmill's assistant is Claude. Labmill sends to the Anthropic API with your own key (or to the broker, if you set one, or to the Labmill test relay, see below):</p>
 <ul>
 <li>your messages;</li>
 <li>the results of Labmill's actions: file names, folder sizes, short previews, job status, the end of a job log, and the output of commands on the cluster.</li>
 </ul>
 <p>Labmill shows the assistant file names and metadata, and small samples only. It does not send whole data sets to Claude. Values that look like passwords, tokens or API keys are replaced by a placeholder before the assistant sees them.</p>
+<p>Without your own <code>ANTHROPIC_API_KEY</code>, a client connected to your Labmill account uses the Labmill test relay (for invited testers): the same requests go through app.labmill.org to Anthropic, with Labmill's key. app.labmill.org does not store or log them; it keeps only token counts per day, for the limits. With your own key, the requests go to Anthropic directly and nothing goes through Labmill. That is the private choice.</p>
 <h2 id="what-goes-to-your-labmill-account">What goes to your Labmill account<a class="headerlink" href="#what-goes-to-your-labmill-account" title="Permanent link">&para;</a></h2>
 <p>Nothing, unless you connect the client to your account at app.labmill.org. Then, for each job that ends after you connect, Labmill sends the cluster, the Slurm state, the times, the resources asked for, the partition and the software module names. It does not send job scripts, data files, program code, file, folder or job names, environment variables or log lines. See <a href="../account/">Connect the client to your Labmill account</a>.</p>
 <h2 id="what-goes-to-the-cluster">What goes to the cluster<a class="headerlink" href="#what-goes-to-the-cluster" title="Permanent link">&para;</a></h2>
