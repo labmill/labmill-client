@@ -252,6 +252,19 @@ type Status struct {
 	Node      string
 	StartTime time.Time // zero if unknown
 	EndTime   time.Time // zero if unknown
+	// Use of an ended single job from accounting; 0 when not reported.
+	ElapsedSec, CPUSec, MaxRSSBytes int64
+	GPUs                            int // allocated GPUs
+}
+
+// Facts are the scheduler facts of st to save with the job, for a status
+// that has an end time (ok false otherwise).
+func (st Status) Facts() (f store.Facts, ok bool) {
+	if st.EndTime.IsZero() {
+		return store.Facts{}, false
+	}
+	return store.Facts{RemoteID: st.RemoteID, ExitCode: st.ExitCode, Signal: st.Signal, Start: st.StartTime.UTC(), End: st.EndTime.UTC(),
+		ElapsedSec: st.ElapsedSec, CPUSec: st.CPUSec, MaxRSSBytes: st.MaxRSSBytes, GPUs: st.GPUs}, true
 }
 
 // StartEstimate is the scheduler's expected start of a job that is not

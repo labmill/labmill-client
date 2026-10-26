@@ -353,11 +353,14 @@ func (s *Slurm) Submit(ctx context.Context, script string, spec backend.JobSpec)
 // `squeue -h -j <id> -o "%T|%r|%N|%i"`. If squeue knows the job, its state maps
 // as PENDING/CONFIGURING → pending; RUNNING/COMPLETING → running; others via
 // the sacct mapping. If squeue prints nothing (job finished), it runs
-// `env TZ=UTC sacct -n -P -X -j <id> --format=State,ExitCode,Start,End,NodeList,JobID`
+// `env TZ=UTC sacct -n -P -X -j <id> --format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES`
 // (TZ=UTC makes sacct's zone-less times UTC whatever the cluster's zone) and maps
 // COMPLETED → completed; CANCELLED* → canceled; FAILED, TIMEOUT, OUT_OF_MEMORY,
 // NODE_FAIL, PREEMPTED, BOOT_FAIL, DEADLINE → failed (Reason = the Slurm
-// state); ExitCode is the part before ':'. Unknown job → error.
+// state); ExitCode is the part before ':'. Unknown job → error. A single job
+// that ended also gets its use: elapsed time and allocated GPUs from that row,
+// CPU time and the largest MaxRSS from `env TZ=UTC sacct -n -P -j <id> --format=JobID,TotalCPU,MaxRSS`
+// (a failed query leaves them 0).
 //
 // Job arrays: for an array ID without a task suffix, squeue and sacct return
 // one row per task (`123_4`) plus collapsed ranges of waiting tasks
@@ -416,7 +419,11 @@ func (s *Slurm) Status(ctx context.Context, remoteID string) (backend.Status, er
 		return aggregateWithID(remoteID, rows), nil
 	}
 	r := rows[0]
-	st := backend.Status{RemoteID: remoteID, State: r.State, Node: r.Node, StartTime: r.Start, EndTime: r.End, ExitCode: r.Exit, Signal: r.Sig}
+	st := backend.Status{RemoteID: remoteID, State: r.State, Node: r.Node, StartTime: r.Start, EndTime: r.End, ExitCode: r.Exit, Signal: r.Sig,
+		ElapsedSec: r.Elapsed, GPUs: r.GPUs}
+	if !r.End.IsZero() {
+		st.CPUSec, st.MaxRSSBytes = s.stepUse(ctx, remoteID)
+	}
 	switch {
 	case !r.Known:
 		st.State, st.Reason = store.StatePending, "unknown state "+r.Raw
@@ -435,7 +442,7 @@ var errNoRows = errors.New("sacct: no rows")
 // sacctRows runs sacct for remoteID and parses every row. It returns
 // errNoRows if there are none, and a command error on a non-zero exit.
 func (s *Slurm) sacctRows(ctx context.Context, remoteID string) ([]taskRow, error) {
-	res, err := s.Runner.Run(ctx, []string{"env", "TZ=UTC", "sacct", "-n", "-P", "-X", "-j", remoteID, "--format=State,ExitCode,Start,End,NodeList,JobID"}, nil)
+	res, err := s.Runner.Run(ctx, []string{"env", "TZ=UTC", "sacct", "-n", "-P", "-X", "-j", remoteID, "--format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES"}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("sacct: %w", err)
 	}
@@ -553,6 +560,9 @@ type taskRow struct {
 	Start  time.Time
 	End    time.Time
 	N      int // number of tasks the row stands for, at least 1
+	// sacct only: ElapsedRaw seconds and the GPUs in AllocTRES (0: none reported)
+	Elapsed int64
+	GPUs    int
 }
 
 // parseSqueueRow parses "%T|%r|%N|%i" (the last field is optional).
@@ -581,11 +591,11 @@ func parseSqueueRow(line string) taskRow {
 	return r
 }
 
-// parseSacctRow parses "State|ExitCode|Start|End|NodeList[|JobID]". ok is
+// parseSacctRow parses "State|ExitCode|Start|End|NodeList[|JobID[|ElapsedRaw|AllocTRES]]". ok is
 // false if the line has no state.
 func (s *Slurm) parseSacctRow(line string) (taskRow, bool) {
 	f := strings.Split(line, "|")
-	f = append(f, "", "", "", "", "", "")
+	f = append(f, "", "", "", "", "", "", "", "")
 	state := strings.Fields(f[0])
 	if len(state) == 0 {
 		return taskRow{}, false
@@ -597,7 +607,40 @@ func (s *Slurm) parseSacctRow(line string) (taskRow, bool) {
 	code, sig, _ := strings.Cut(strings.TrimSpace(f[1]), ":")
 	r.Sig, _ = strconv.Atoi(sig)
 	r.Exit, _ = strconv.Atoi(code)
+	r.Elapsed, _ = strconv.ParseInt(strings.TrimSpace(f[6]), 10, 64)
+	for _, t := range strings.Split(f[7], ",") {
+		if v, ok := strings.CutPrefix(strings.TrimSpace(t), "gres/gpu="); ok {
+			r.GPUs, _ = strconv.Atoi(v)
+		}
+	}
 	return r, true
+}
+
+// stepUse runs `env TZ=UTC sacct -n -P -j <id> --format=JobID,TotalCPU,MaxRSS` and returns
+// the job line's TotalCPU (the sum over its steps) in seconds and the largest
+// MaxRSS of its steps in bytes. Read only; 0 for anything not reported.
+func (s *Slurm) stepUse(ctx context.Context, remoteID string) (cpuSec, maxRSS int64) {
+	res, err := s.Runner.Run(ctx, []string{"env", "TZ=UTC", "sacct", "-n", "-P", "-j", remoteID, "--format=JobID,TotalCPU,MaxRSS"}, nil)
+	if err != nil || res.ExitCode != 0 {
+		return 0, 0
+	}
+	for _, l := range nonEmptyLines(res.Stdout) {
+		f := strings.Split(l, "|")
+		if len(f) != 3 {
+			continue
+		}
+		id := strings.TrimSpace(f[0])
+		switch {
+		case id == remoteID:
+			cpu, _, _ := strings.Cut(strings.TrimSpace(f[1]), ".") // drop the milliseconds
+			if d, err := parseTimeLimit(cpu); err == nil {
+				cpuSec = int64(d.Seconds())
+			}
+		case strings.HasPrefix(id, remoteID+"."):
+			maxRSS = max(maxRSS, parseSlurmMem(f[2]))
+		}
+	}
+	return cpuSec, maxRSS
 }
 
 // isArray reports whether remoteID, an ID without a task suffix, is a job

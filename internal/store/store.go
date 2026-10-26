@@ -12,6 +12,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -81,8 +82,25 @@ type Job struct {
 	// (checked); LocalDir alone is only the planned folder. A failed job
 	// that was downloaded stays failed, so State can't say it.
 	Downloaded bool
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	// Facts are the scheduler's facts of the run Facts.RemoteID, saved
+	// when the scheduler reported its end.
+	Facts     Facts
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// Facts are the scheduler's accounting facts of one ended run. They hold
+// no names, paths or commands. A zero number means not reported.
+type Facts struct {
+	RemoteID    string    `json:"remote_id"`
+	ExitCode    int       `json:"exit_code"`
+	Signal      int       `json:"signal,omitempty"`
+	Start       time.Time `json:"start,omitzero"`
+	End         time.Time `json:"end,omitzero"`
+	ElapsedSec  int64     `json:"elapsed_sec,omitempty"`
+	CPUSec      int64     `json:"cpu_sec,omitempty"`
+	MaxRSSBytes int64     `json:"max_rss_bytes,omitempty"`
+	GPUs        int       `json:"gpus,omitempty"`
 }
 
 // ManifestEntry is one staged file.
@@ -137,7 +155,7 @@ func DefaultPath() (string, error) {
 }
 
 // schemaVersion is the user_version this build writes.
-const schemaVersion = 4
+const schemaVersion = 5
 
 // migrations[i] upgrades a database from version i to i+1.
 var migrations = []string{
@@ -199,6 +217,8 @@ var migrations = []string{
 		last_error TEXT NOT NULL DEFAULT '',
 		PRIMARY KEY (job_id, remote_id)
 	);`,
+	// 5: the scheduler's facts of the ended run (Facts, as JSON; '' = none).
+	`ALTER TABLE jobs ADD COLUMN facts TEXT NOT NULL DEFAULT '';`,
 }
 
 // WAL mode needs shared memory and file locking, so the database must live on
@@ -376,9 +396,9 @@ func (s *Store) CreateJob(ctx context.Context, j Job) (int64, error) {
 	var id int64
 	err := s.withTx(ctx, func(tx *sql.Tx) error {
 		res, err := tx.ExecContext(ctx, `INSERT INTO jobs
-			(name, cluster, backend, remote_id, state, script, local_dir, remote_dir, message, downloaded, created_at, updated_at)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-			j.Name, j.Cluster, j.Backend, j.RemoteID, string(j.State), j.Script, j.LocalDir, j.RemoteDir, j.Message, j.Downloaded, now, now)
+			(name, cluster, backend, remote_id, state, script, local_dir, remote_dir, message, downloaded, facts, created_at, updated_at)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			j.Name, j.Cluster, j.Backend, j.RemoteID, string(j.State), j.Script, j.LocalDir, j.RemoteDir, j.Message, j.Downloaded, factsJSON(j.Facts), now, now)
 		if err != nil {
 			return err
 		}
@@ -393,17 +413,28 @@ func (s *Store) CreateJob(ctx context.Context, j Job) (int64, error) {
 	return id, nil
 }
 
-const jobCols = `id, name, cluster, backend, remote_id, state, script, local_dir, remote_dir, message, downloaded, created_at, updated_at`
+const jobCols = `id, name, cluster, backend, remote_id, state, script, local_dir, remote_dir, message, downloaded, facts, created_at, updated_at`
+
+func factsJSON(f Facts) string {
+	if f == (Facts{}) {
+		return ""
+	}
+	b, _ := json.Marshal(f)
+	return string(b)
+}
 
 type scanner interface{ Scan(...any) error }
 
 func scanJob(r scanner) (Job, error) {
 	var j Job
-	var st string
+	var st, facts string
 	var c, u int64
 	if err := r.Scan(&j.ID, &j.Name, &j.Cluster, &j.Backend, &j.RemoteID, &st, &j.Script,
-		&j.LocalDir, &j.RemoteDir, &j.Message, &j.Downloaded, &c, &u); err != nil {
+		&j.LocalDir, &j.RemoteDir, &j.Message, &j.Downloaded, &facts, &c, &u); err != nil {
 		return Job{}, err
+	}
+	if facts != "" {
+		_ = json.Unmarshal([]byte(facts), &j.Facts) // damaged facts read as none
 	}
 	j.State = JobState(st)
 	j.CreatedAt, j.UpdatedAt = fromTS(c), fromTS(u)
@@ -439,9 +470,9 @@ func (s *Store) UpdateJob(ctx context.Context, id int64, fn func(*Job) error) er
 			return fmt.Errorf("store: invalid job state %q", j.State)
 		}
 		_, err = tx.ExecContext(ctx, `UPDATE jobs SET name=?, cluster=?, backend=?, remote_id=?, state=?,
-			script=?, local_dir=?, remote_dir=?, message=?, downloaded=?, updated_at=? WHERE id=?`,
+			script=?, local_dir=?, remote_dir=?, message=?, downloaded=?, facts=?, updated_at=? WHERE id=?`,
 			j.Name, j.Cluster, j.Backend, j.RemoteID, string(j.State), j.Script, j.LocalDir,
-			j.RemoteDir, j.Message, j.Downloaded, ts(time.Now()), id)
+			j.RemoteDir, j.Message, j.Downloaded, factsJSON(j.Facts), ts(time.Now()), id)
 		if err != nil {
 			return fmt.Errorf("store: saving job %d: %w", id, err)
 		}
