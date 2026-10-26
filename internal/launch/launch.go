@@ -149,10 +149,12 @@ func maxTurns(getenv func(string) string) int {
 //     (site.SkillsFSAll(skills.FS): the generic skills plus the home site skill and the skills of the other institutions (M45.1),
 //     <config dir>/labmill/skills) with Preamble = app.SkillPreamble
 //     (warnings are logged to the status, never fatal);
-//   - the model (newModel): broker.New with site.BrokerURL and the
-//     LABMILL_BROKER_TOKEN token when a broker is configured, else the
-//     Anthropic Messages API with the user's ANTHROPIC_API_KEY (neither is
-//     reported by every chat turn, see below);
+//   - the model: broker.New with site.BrokerURL and the
+//     LABMILL_BROKER_TOKEN token when a broker is configured, else
+//     chooseModel: the Anthropic Messages API with the user's
+//     ANTHROPIC_API_KEY, else the Labmill test relay when an account is
+//     linked (none of them is reported by every chat turn, see below); the
+//     status line ends with "assistant: <path>";
 //   - app.Env with Backend = the per-runtime backendFor, RemoteHome via
 //     `printenv HOME` over the cluster's runner, Upload/Download =
 //     transfer.Upload/Download, SSHCommand = [os.Executable(), "ssh-exec",
@@ -163,7 +165,7 @@ func maxTurns(getenv func(string) string) int {
 //   - an agent.Agent with Tools = app.Tools + agent.SkillTools, Approver = ui,
 //     OnEvent = ui.Event (via stepTracker.observe), System = app.SystemPrompt, SystemExtra =
 //     Workspace.Prompt (the chosen folders, every turn);
-//   - Status like "bigcluster (Slurm) · othercluster (Slurm)";
+//   - Status like "bigcluster (Slurm) · othercluster (Slurm) · assistant: own key";
 //   - the background job monitor (monitor.go), which checks submitted jobs
 //     every 45 s without ever logging in (connCache.backendNoLogin) and
 //     reports finished ones through ui.JobNotice.
@@ -559,15 +561,13 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 			stopSync()
 		}
 	}()
+	modelPath := PathBroker
 	if st.BrokerURL == "" {
-		// No broker: the Anthropic Messages API with the user's own key.
-		if dm, err := newDirectModel(os.Getenv("ANTHROPIC_API_KEY"), os.Getenv); err != nil {
-			model = unavailableModel{errors.New("Labmill has no assistant yet: set ANTHROPIC_API_KEY to your own Anthropic API key, then restart labmill")}
-		} else {
-			model = dm
-		}
+		// No broker: the user's own key, else the Labmill test relay.
+		linkPath, _ := account.Path()
+		model, modelPath = chooseModel(os.Getenv("ANTHROPIC_API_KEY"), os.Getenv, linkPath)
 	} else if bc, err := newBrokerClient(st.BrokerURL, st.Domain, base.Version, notes.current); err != nil {
-		model = unavailableModel{fmt.Errorf("Labmill can't use its assistant address (%s): %w", st.BrokerURL, err)}
+		model, modelPath = unavailableModel{fmt.Errorf("Labmill can't use its assistant address (%s): %w", st.BrokerURL, err)}, PathNone
 	} else {
 		model = bc
 		// Fetch newer cluster know-how in the background, once a token is
@@ -664,7 +664,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 			warnSuffix += " (couldn't write labmill.log)"
 		}
 	}
-	status := statusLine(cfg) + warnSuffix
+	status := statusLine(cfg) + " · assistant: " + modelPath + warnSuffix
 	// Configs written before files_host existed: offer the site's transfer
 	// host once, at the first turn (a dialog needs the front end running).
 	var firstTurn func(ctx context.Context)
