@@ -1,11 +1,10 @@
 name: Docs build
 
 # Builds the docs strictly as a check. They are published at
-# https://client.labmill.org/ (not from here yet).
+# https://docs.labmill.org/ (built and served by the Labmill server, not from here).
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
