@@ -12,7 +12,7 @@ import (
 )
 
 // JobIn is one job report in the schema of the API's POST /api/jobs
-// (labmill-platform internal/api/jobs.go). It holds no job name, folder,
+// on app.labmill.org. It holds no job name, folder,
 // script, command, environment value, log line or file name: only the
 // scheduler's facts. Fields the client does not know are left out.
 type JobIn struct {
