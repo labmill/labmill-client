@@ -45,7 +45,7 @@ jobs:
           mkdir -p dist
           go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o "dist/labmill-${GOOS}-${GOARCH}${ext}" ./cmd/labmill
           cd dist && sha256sum labmill-* > "labmill-${GOOS}-${GOARCH}.sha256"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: labmill-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
@@ -70,7 +70,7 @@ jobs:
           mkdir -p dist
           cp bin/cross/labmill-gui.exe dist/labmill-gui-windows-amd64.exe
           cd dist && sha256sum labmill-gui-windows-amd64.exe > labmill-gui-windows-amd64.sha256
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: labmill-gui-windows-amd64
           path: dist/*
@@ -103,7 +103,7 @@ jobs:
           mkdir -p dist
           cp bin/labmill-gui dist/labmill-gui-linux-amd64
           cd dist && sha256sum labmill-gui-linux-amd64 > labmill-gui-linux-amd64.sha256
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: labmill-gui-linux-amd64
           path: dist/*
@@ -129,7 +129,7 @@ jobs:
           mkdir -p dist
           go build -tags desktop,production -ldflags "-X main.version=$VERSION" -o dist/labmill-gui-darwin-arm64 ./cmd/labmill-gui
           cd dist && shasum -a 256 labmill-gui-darwin-arm64 > labmill-gui-darwin-arm64.sha256
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: labmill-gui-darwin-arm64
           path: dist/*
