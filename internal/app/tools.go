@@ -1041,6 +1041,9 @@ func (t *toolset) jobStatus() agent.Tool {
 						return errJobMoved // resubmitted meanwhile: st is about the old ID
 					}
 					cur.State, cur.Message = state, st.Reason
+					if f, ok := st.Facts(); ok {
+						cur.Facts = f
+					}
 					return nil
 				})
 				if errors.Is(err, errJobMoved) {

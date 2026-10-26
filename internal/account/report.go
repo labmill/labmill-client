@@ -20,11 +20,13 @@ type JobIn struct {
 	HPCSystemID     string          `json:"hpc_system_id"`
 	Backend         string          `json:"backend"`
 	State           string          `json:"state"`
+	ExitCode        string          `json:"exit_code,omitempty"`
 	FailureCategory string          `json:"failure_category,omitempty"`
 	SubmittedAt     *time.Time      `json:"submitted_at,omitempty"`
 	StartedAt       *time.Time      `json:"started_at,omitempty"`
 	EndedAt         *time.Time      `json:"ended_at,omitempty"`
 	Req             json.RawMessage `json:"req,omitempty"`
+	Used            json.RawMessage `json:"used,omitempty"`
 	Partition       string          `json:"partition,omitempty"`
 	QueueWaitSec    *int64          `json:"queue_wait_sec,omitempty"`
 	Software        []Software      `json:"software,omitempty"`
@@ -76,7 +78,8 @@ func apiState(j store.Job) (state, category string) {
 }
 
 // BuildReport makes the report of job j from its events (the "spec" event
-// of its draft and the "state" events), without hpc_system_id. ok is false
+// of its draft and the "state" events) and the scheduler's facts of its last
+// run (exit code, start and end, use), without hpc_system_id. ok is false
 // when j has not ended or was never submitted.
 func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	if !Final(j.State) || j.RemoteID == "" {
@@ -110,6 +113,18 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 			}
 		}
 	}
+	// Facts of an earlier run (the job was resubmitted) are left out.
+	if f := j.Facts; f.RemoteID == j.RemoteID {
+		in.ExitCode = fmt.Sprintf("%d:%d", f.ExitCode, f.Signal)
+		in.Used = usedJSON(f)
+		// The scheduler's times win over the times this computer saw.
+		if !f.Start.IsZero() {
+			started = f.Start
+		}
+		if !f.End.IsZero() {
+			ended = f.End
+		}
+	}
 	at := func(t time.Time) *time.Time {
 		if t.IsZero() {
 			return nil
@@ -132,6 +147,33 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	return in, true
 }
 
+// usedJSON is what the job used, in the API's form
+// ({"elapsed": "07:42:10", "cpu_time": "50:01:02", "max_rss": "21.4G", "gpu": 1}).
+func usedJSON(f store.Facts) json.RawMessage {
+	r := map[string]any{}
+	if f.ElapsedSec > 0 {
+		r["elapsed"] = hms(f.ElapsedSec)
+	}
+	if f.CPUSec > 0 {
+		r["cpu_time"] = hms(f.CPUSec)
+	}
+	if f.MaxRSSBytes > 0 {
+		r["max_rss"] = fmt.Sprintf("%.1fG", float64(f.MaxRSSBytes)/(1<<30))
+	}
+	if f.GPUs > 0 {
+		r["gpu"] = f.GPUs
+	}
+	if len(r) == 0 {
+		return nil
+	}
+	b, _ := json.Marshal(r)
+	return b
+}
+
+func hms(sec int64) string {
+	return fmt.Sprintf("%02d:%02d:%02d", sec/3600, sec/60%60, sec%60)
+}
+
 // reqJSON is what the job asked for, in the API's form
 // ({"cpu": 8, "mem": "32G", "gpu": 1, "gpu_type": "a100", "time": "12:00:00", "nodes": 1}).
 func reqJSON(s backend.JobSpec) json.RawMessage {
@@ -149,8 +191,7 @@ func reqJSON(s backend.JobSpec) json.RawMessage {
 		}
 	}
 	if s.Time > 0 {
-		sec := int64(s.Time.Seconds())
-		r["time"] = fmt.Sprintf("%02d:%02d:%02d", sec/3600, sec/60%60, sec%60)
+		r["time"] = hms(int64(s.Time.Seconds()))
 	}
 	if s.Nodes > 0 {
 		r["nodes"] = s.Nodes

@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 func openTemp(t *testing.T) (*Store, string) {
@@ -317,7 +318,7 @@ func TestMigrateV1ToV2KeepsJobs(t *testing.T) {
 		t.Fatalf("jobs after upgrade = %+v, %v", jobs, err)
 	}
 	var v int
-	if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != schemaVersion || schemaVersion != 4 {
+	if err := s.db.QueryRow("PRAGMA user_version").Scan(&v); err != nil || v != schemaVersion || schemaVersion != 5 {
 		t.Errorf("user_version = %d, %v", v, err)
 	}
 	if jobs[0].Downloaded {
@@ -328,5 +329,17 @@ func TestMigrateV1ToV2KeepsJobs(t *testing.T) {
 	}
 	if j, err := s.Job(context.Background(), jobs[0].ID); err != nil || !j.Downloaded {
 		t.Errorf("Downloaded not kept: %+v %v", j, err)
+	}
+	if jobs[0].Facts != (Facts{}) {
+		t.Errorf("an upgraded job has facts: %+v", jobs[0].Facts)
+	}
+	f := Facts{RemoteID: "4242", ExitCode: 1, Signal: 9, Start: time.Unix(100, 0).UTC(), End: time.Unix(200, 0).UTC(),
+		ElapsedSec: 100, CPUSec: 80, MaxRSSBytes: 1 << 30, GPUs: 2}
+	if err := s.UpdateJob(context.Background(), jobs[0].ID, func(j *Job) error { j.Facts = f; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if j, err := s.Job(context.Background(), jobs[0].ID); err != nil || !j.Facts.Start.Equal(f.Start) || !j.Facts.End.Equal(f.End) ||
+		j.Facts.ExitCode != 1 || j.Facts.Signal != 9 || j.Facts.CPUSec != 80 || j.Facts.MaxRSSBytes != 1<<30 || j.Facts.GPUs != 2 || j.Facts.RemoteID != "4242" {
+		t.Errorf("Facts not kept: %+v %v", j.Facts, err)
 	}
 }

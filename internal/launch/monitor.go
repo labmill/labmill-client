@@ -320,6 +320,9 @@ func (m *jobMonitor) apply(ctx context.Context, j store.Job, st backend.Status) 
 			return errUnchanged
 		}
 		cur.State, cur.Message = st.State, st.Reason
+		if f, ok := st.Facts(); ok {
+			cur.Facts = f
+		}
 		return nil
 	})
 	if err != nil {

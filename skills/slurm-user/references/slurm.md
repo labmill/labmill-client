@@ -176,7 +176,8 @@ One status check, in this order:
 
 ```bash
 squeue -h -j <jobid> -o '%T|%r|%N|%i'          # still queued or running: state|reason|node|id
-env TZ=UTC sacct -n -P -X -j <jobid> --format=State,ExitCode,Start,End,NodeList,JobID   # finished
+env TZ=UTC sacct -n -P -X -j <jobid> --format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES   # finished
+env TZ=UTC sacct -n -P -j <jobid> --format=JobID,TotalCPU,MaxRSS   # finished: what it used
 ```
 
 - `squeue` prints a row while the job is queued or running (`PENDING`,
@@ -190,6 +191,11 @@ env TZ=UTC sacct -n -P -X -j <jobid> --format=State,ExitCode,Start,End,NodeList,
   Any other state with an End time is finished: count it as done and as
   failed ("K unknown (STATE)"), and look at the log. Without an End time,
   treat it as waiting.
+- What a finished job used: `ElapsedRaw` is the run time in seconds and
+  `gres/gpu=N` in `AllocTRES` the GPUs it had. In the second query the line
+  `<jobid>` has the total CPU time of all steps (`[D-]HH:MM:SS` or
+  `MM:SS.mmm`), and the largest `MaxRSS` of the `<jobid>.<step>` lines is
+  the peak memory of one task.
 - `TZ=UTC` makes sacct's times (which carry no zone) UTC, whatever zone the
   cluster runs in.
 - **Arrays:** `squeue`/`sacct` return one row per task (`<id>_<n>`) plus
