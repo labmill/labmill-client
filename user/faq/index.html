@@ -1218,10 +1218,12 @@
 Slurm clusters only.</p>
 <p><strong>Do I need an account with Labmill?</strong>
 No. You use your own cluster account and your own Anthropic API key. A Labmill account at app.labmill.org is optional.</p>
+<p><strong>Do I need my own Anthropic API key?</strong>
+Not if you are an invited tester. Without a key, a client connected to your Labmill account (<code>labmill login</code>) uses the Labmill test relay: app.labmill.org sends your requests to Claude with Labmill's key, within a daily limit, and does not store them. This is for testing only. Your own key stays the private choice: Labmill then talks to Anthropic directly and nothing goes through Labmill. When both are there, Labmill uses your own key. See <a href="../first-run/">Starting Labmill and signing in</a>.</p>
 <p><strong>Is the client linked to my Labmill account?</strong>
 Only if you connect it. Make a program token at app.labmill.org and run <code>labmill login</code>, or paste it in <strong>Settings &gt; Labmill account</strong>. Then Labmill sends a record of each job that ends: state, times, resources, partition and software modules. It never sends job scripts, data files, program code, names or log lines. See <a href="../account/">Connect the client to your Labmill account</a>.</p>
 <p><strong>Does Labmill cost money?</strong>
-The client is free. It will be open source under the MIT license when it is published. Anthropic bills the API use on your own key. A Labmill account on labmill.org is optional: it costs 6 USD a month, or 35 USD a month for a fully private account (redacted job facts do not help other researchers), plus tax where it applies. See <a href="https://labmill.org/pricing/">labmill.org/pricing</a>.</p>
+The client is free. It will be open source under the MIT license when it is published. Anthropic bills the API use on your own key (the test relay costs testers nothing). A Labmill account on labmill.org is optional: it costs 6 USD a month, or 35 USD a month for a fully private account (redacted job facts do not help other researchers), plus tax where it applies. See <a href="https://labmill.org/pricing/">labmill.org/pricing</a>.</p>
 <p><strong>Does it send my data to Claude?</strong>
 No. Claude sees file names, sizes, short previews and small samples. Files go to the cluster only after you approve. See <a href="../privacy/">Privacy</a>.</p>
 <p><strong>Can I check the job script before it runs?</strong>
