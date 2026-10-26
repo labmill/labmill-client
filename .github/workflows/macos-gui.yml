@@ -36,11 +36,12 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Build arm64 and amd64
+        # The Wails CLI adds -framework UniformTypeIdentifiers on macOS; a plain go build must add it itself.
         run: |
           mkdir -p dist
           for a in arm64 amd64; do
             arch=$a; [ $a = amd64 ] && arch=x86_64
-            CGO_ENABLED=1 GOARCH=$a CC="clang -arch $arch" CGO_LDFLAGS="-arch $arch" \
+            CGO_ENABLED=1 GOARCH=$a CC="clang -arch $arch" CGO_LDFLAGS="-framework UniformTypeIdentifiers" \
               go build -tags desktop,production -ldflags "-X main.version=$VERSION" -o dist/labmill-gui-darwin-$a ./cmd/labmill-gui
           done
           file dist/*
