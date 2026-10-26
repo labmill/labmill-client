@@ -1,0 +1,1732 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/user/first-run/">
+      
+      
+      
+        <link rel="prev" href="../install/">
+      
+      
+        <link rel="next" href="../first-job/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Starting Labmill and signing in - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Starting Labmill and signing in
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#before-you-start-your-anthropic-api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Before you start: your Anthropic API key
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-labmill" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Start Labmill
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-run-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first-run setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coming-from-yeetl" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Coming from yeetl?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-login" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first login
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The first login">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if-no-push-arrives" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If no push arrives
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-the-password-is-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If the password is rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-your-cluster-accepts-only-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If your cluster accepts only SSH keys
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-your-password-is-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If your password is rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-connection-to-a-cluster-do-you-trust-this-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first connection to a cluster: "Do you trust this server?"
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        S3
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-your-aws-profile-in-slurm-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Use your AWS profile in Slurm jobs
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dev/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#before-you-start-your-anthropic-api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Before you start: your Anthropic API key
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-labmill" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Start Labmill
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-run-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first-run setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coming-from-yeetl" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Coming from yeetl?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-login" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first login
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The first login">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#if-no-push-arrives" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If no push arrives
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-the-password-is-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If the password is rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-your-cluster-accepts-only-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If your cluster accepts only SSH keys
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-your-password-is-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        If your password is rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-first-connection-to-a-cluster-do-you-trust-this-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The first connection to a cluster: "Do you trust this server?"
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        S3
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-your-aws-profile-in-slurm-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Use your AWS profile in Slurm jobs
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="starting-labmill-and-signing-in">Starting Labmill and signing in<a class="headerlink" href="#starting-labmill-and-signing-in" title="Permanent link">&para;</a></h1>
+<h2 id="before-you-start-your-anthropic-api-key">Before you start: your Anthropic API key<a class="headerlink" href="#before-you-start-your-anthropic-api-key" title="Permanent link">&para;</a></h2>
+<p>Labmill's assistant is Claude. Labmill talks to Claude with your own Anthropic API key. Set it in your environment before you start Labmill:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>export ANTHROPIC_API_KEY=sk-ant-...
+</span></code></pre></div>
+<p>On Windows, set it as a user environment variable (Settings, search for "environment variables"). Labmill reads the key from the environment only. It never writes the key to disk. Without a key, Labmill starts but tells you that it has no assistant yet.</p>
+<p>Planning turns use a larger Claude model and the other turns a faster one. To use one model for all turns, set <code>LABMILL_MODEL</code> (for example <code>LABMILL_MODEL=claude-sonnet-5-5</code>).</p>
+<p>If your institution runs a Labmill relay service (a "broker"), set <code>LABMILL_BROKER_URL</code> to its address and <code>LABMILL_BROKER_TOKEN</code> to the token it gave you. Labmill then sends model calls there instead of to Anthropic.</p>
+<h2 id="start-labmill">Start Labmill<a class="headerlink" href="#start-labmill" title="Permanent link">&para;</a></h2>
+<p>Open a terminal window, type <code>labmill</code> and press Enter. (If your IT team installed Labmill for you, they will tell you if it starts differently.)</p>
+<p>To leave Labmill, press <strong>Ctrl+D</strong>. If a job is being submitted at that moment, Labmill waits a few seconds so the job is recorded properly.</p>
+<h2 id="the-first-run-setup">The first-run setup<a class="headerlink" href="#the-first-run-setup" title="Permanent link">&para;</a></h2>
+<p>The very first time, Labmill shows a short welcome form:</p>
+<ol>
+<li><strong>Your home institution.</strong> Pick where your cluster account is from the list. You always choose one. Your data mostly lives on your home institution's systems, so Labmill sends work there first. When your institution has a site profile, Labmill knows its login and file transfer computers and how its two-factor sign-in works, and its assistant knows the local details (cluster names, storage folders, software notes). If your institution isn't in the list, choose <strong>My institution isn't listed</strong>: Labmill then asks for the cluster login computer (the name you would type after <code>ssh</code>, for example <code>login.example.edu</code>). This tells Labmill which institution is your home.</li>
+<li><strong>Your account name.</strong> Type the user name you use to sign in to the cluster (your institution's username). Use lowercase letters, digits, dots, dashes and underscores.</li>
+<li><strong>Save these settings?</strong> Choose <strong>Yes</strong>. Labmill saves the cluster addresses and your user name in the standard SSH settings format, in a separate file (<code>~/.ssh/config.d/labmill</code>), and adds one line at the top of your <code>~/.ssh/config</code> so that file is used. Before changing your own file it makes a backup copy next to it. If you already had a name for the same cluster, Labmill reuses your name and doesn't write a second one. Labmill saves two computers for each Slurm cluster: the login computer and the file transfer computer. Uploads and downloads go through the transfer computer, which you sign in to the same way. The upload and download approval questions name the computer the files travel through. In <code>clusters.yaml</code> the transfer computer is the <code>files_host</code> line. Keep it: if you remove it, Labmill falls back to the login computer, which may not allow file transfers.</li>
+</ol>
+<p>You only do this once. Your cluster list is kept in <code>~/.config/labmill/clusters.yaml</code>, and the institution you chose is its <code>site:</code> line (for example <code>site: example.edu</code>). If <code>clusters.yaml</code> has no <code>site:</code> line (for example settings saved by an older Labmill) or names an institution this Labmill doesn't know, Labmill shows the institution form again with a short explanation and adds only the <code>site:</code> line; your clusters stay as they are. To switch institution later, change the <code>site:</code> line (and the cluster entries), or move <code>clusters.yaml</code> aside and start Labmill again to get the welcome form.</p>
+<p>Labmill reads job times in UTC, so you normally don't need to set anything. Only if a Slurm cluster's job start and end times still look wrong (its Slurm ignores the time zone request), add a <code>timezone:</code> line to its entry, for example <code>timezone: Europe/Berlin</code>.</p>
+<h2 id="coming-from-yeetl">Coming from yeetl?<a class="headerlink" href="#coming-from-yeetl" title="Permanent link">&para;</a></h2>
+<p>If Labmill has no <code>~/.config/labmill/clusters.yaml</code> yet, it looks for a yeetl setup on its first start. It copies <code>~/.config/yeetl/clusters.yaml</code> (only if the file parses) and <code>~/.ssh/config.d/yeetl</code>. It copies the files and does not move them, so yeetl keeps working. The variables <code>YEETL_MODEL</code>, <code>YEETL_BROKER_URL</code> and <code>YEETL_BROKER_TOKEN</code> are read when the matching <code>LABMILL_</code> variable is empty.</p>
+<h2 id="the-first-login">The first login<a class="headerlink" href="#the-first-login" title="Permanent link">&para;</a></h2>
+<p>Labmill signs in to the cluster the first time it needs it, for example when you ask about queues or when you approve an upload. A small box pops up in the window.</p>
+<ol>
+<li><strong>Password.</strong> Type your cluster password. The characters are hidden and the password is not saved anywhere.</li>
+<li><strong>Two-factor sign-in.</strong> If your institution uses a push to your phone, Labmill chooses that option for you. Look at your phone and <strong>approve the push notification</strong>. Labmill waits up to about a minute.</li>
+<li>That's it. Labmill keeps the login open while you work, so you aren't asked again for every upload or job. A small background helper holds the login and closes it by itself about 10 minutes after you stop using Labmill.</li>
+</ol>
+<h3 id="if-no-push-arrives">If no push arrives<a class="headerlink" href="#if-no-push-arrives" title="Permanent link">&para;</a></h3>
+<p>After the wait, Labmill tells you that two-factor sign-in did not complete and shows how to set it up. The usual reasons are that you are not enrolled in two-factor sign-in yet (the message shows your institution's setup page, or ask your help desk), your phone is offline, or the push was denied or expired. Fix that and just ask Labmill to try again.</p>
+<h3 id="if-the-password-is-rejected">If the password is rejected<a class="headerlink" href="#if-the-password-is-rejected" title="Permanent link">&para;</a></h3>
+<p>Labmill tries your password once and stops. It says that the sign-in was denied, repeats your institution's help when there is any, and reminds you to check your password before trying again: many institutions lock the account after repeated failed sign-ins. Labmill will not start another sign-in by itself in that conversation turn. Check or reset your password, then tell Labmill to try again.</p>
+<h3 id="if-your-cluster-accepts-only-ssh-keys">If your cluster accepts only SSH keys<a class="headerlink" href="#if-your-cluster-accepts-only-ssh-keys" title="Permanent link">&para;</a></h3>
+<p>Some clusters don't accept passwords at all, only SSH keys. Labmill knows which ones from your institution's profile, and instead of the password box it guides you through the one-time key setup:</p>
+<ol>
+<li><strong>Your existing keys.</strong> Labmill first looks for a key it can use: the default key files in your <code>.ssh</code> folder (<code>id_ed25519</code>, <code>id_ecdsa</code>, <code>id_rsa</code>), a key your SSH agent holds, or one named in your SSH settings. If a key is protected by a passphrase, Labmill asks for it (the characters are hidden and the passphrase is not saved anywhere). If the cluster already knows the key, you are signed in and nothing else happens.</li>
+<li><strong>Reusing a key you already have.</strong> Labmill asks the cluster which of your existing keys it already accepts. It sends only the <strong>public</strong> keys for this and never signs in again just to ask. It checks the keys on this computer and, if you are already signed in to your home institution's cluster, the keys stored in the <code>.ssh</code> folder there. If an accepted key sits on that cluster and not on this computer, Labmill offers to <strong>copy it here</strong>. The box shows the key file, where it comes from and where it goes, and warns that this puts a copy of a private key on your computer. The choice is <strong>No</strong> unless you pick <strong>Yes</strong>. The copy goes into a new file that only you can read (an existing file is never overwritten), and the key's contents are never shown to the assistant or written to the chat. Labmill also tells you whether the key has a passphrase, which it then asks for at sign-in. If the path to the cluster goes through another host that needs a password, Labmill skips this check and says so.</li>
+<li><strong>Creating a key.</strong> If no existing key is accepted, or you decline the copy, Labmill asks whether to create a new one. The private key stays on this computer in your <code>.ssh</code> folder and Labmill never overwrites an existing key (a new key gets its own name if <code>id_ed25519</code> is taken). You may protect it with a passphrase, which Labmill then asks for at each sign-in.</li>
+<li><strong>Registering the public key.</strong> Labmill shows the <strong>public</strong> key with a <strong>Copy</strong> button (<strong>Ctrl+Y</strong> in the terminal app) and your institution's instructions for where to paste it, usually a page on the cluster's website. Do that, then choose <strong>I've added it, try again</strong>. The public key is meant to be shared; the private key never leaves your computer.</li>
+<li><strong>Signing in.</strong> Labmill signs in with the key and remembers it in the SSH settings it keeps for you (the same file the terminal's <code>ssh</code> reads), so <code>ssh</code> and <code>sftp</code> work with it too.</li>
+</ol>
+<p>If the cluster does not accept the key yet, Labmill asks you again to finish the upload; some registries take a few minutes. Choose <strong>Cancel</strong> to stop; nothing is lost, and the key stays in your <code>.ssh</code> folder for the next try. On Windows the new key files get the permissions that your user profile folder gives them, which is what the built-in OpenSSH expects.</p>
+<p><strong>If the cluster briefly refuses connections.</strong> While Labmill checks which of your existing keys the cluster accepts (step 2), the cluster may shut the door for a short time. Clusters often shut the door for a short time after several sign-in tries in a row. Labmill guards against this by asking about a few keys at a time and pausing between tries. If the cluster still refuses, Labmill says so, waits a minute and checks the remaining keys once more. If it is still refused after that, Labmill stops with a message like "is still refusing connections; wait a few minutes and try again". It does not ask you to create a new key in that case, because the problem is the waiting time, not your keys. Wait a few minutes and start again.</p>
+<h3 id="if-your-password-is-rejected">If your password is rejected<a class="headerlink" href="#if-your-password-is-rejected" title="Permanent link">&para;</a></h3>
+<p>Labmill tells you to check the user name and password. It tries your password once per login, so repeated mistakes don't lock your account.</p>
+<h2 id="the-first-connection-to-a-cluster-do-you-trust-this-server">The first connection to a cluster: "Do you trust this server?"<a class="headerlink" href="#the-first-connection-to-a-cluster-do-you-trust-this-server" title="Permanent link">&para;</a></h2>
+<p>The first time Labmill connects to a cluster computer, it shows a question like this: <em>"This is the first time you connect to login.example.edu, so Labmill cannot yet check that it is the real server. Its identity fingerprint is SHA256:... Continue and remember this server?"</em></p>
+<p>This is the same check your terminal's <code>ssh</code> does. Every server has a unique fingerprint. By saying <strong>Yes</strong>, you tell Labmill "this is the right server, remember it". From then on Labmill checks automatically. If your HPC center publishes the fingerprint, you can compare it. Otherwise it is normally safe to continue the first time, from a trusted network.</p>
+<p>The default answer is <strong>No</strong>. If, later, the server's identity changes, Labmill refuses to connect and tells you not to continue, because it can mean someone is intercepting the connection. Contact your HPC support in that case.</p>
+<p>Labmill saves the remembered servers in your normal <code>~/.ssh/known_hosts</code> file.</p>
+<h2 id="s3">S3<a class="headerlink" href="#s3" title="Permanent link">&para;</a></h2>
+<p>A cluster entry can name an S3 bucket instead of sending files over SFTP. This suits large data sets. Set <code>transfer: s3</code> and add an <code>s3</code> block:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bigcluster</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">ssh_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bigcluster-login</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">transfer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">s3</span><span class="p">:</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">bucket</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-bucket</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">prefix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Labmill</span><span class="w">        </span><span class="c1"># optional: everything Labmill writes goes below this</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">us-east-1</span><span class="w">    </span><span class="c1"># optional: default is the region of your AWS profile</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">profile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myprofile</span><span class="w">   </span><span class="c1"># optional: name of your AWS profile</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="c1"># endpoint: https://s3.example.edu   # optional: S3-compatible storage</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="c1"># sse: aws:kms                       # optional: for buckets that require KMS encryption</span>
+</span></code></pre></div>
+<p>If your bucket requires KMS encryption, add <code>sse: aws:kms</code>; to use a specific key, also add <code>kms_key_id</code> (a key ID, ARN or alias). <code>sse: AES256</code> asks for S3-managed encryption.</p>
+<p>Your S3 credentials come from your AWS profile (<code>aws configure</code>, or <code>aws sso login</code> for single sign-on). They never go in this file, and Labmill refuses a file that has them. Labmill asks you to approve the file list, the full <code>s3://bucket/prefix/folder</code> destination and the AWS profile before anything is sent. It only writes below that folder, never creates buckets, and checks each uploaded object (size and checksum) against your approved list. Results are downloaded the same way, and never replace files you already have.</p>
+<p>Labmill does not set up the bucket or give your jobs access to it. Your job must be able to read the bucket itself, for example with credentials on the cluster (see below). Ask your cluster support if you're not sure.</p>
+<h3 id="use-your-aws-profile-in-slurm-jobs">Use your AWS profile in Slurm jobs<a class="headerlink" href="#use-your-aws-profile-in-slurm-jobs" title="Permanent link">&para;</a></h3>
+<p>You can ask Labmill to copy one AWS profile from your computer to the login node of a Slurm cluster, so your jobs can read and write S3. Labmill stores it as a separate section named <code>[labmill-&lt;name&gt;]</code> in <code>~/.aws/credentials</code> there and leaves your other sections alone. This always asks first, also when <strong>Approve everything automatically</strong> is on. If the profile uses single sign-on (SSO), Labmill copies temporary keys that expire. Claude never sees the key values. If you have no AWS profile on your computer, run <code>aws configure</code> first. Your institution can turn this off.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../install/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Install">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Install
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../first-job/" class="md-footer__link md-footer__link--next" aria-label="Next: Your first job">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Your first job
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

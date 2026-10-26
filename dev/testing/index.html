@@ -1,0 +1,1698 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/dev/testing/">
+      
+      
+      
+        <link rel="prev" href="../voice/">
+      
+      
+        <link rel="next" href="../security/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Testing - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Testing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Running tests
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-tests-are-organized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How tests are organized
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-test-server-sshtest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH test server: <code>sshtest</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-end-to-end-harness-internale2e" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The end-to-end harness (<code>internal/e2e</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-some-tests-are-excluded-from-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why some tests are excluded from <code>-race</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Live smoke test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-s3-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Live S3 check
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuzzing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fuzzing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Other conventions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-targets-and-test-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Build targets and test setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-self-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        GUI self-tests
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#running-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Running tests
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-tests-are-organized" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How tests are organized
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-test-server-sshtest" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH test server: <code>sshtest</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-end-to-end-harness-internale2e" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The end-to-end harness (<code>internal/e2e</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-some-tests-are-excluded-from-race" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why some tests are excluded from <code>-race</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Live smoke test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#live-s3-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Live S3 check
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuzzing" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Fuzzing
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Other conventions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-targets-and-test-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Build targets and test setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-self-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        GUI self-tests
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h1>
+<p>Every package is tested without network access, real clusters or real credentials. Interfaces at the package boundaries (<code>agent.Model</code>, <code>agent.Approver</code>, the model client, the SSH directory, the store path) let tests substitute in-process fakes.</p>
+<h2 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make check                        # gofmt, go vet, go test ./..., cross-compile for Windows and macOS
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>go test ./...                     # all tests
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>go test ./internal/skill          # one package
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>go test ./internal/skill -run TestLoad     # tests whose name matches the regex
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>go test -race ./...               # with the race detector
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>go test -count=1 ./internal/store # bypass the test cache
+</span></code></pre></div>
+<p><code>make check</code> is the gate for every commit. Run <code>go test -race</code> for any change that touches goroutines or the store, since the store is meant to be used by several processes at once.</p>
+<h2 id="how-tests-are-organized">How tests are organized<a class="headerlink" href="#how-tests-are-organized" title="Permanent link">&para;</a></h2>
+<p>Tests sit next to the code in <code>*_test.go</code> files. Files named <code>review_test.go</code> hold regression tests added after code review.</p>
+<ul>
+<li><strong>No network.</strong> The broker tests start an <code>httptest</code> server on loopback as a fake broker and point <code>broker.Config.BaseURL</code> at it (plain <code>http</code> is allowed only for loopback). They also set <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_AUTH_TOKEN</code> and <code>ANTHROPIC_BASE_URL</code> with <code>t.Setenv</code> to check that the client ignores them.</li>
+<li><strong>Scripted model.</strong> The agent tests use a <code>scriptedModel</code> that implements <code>agent.Model</code> and returns prepared replies in order, with helpers to build text and tool-use messages. A <code>fakeApprover</code> records proposals and returns canned decisions. Together they cover declines, edited proposals, aborts, truncation and <code>MaxTurns</code> without calling any model.</li>
+<li><strong>Temp directories instead of the real home.</strong> <code>config</code> and <code>store</code> tests write under <code>t.TempDir()</code> and set <code>XDG_CONFIG_HOME</code> or <code>XDG_STATE_HOME</code> with <code>t.Setenv</code>. The <code>sshconfig</code> functions take a <code>sshconfig.Paths{SSHDir: ...}</code> value, so tests point <code>SSHDir</code> at a temporary directory and never touch <code>~/.ssh</code>. Skill override tests build override directories (including escaping symlinks) in a temp directory.</li>
+<li><strong>Two-handle store tests.</strong> Because several Labmill processes share one database, the store tests open the same file twice with <code>store.Open</code> and use both handles, for example to tail events from one handle while the other writes, and to run concurrent <code>UpdateJob</code> calls from two handles and check that no update is lost.</li>
+<li><strong>Embedded skills.</strong> The skill tests load from an in-memory <code>fs.FS</code> for the loader rules and from <code>skills.FS</code> to check that the vendored skills are valid.</li>
+</ul>
+<h2 id="ssh-test-server-sshtest">SSH test server: <code>sshtest</code><a class="headerlink" href="#ssh-test-server-sshtest" title="Permanent link">&para;</a></h2>
+<p><code>internal/sshx/sshtest</code> is an in-process SSH server for tests. It mimics a typical campus login flow: keyboard-interactive password, then a Duo-style menu where <code>1</code> sends a push. The <code>Duo</code> modes are: no 2FA, push approved after a delay (or a passcode), push never approved, auto-push without a menu (approved or never), not enrolled, and push denied. It also provides:</p>
+<ul>
+<li>scripted exec commands (<code>Handler</code> functions standing in for <code>sinfo</code>, <code>sbatch</code>, <code>squeue</code>, ...), which receive the arguments verbatim and return an exit status;</li>
+<li>the sftp subsystem (<code>github.com/pkg/sftp</code>), backed by a real directory;</li>
+<li>direct-tcpip forwarding, for ProxyJump tests;</li>
+<li>a known-hosts line, so tests verify host keys without touching the developer's <code>~/.ssh</code>.</li>
+</ul>
+<p>Tests point <code>sshconfig.Paths</code> at a temporary <code>SSHDir</code>, so they stay offline and never use real keys. The helper, the Slurm runner, <code>ssh-exec</code> and the transfers are all tested against this server.</p>
+<h2 id="the-end-to-end-harness-internale2e">The end-to-end harness (<code>internal/e2e</code>)<a class="headerlink" href="#the-end-to-end-harness-internale2e" title="Permanent link">&para;</a></h2>
+<p><code>internal/e2e</code> holds test code only. A scripted model drives the real agent loop through the real <code>app</code> tools, the Slurm backend over the SSH helper, rclone uploads and downloads through <code>ssh-exec</code>, and the SQLite store, against the in-process SSH server acting as the cluster. The Slurm test walks the full flow: find, stage, upload (approval), draft, submit (approval), status, fetch (approval). It checks the uploaded bytes on the fake cluster, that the approved script is what reached <code>sbatch</code>, the fetched results and the final job state.</p>
+<p>Because rclone runs <code>labmill ssh-exec</code> as a child process, the e2e <code>TestMain</code> re-executes the test binary as <code>ssh-exec</code> when <code>LABMILL_E2E_SSHEXEC=1</code> is set. The tests skip under <code>-short</code>, since they spawn processes.</p>
+<h2 id="why-some-tests-are-excluded-from-race">Why some tests are excluded from <code>-race</code><a class="headerlink" href="#why-some-tests-are-excluded-from-race" title="Permanent link">&para;</a></h2>
+<p>The e2e tests carry <code>//go:build !race</code>. rclone v1.75.1's external-ssh connection pooling has an internal data race (<code>sshSessionExternal.exited</code> in <code>backend/sftp/ssh_external.go</code> reads <code>cmd.ProcessState</code> while <code>exec.Cmd.Wait</code> writes it), which fires during real transfers. It is not in Labmill's code, so the tests are skipped under the race detector instead of failing it. Run them with plain <code>go test ./internal/e2e/</code>. The transfer tests work around the same race. Everything else is race-tested: <code>go test -race ./...</code> still covers the store, the helper, the agent and the TUI.</p>
+<h2 id="live-smoke-test">Live smoke test<a class="headerlink" href="#live-smoke-test" title="Permanent link">&para;</a></h2>
+<p><code>internal/backend/slurm/live_test.go</code> (<code>TestLiveReadOnly</code>) parses real <code>sinfo</code> and <code>squeue</code> output from a real Slurm cluster. It is skipped unless <code>LABMILL_LIVE=1</code>. It needs an already-authenticated OpenSSH ControlMaster that you opened yourself (set <code>LABMILL_LIVE_ALIAS</code> to its SSH alias; there is no default and the test skips when it is unset; check with <code>ssh -O check &lt;alias&gt;</code>), and it only runs read-only commands.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>LABMILL_LIVE=1 LABMILL_LIVE_ALIAS=&lt;alias&gt; go test -run TestLiveReadOnly ./internal/backend/slurm/
+</span></code></pre></div>
+<p>The Slurm live tests that submit (<code>LABMILL_LIVE_SUBMIT=1</code>) send only short CPU jobs named <code>labmill-live-*</code> and cancel only their own jobs. <code>internal/launch/live_guard_test.go</code> holds the guard approver used by the live runs; it approves only steps that stay inside the test's own folder.</p>
+<h2 id="live-s3-check">Live S3 check<a class="headerlink" href="#live-s3-check" title="Permanent link">&para;</a></h2>
+<p><code>TestLiveS3</code> (<code>internal/transfer/live_s3_test.go</code>) runs Labmill's real <code>UploadS3</code>/<code>DownloadS3</code> against real S3. It never creates or deletes buckets or objects (re-runs overwrite). Create the buckets yourself first (private, public access blocked; one with default SSE-KMS using the <code>aws/s3</code> key), then:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>LABMILL_LIVE=1 LABMILL_LIVE_S3=1 LABMILL_LIVE_S3_BUCKET=&lt;plain bucket&gt; \
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  LABMILL_LIVE_S3_KMS_BUCKET=&lt;kms bucket&gt; [LABMILL_LIVE_S3_REGION=us-west-2] [LABMILL_LIVE_S3_PROFILE=&lt;profile&gt;] \
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  go test -run TestLiveS3 -v ./internal/transfer/
+</span></code></pre></div>
+<p>Subtests: <code>plain</code> (small files, an empty file, a 210 MiB random file uploaded multipart in 42 parts, download, byte compare, re-upload skips); <code>kms-default-encryption</code> (the same on a bucket whose default encryption is SSE-KMS); <code>kms-explicit-sse</code> (<code>SSE: "aws:kms"</code>); <code>wrong-region</code> (region set to us-east-1 for a us-west-2 bucket).</p>
+<p>Findings from the first runs:</p>
+<ul>
+<li><strong>Bug found and fixed:</strong> on a bucket with default SSE-KMS the ETag is a 32-hex non-MD5, and rclone (not told about the encryption) failed the upload with <code>md5 hashes differ</code>; multipart would fail the same way. <code>UploadS3</code>/<code>DownloadS3</code> now detect that error and repeat once with rclone's checksum comparison and multipart-ETag check off (S3's Content-MD5 check on every request and part, and Labmill's size check, stay). <code>DownloadS3</code> repeats only after a HeadObject shows the failing object is KMS (or SSE-C) encrypted, and then sets <code>server_side_encryption</code> on the source so rclone checks the md5chksum metadata where present; it never ignores checksums, and a mismatch on any other object is an error. Covered offline by <code>TestS3NonMD5ETag</code>, <code>TestS3NonMD5ETagCorruptBodyFails</code> (a body damaged after Content-MD5 was set is still rejected) and <code>TestS3DownloadMismatchWithoutKMSFails</code> (fake S3 with bogus ETags).</li>
+<li>rclone may remove its own failed upload under the prefix; the test never deletes anything itself.</li>
+<li>Wrong region: rclone follows S3's redirect, no error, so there is nothing to explain.</li>
+<li>A named non-default profile (<code>LABMILL_LIVE_S3_PROFILE</code>) works. SSO profiles: not tested (no SSO profile in <code>~/.aws/config</code>).</li>
+</ul>
+<h2 id="fuzzing">Fuzzing<a class="headerlink" href="#fuzzing" title="Permanent link">&para;</a></h2>
+<p><code>FuzzQuoteSplit</code> in <code>internal/backend/review_m7_test.go</code> checks that <code>backend.Quote</code> and <code>backend.SplitWords</code> round-trip for arbitrary strings. As an ordinary test it runs the seed corpus on every <code>go test</code>. To fuzz for real:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>go test ./internal/backend -run '^$' -fuzz FuzzQuoteSplit -fuzztime 30s
+</span></code></pre></div>
+<h2 id="other-conventions">Other conventions<a class="headerlink" href="#other-conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>TUI tests</strong> use Bubble Tea's <code>teatest</code> helpers and an injectable clock (<code>model.now</code>), so the half-second key grace after a modal opens can be tested without sleeping.</li>
+<li><strong>Cross-platform code.</strong> Privacy rules, the helper's lock and spawn code sit behind build tags. <code>make check</code> only cross-compiles them for Windows and macOS; some checks need real hardware.</li>
+</ul>
+<h2 id="build-targets-and-test-setup">Build targets and test setup<a class="headerlink" href="#build-targets-and-test-setup" title="Permanent link">&para;</a></h2>
+<p>Minimum <strong>Go 1.26</strong> (<code>go.mod</code>: <code>go 1.26.0</code>, <code>toolchain go1.26.8</code>), which Charm v2 needs. The Makefile exports <code>GOTOOLCHAIN=auto</code>.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make check                     # the gate: gofmt check, go vet, go test ./..., cross build+vet for windows/amd64 and darwin/arm64
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>make build                     # bin/labmill (TUI)
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>go test ./internal/skill -run TestLoad      # one package / one test
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>go test -race ./...            # needed when touching goroutines, the store or the helper
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>go test ./internal/e2e/        # e2e tests are //go:build !race (rclone's own data race) and skip under -short
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>make docs                      # zensical build --strict (zensical.toml, docs/ -&gt; site/; uv tool install zensical)
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>make gui-linux                 # bin/labmill-gui, tags desktop,production,webkit2_41 (cgo + webkit2gtk-4.1); not in make check
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>make gui-smoke / gui-selftest  # run the GUI under a throwaway HOME in tmp/, on a hidden Xvfb display (LABMILL_GUI_VISIBLE=1 shows it); selftest asserts on the real DOM
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>make gui-windows / gui-windows-selftest   # cross-built exe, self-test on the Windows host via WSL interop (WebView2)
+</span></code></pre></div>
+<ul>
+<li><strong>Live tests are opt-in</strong> (skip otherwise): <code>LABMILL_LIVE=1</code> (read-only, needs a live ControlMaster for <code>LABMILL_LIVE_ALIAS</code>), <code>LABMILL_LIVE_SUBMIT=1</code> for job-submitting tests.</li>
+<li><strong>Offline test doubles:</strong> <code>internal/sshx/sshtest</code> (in-process SSH server that mimics a password + Duo-menu login, with scripted exec commands, sftp and direct-tcpip), <code>agent/agenttest</code> (fake broker), <code>review_test.go</code> regressions; tests needing rclone's <code>ssh-exec</code> child re-exec the test binary (<code>LABMILL_E2E_SSHEXEC</code> / <code>LABMILL_TEST_SSHEXEC</code>).</li>
+<li><strong>GitHub Actions</strong> (<code>.github/workflows/</code>): see <a href="../ci/">CI</a>.</li>
+</ul>
+<h2 id="gui-self-tests">GUI self-tests<a class="headerlink" href="#gui-self-tests" title="Permanent link">&para;</a></h2>
+<p><code>make gui-selftest</code> runs the Wails GUI on a hidden Xvfb display. <code>make gui-windows-selftest</code> runs the cross-built exe in WebView2 on the Windows host through WSL interop; its window is never shown (no focus change, no taskbar button; the tray icon shows briefly) and the test proves that with <code>IsWindowVisible</code>/<code>GetForegroundWindow</code> on the app's own windows. The self-test also covers the jobs panel divider (section 6b: keys, drag, double-click reset, the saved width through <code>SettingsAPI</code>); the prefs field has Go tests in <code>internal/gui/prefs_test.go</code> (round trip, clamping). Details in <code>gui.md</code>.</p>
+<p>Startup timing (<code>internal/startup</code>): every startup step records a mark or span; the lines (<code>startup: &lt;step&gt; &lt;ms&gt; ms</code>) go to <code>labmill.log</code> when the chat is usable (again after 20 s for the background steps) and are printed by the self-test. <code>LABMILL_GUI_TIMING=1 make gui-selftest</code> (or <code>gui-windows-selftest</code>) also runs the real <code>launch.Build</code> on a persistent home per site next to the executable, <code>labmill-selftest-timing-home-&lt;domain&gt;</code>, reused across runs so the second run is a warm start (<code>LABMILL_GUI_TIMING_SITE=&lt;domain&gt;</code> picks the site profile, default <code>generic</code>), so the numbers cover the whole startup.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../voice/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Voice: &quot;Hey Labmill&quot;">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Voice: "Hey Labmill"
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../security/" class="md-footer__link md-footer__link--next" aria-label="Next: Security">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Security
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>
