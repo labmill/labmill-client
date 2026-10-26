@@ -41,10 +41,12 @@ docs:
 # out of `make check`: the package is behind the `desktop` build tag.
 # macOS and Windows builds use the same command on those hosts (drop webkit2_41).
 GUI_TAGS ?= desktop,production,webkit2_41
+# The version the binaries report (-X main.version); CI sets it to the tag.
+VERSION ?= dev
 
 .PHONY: gui-linux gui-smoke gui-selftest gui-windows gui-windows-selftest
 gui-linux:
-	$(GO) build -tags $(GUI_TAGS) -o bin/labmill-gui ./cmd/labmill-gui
+	$(GO) build -tags $(GUI_TAGS) -ldflags "-X main.version=$(VERSION)" -o bin/labmill-gui ./cmd/labmill-gui
 
 # Both targets run the app with a throwaway HOME under tmp/ (gitignored), so
 # the real configuration is never touched. The folder is left behind (tmp/ is
@@ -89,7 +91,7 @@ gui-selftest: gui-linux
 # .syso, overwritten each build; go build links it automatically).
 gui-windows:
 	$(GO) run ./cmd/labmill-winres -arch amd64 -o cmd/labmill-gui/rsrc_windows_amd64.syso
-	GOOS=windows GOARCH=amd64 $(GO) build -tags desktop,production -trimpath -ldflags "-H windowsgui -s -w" -o bin/cross/labmill-gui.exe ./cmd/labmill-gui
+	GOOS=windows GOARCH=amd64 $(GO) build -tags desktop,production -trimpath -ldflags "-H windowsgui -s -w -X main.version=$(VERSION)" -o bin/cross/labmill-gui.exe ./cmd/labmill-gui
 
 # Run the self-test on the Windows host through WSL interop (WebView2). The
 # exe is copied to %TEMP%\labmill-selftest (overwritten each run); self-test mode
