@@ -18,8 +18,8 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/kevinburke/ssh_config v1.6.0
 	github.com/pkg/sftp v1.13.11
-	github.com/rclone/gofakes3 v0.0.9
-	github.com/rclone/rclone v1.75.1
+	github.com/rclone/gofakes3 v0.0.10
+	github.com/rclone/rclone v1.75.2
 	github.com/tc-hib/winres v0.3.1
 	github.com/wailsapp/wails/v2 v2.16.0
 	go.yaml.in/yaml/v3 v3.0.5
@@ -171,12 +171,12 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	golang.org/x/image v0.45.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.50.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.77.1 // indirect
