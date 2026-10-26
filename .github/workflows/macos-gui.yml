@@ -1,0 +1,54 @@
+name: macOS GUI for a release
+
+# Started by hand: builds the macOS desktop app for an existing release tag and adds it to that release. For when
+# the Build workflow's macOS job got no runner (GitHub's macOS arm64 runners were full on 2026-10-26). The runner
+# can be chosen; an Intel runner builds the arm64 app with clang -arch arm64.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v0.1.0-test.1)
+        required: true
+      runner:
+        description: macOS runner label
+        required: true
+        default: macos-15
+
+permissions:
+  contents: read
+
+jobs:
+  gui-macos:
+    name: labmill-gui macOS ${{ inputs.tag }} on ${{ inputs.runner }}
+    runs-on: ${{ inputs.runner }}
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Build arm64 and amd64
+        run: |
+          mkdir -p dist
+          for a in arm64 amd64; do
+            arch=$a; [ $a = amd64 ] && arch=x86_64
+            CGO_ENABLED=1 GOARCH=$a CC="clang -arch $arch" CGO_LDFLAGS="-arch $arch" \
+              go build -tags desktop,production -ldflags "-X main.version=$VERSION" -o dist/labmill-gui-darwin-$a ./cmd/labmill-gui
+          done
+          file dist/*
+          cd dist && shasum -a 256 labmill-gui-darwin-* > macos.sha256 && cat macos.sha256
+      - name: Add to the release
+        run: |
+          gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" -p SHA256SUMS -D old
+          grep -v 'labmill-gui-darwin-' old/SHA256SUMS > dist/SHA256SUMS || true
+          cat dist/macos.sha256 >> dist/SHA256SUMS
+          gh release upload "$VERSION" --repo "$GITHUB_REPOSITORY" --clobber \
+            dist/labmill-gui-darwin-arm64 dist/labmill-gui-darwin-amd64 dist/SHA256SUMS
