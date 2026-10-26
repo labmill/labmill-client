@@ -1,0 +1,1928 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/dev/architecture/">
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../ssh/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Architecture - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Packages
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-a-request-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How a request flows
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How a request flows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-typed-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The typed tools
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The typed tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commands-on-the-login-node-remote_command" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Commands on the login node (<code>remote_command</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-chosen-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The chosen folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-job-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background job monitor
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-helper-and-ssh-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH helper and <code>ssh-exec</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-rclone-is-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How rclone is used
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-records-for-the-labmill-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Job records for the Labmill account
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Skills
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#know-how-from-a-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Know-how from a broker
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Know-how from a broker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-only-ssh-hosts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Key-only SSH hosts
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-config-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH config files
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dependency direction
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Packages
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-a-request-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How a request flows
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How a request flows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-typed-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The typed tools
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The typed tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commands-on-the-login-node-remote_command" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Commands on the login node (<code>remote_command</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-chosen-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The chosen folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#background-job-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Background job monitor
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssh-helper-and-ssh-exec" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH helper and <code>ssh-exec</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-rclone-is-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How rclone is used
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-records-for-the-labmill-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Job records for the Labmill account
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Skills
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#know-how-from-a-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Know-how from a broker
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Know-how from a broker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-only-ssh-hosts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Key-only SSH hosts
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-config-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH config files
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependency-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Dependency direction
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
+<p>Labmill is one Go binary (<code>cmd/labmill</code>), plus the desktop app (<code>cmd/labmill-gui</code>). The agent loop runs on the user's laptop and calls Claude directly with the user's own <code>ANTHROPIC_API_KEY</code>, or through an optional broker. It supports Slurm clusters only. Every action the agent can take is a typed tool with its own approval rule. The design decisions behind this are recorded in <code>CLAUDE.md</code>.</p>
+<h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">&para;</a></h2>
+<p>Everything is implemented except the "Hey Labmill" voice feature and the headless Agent mode, which are planned and have no code. The packages Agent mode needs (<code>agent</code>, <code>app</code>, <code>store</code>, <code>sshx</code>, <code>launch</code>) don't depend on the TUI. The desktop app is built and self-tested (see <a href="../gui/">GUI</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmd/labmill</code></td>
+<td>Entry point. <code>labmill</code> starts the TUI (first run: setup form); <code>version</code>, <code>help</code>, <code>ssh-helper</code> (the shared connection helper, started automatically) and <code>ssh-exec &lt;alias&gt; [-s &lt;subsystem&gt; \| &lt;command&gt;...]</code> (used by rclone). Thin: <code>wire.go</code> only ties the TUI to <code>launch</code>, <code>setup.go</code> is the first-run form (home institution required: the form needs a login host for a not-listed institution; <code>launch.Build</code> asks again, with <code>launch.SetupNote</code>, when <code>clusters.yaml</code> has no known <code>site:</code> and then only adds that line).</td>
+</tr>
+<tr>
+<td><code>cmd/labmill-gui</code></td>
+<td>Desktop app (Wails v2, behind the <code>desktop</code> build tag). See <a href="../gui/">GUI</a>.</td>
+</tr>
+<tr>
+<td><code>internal/gui</code></td>
+<td>The GUI's <code>App</code>/<code>Bridge</code>, the window-close sequence, the folder menu (<code>FolderHost</code>) and <code>OpenFolder</code>.</td>
+</tr>
+<tr>
+<td><code>internal/textsafe</code></td>
+<td><code>Clean</code>, the one display sanitizer used by the TUI and the GUI.</td>
+</tr>
+<tr>
+<td><code>internal/livetest</code></td>
+<td>Test-only support for the opt-in live checks (<code>LABMILL_LIVE=1</code>).</td>
+</tr>
+<tr>
+<td><code>internal/config</code></td>
+<td><code>~/.config/labmill/clusters.yaml</code>: loading, validation, saving.</td>
+</tr>
+<tr>
+<td><code>internal/sshconfig</code></td>
+<td>OpenSSH-format <code>~/.ssh/config.d/labmill</code>: writer, <code>Include</code> line, reader, alias reuse.</td>
+</tr>
+<tr>
+<td><code>skills</code></td>
+<td>Embedded generic skills (<code>SKILL.md</code> + <code>references/</code>): <code>slurm-user</code> and <code>research-computing</code>. <code>slurm-user</code> started as a sync of an upstream skill set; both come from yeetl, and Labmill is now the master copy (<code>skills/SOURCE.md</code>). Every site fact lives in <code>sites/</code>. Also <code>tools/*</code> helper files, readable but never run.</td>
+</tr>
+<tr>
+<td><code>sites</code></td>
+<td>Embedded site profiles. Only <code>generic/</code> is in this repository: a site skill (<code>SKILL.md</code> + <code>References/</code>), a machine-readable <code>Site.yaml</code> and a cluster template. See <a href="../sites/">Sites</a>.</td>
+</tr>
+<tr>
+<td><code>internal/skill</code></td>
+<td>Skill runtime: loading, override directory, <code>load_skill</code>/<code>read_reference</code> tools.</td>
+</tr>
+<tr>
+<td><code>internal/broker</code></td>
+<td>Client for an optional Claude broker (streaming Messages API with a bearer token).</td>
+</tr>
+<tr>
+<td><code>internal/knowledge</code></td>
+<td>Builds the <strong>bundle</strong> (the generic skills plus one site's skill, exactly <code>Site.SkillsFS</code>), its version hash, the deterministic gzip'd tar, the manifest and the cached prompt index. The client uses it to verify and load bundles from a broker.</td>
+</tr>
+<tr>
+<td><code>internal/rules</code></td>
+<td>The decisions the laptop makes without the model, as pure functions with no I/O: today the Slurm placement facts (<code>SlurmHints</code>). <code>internal/app</code> calls it; an import-graph test keeps SSH, UI and site code out.</td>
+</tr>
+<tr>
+<td><code>internal/agent</code></td>
+<td>The agent loop, typed-tool registry, approval interface.</td>
+</tr>
+<tr>
+<td><code>internal/app</code></td>
+<td>The typed tools, the system prompt, local privacy rules and approval integrity; <code>Workspace</code> (the user's chosen code and data folders, <code>CheckFolder</code>, <code>workspace.json</code>).</td>
+</tr>
+<tr>
+<td><code>internal/stall</code></td>
+<td>Runs a blocking file operation in a goroutine with a time limit and a cap on abandoned ones, so a stalled mount or cloud placeholder can't hang <code>find_local_data</code> or <code>preview_file</code>.</td>
+</tr>
+<tr>
+<td><code>internal/store</code></td>
+<td>SQLite job state shared by all processes.</td>
+</tr>
+<tr>
+<td><code>internal/account</code></td>
+<td>Optional link to the user's Labmill account: the program token in <code>account.json</code> (<code>labmill login</code>/<code>logout</code>/<code>whoami</code>, GUI Settings &gt; Labmill account), the API client (<code>GET /api/me</code>, <code>GET /api/systems/resolve</code>, <code>GET /api/systems</code>, <code>POST /api/jobs</code>) and the <code>Uploader</code> that sends finished-job records from the store's <code>uploads</code> queue. See "Job records for the Labmill account" below.</td>
+</tr>
+<tr>
+<td><code>internal/sshx</code></td>
+<td>Go-native SSH: login dialog flow (password, Duo), host keys, ProxyJump, connection helper, key setup, <code>Exec</code> (ssh-exec), interactive shell. <code>sshx/sshtest</code> is the in-process test server.</td>
+</tr>
+<tr>
+<td><code>internal/backend</code></td>
+<td>Backend interface, <code>JobSpec</code> validation, <code>Quote</code>/<code>SplitWords</code>, <code>SSHRunner</code>. <code>backend/slurm</code> implements it.</td>
+</tr>
+<tr>
+<td><code>internal/transfer</code></td>
+<td>Staging manifest and rclone-based upload/download over the helper connection.</td>
+</tr>
+<tr>
+<td><code>internal/site</code></td>
+<td>Loads the site profiles from <code>sites/*/Site.yaml</code> and each cluster folder's <code>Cluster.yaml</code> (validated): hosts with roles, cluster templates, 2FA help text and URL, the optional broker URL and the documentation URL. Picks the site named in <code>clusters.yaml</code> (else generic), and adds the site skill to the generic skills (<code>Site.SkillsFS</code>).</td>
+</tr>
+<tr>
+<td><code>internal/tui</code></td>
+<td>Bubble Tea v2 interface: chat, jobs panel, approval modal, login dialog, and the <code>Bridge</code> to background work.</td>
+</tr>
+<tr>
+<td><code>internal/launch</code></td>
+<td>Runtime wiring shared by the front ends: <code>Build</code> (config, store, skills, backends, SSH logins, model access, agent), the <code>UI</code> interface, <code>Session</code> (conversation history, serialized turns), the background job monitor, <code>WriteSetup</code>. Also holds the opt-in live agent tests.</td>
+</tr>
+<tr>
+<td><code>internal/e2e</code></td>
+<td>End-to-end tests (test code only).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-a-request-flows">How a request flows<a class="headerlink" href="#how-a-request-flows" title="Permanent link">&para;</a></h2>
+<p>The layers, from the keyboard to the cluster:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>TUI (Bridge) -&gt; session -&gt; agent -&gt; app tools -&gt; backends / transfer / store
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                  |                                 |
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                  +-- Approver = Bridge             +-- sshx.Connect -&gt; helper -&gt; cluster
+</span></code></pre></div>
+<ol>
+<li><strong>TUI to session.</strong> The user presses Enter. <code>tui</code> calls <code>Session.Send(ctx, text)</code>, implemented by <code>launch.Session</code>, which serializes turns and passes the history to <code>agent.Agent.Send(ctx, history, text, origin)</code>. <code>Origin</code> is <code>Typed</code> or <code>Voice</code>; dictated text would get <code>VoiceNote</code> prepended (the voice front end doesn't exist yet).</li>
+<li><strong>Agent to model.</strong> The system prompt is <code>Agent.System</code> (fixed per runtime) plus <code>Agent.SystemExtra()</code>, read once per <code>Send</code>: <code>launch.Build</code> wires it to <code>Workspace.Prompt</code>, which names the user's chosen code and data folders (empty when none). <code>Send</code> runs the turn on the Go SDK's streaming tool runner (<code>client.Beta.Messages.NewToolRunnerStreaming</code>, <code>internal/agent/runner.go</code>) over the service and request options that <code>agent.Model.BetaMessages</code> returns (in production the direct model in <code>internal/launch/model.go</code>, or <code>*broker.Client</code> when a broker is configured). A request middleware sets <code>X-Labmill-Task</code>: <code>broker.HintPlan</code> for the first request of a <code>Send</code>, <code>broker.HintRoutine</code> after. The direct model maps the hint to the model (planning: <code>claude-opus-5-5</code>, else <code>claude-sonnet-5-5</code>; <code>LABMILL_MODEL</code> overrides both) and drops the header; a broker picks the model itself. Only the planning request asks for adaptive thinking (<code>display: omitted</code>, <code>agent.PlanMaxTokens</code>); a thinking block shows as the step "Thinking…", never as text. Prompt caching: a breakpoint on the fixed system block (<code>SystemExtra</code> is a second, uncached block), one on the last tool definition, and the top-level automatic breakpoint that follows the conversation (loaded skill text included). When a reply's prompt (input plus cache tokens) reaches <code>Agent.CompactAt</code> (default 150,000), <code>runner.CompactBeforeNextTurn</code> compacts the conversation with the <code>compact-2026-09-04</code> beta before the next turn (after the last reply it compacts and stops); the UI shows the step "Summarizing earlier conversation…" and then the note "Summarized earlier conversation" (<code>EventNote</code>). The runner starts a reply's tools together; <code>agent</code> keeps them in Claude's order and one at a time. Text deltas reach the UI as <code>EventText</code> through the Bridge. With no broker URL and no <code>ANTHROPIC_API_KEY</code>, <code>unavailableModel</code> makes each turn fail with a plain explanation. Tests run the real runner against <code>agent/agenttest</code>, a fake broker that streams scripted messages.</li>
+<li><strong>Model access.</strong> Without a broker, <code>newDirectModel</code> builds an Anthropic client with the key from <code>ANTHROPIC_API_KEY</code> (read from the environment, kept in memory only) and <code>WithoutEnvironmentDefaults</code>, so no other <code>ANTHROPIC_*</code> variable changes where requests go. With a broker URL (<code>broker_url</code> in <code>Site.yaml</code>, or <code>LABMILL_BROKER_URL</code>), the broker client's middleware puts the bearer token from <code>LABMILL_BROKER_TOKEN</code> on every request. It never uses credentials or base URLs from the environment, and a stream that ends without <code>message_stop</code> is an error.</li>
+<li><strong>Tools.</strong> If Claude's reply asks for tools, the loop handles each <code>tool_use</code> block in order. A tool is a typed <code>agent.Tool</code> (fixed JSON schema, registered in an <code>agent.Registry</code>); there is no shell tool on the laptop (<code>remote_command</code> runs one argv command on a login node, see below). <code>app.Tools</code> provides the tools (see below) and <code>agent.SkillTools</code> the two skill tools.</li>
+<li><strong>Approval.</strong> A tool with <code>NeedsApproval</code> first builds a <code>Proposal</code> (<code>Propose</code>) and the loop asks the <code>Approver</code>, which is the TUI <code>Bridge</code>: it queues an <code>ApprovalRequestMsg</code> for the Bubble Tea program and waits for exactly one <code>Decision</code>. The wait also ends when the turn's context is canceled, so a cancel never hangs on an open dialog. If the user declines, <code>Run</code> is never called and Claude receives "The user declined: ..." as a normal (not <code>is_error</code>) tool result. If approved (<code>EventApproved</code>), the <code>Decision</code> (carrying the exact <code>Proposal</code> shown, and the user's edit only when the proposal was <code>Editable</code>) goes to <code>Run</code>. With no <code>Approver</code>, a gated tool fails with <code>ErrNoApprover</code>. A <code>Propose</code> that returns <code>agent.ErrNoApproval</code> (a read-only <code>remote_command</code>) skips the approval: the tool runs with the zero <code>Decision</code> and nobody is asked, also without an <code>Approver</code>.</li>
+<li><strong>Run.</strong> The tool does the work: it gets a backend or SSH connection from the <code>app.Env</code> function fields, and records state in <code>internal/store</code> (<code>CreateJob</code>, <code>UpdateJob</code>, <code>AddEvent</code>, <code>SetManifest</code>). Tool errors become error results and do not stop the loop; an approver error or a canceled context aborts <code>Send</code>. When that happens while the latest reply's tools run, their recorded results are kept, unknown tools keep "not found", and the rest get "aborted"/"canceled", so the history stays valid for the API; a cancel before any tool of this <code>Send</code> ran leaves the history (earlier turns included) as it was. Tools get Claude's input bytes as sent. In the TUI, writes to <code>os.Stderr</code> (e.g. SDK warnings) go to <code>labmill.log</code> (<code>launch.Runtime.LogPath</code>) while the screen is up.</li>
+<li><strong>Loop end.</strong> Tool results go back to Claude as one user message and the loop repeats until Claude stops asking for tools, <code>MaxTurns</code> (the runner's <code>MaxIterations</code>; 25 for a bare <code>agent.Agent</code>, 80 for the TUI/GUI sessions via <code>launch.DefaultMaxTurns</code>, override <code>LABMILL_MAX_TURNS</code>) is reached (not an error; that reply's tool calls get "not run" results and <code>Send</code> appends the assistant message <code>agent.MaxTurnsMessage</code>, "I stopped after N steps so you can check in. Say 'continue' and I'll go on.", so the history stays valid and the next user message carries on; <code>ErrMaxTurns</code> is no longer returned), or the reply is truncated or refused (<code>ErrTruncated</code>, <code>ErrRefused</code>). <code>Send</code> returns the updated history even on error.</li>
+</ol>
+<h3 id="the-typed-tools">The typed tools<a class="headerlink" href="#the-typed-tools" title="Permanent link">&para;</a></h3>
+<p>Defined in <code>internal/app/tools.go</code> (the doc comment on <code>app.Tools</code> is the reference).</p>
+<ul>
+<li><strong>Read-only:</strong> <code>list_clusters</code>, <code>cluster_info</code>, <code>find_local_data</code>, <code>preview_file</code>, <code>stage_data</code>, <code>draft_job</code>, <code>job_status</code>, <code>list_jobs</code>, <code>cluster_jobs</code> (the user's own jobs on the scheduler via the optional <code>backend.Lister</code>; includes jobs not started through Labmill), <code>job_logs</code>, <code>diagnose_job</code> (collects the facts of a failed job and keeps a local failure memory), <code>update_todos</code> (the to-do list shown above the input), <code>ask_user</code> (a question with 2 to 8 options shown as a selection dialog; see below).</li>
+<li><strong>Approval-gated:</strong> <code>upload_data</code>, <code>submit_job</code> (editable script), <code>cancel_job</code>, <code>fetch_results</code>, <code>cleanup_job</code> (after a verified download, removes the ended Slurm job's own working files in its Labmill job folder in the global scratch: exact files only, each re-checked by SHA-256 on the cluster, then the folders that held them; never environments, never a tree-wide delete; see <code>internal/app/cleanup.go</code>), <code>s3_credentials_to_cluster</code> (copies one AWS profile to the login node's <code>~/.aws/credentials</code> as its own section; always asks, the values never reach the model), <code>set_cluster_account</code> (changes the <code>User</code> of a cluster's login and files hosts in Labmill's own SSH file after a sign-in rejected the reused name; refuses entries of the user's own SSH config and entries another cluster shares; makes the SSH helper forget its logins for those aliases first, then clears the cached connections and user ID of the cluster), <code>add_cluster</code> (sets up a cluster of another institution this build has a profile for, only on the user's explicit request; writes <code>clusters.yaml</code> and the SSH settings, never runs anything on a cluster, and always asks, also under "Approve everything automatically"; the cluster is usable in the same session). Its scope also covers a cluster of the user's own institution that the install lacks (the profile gained it after setup; <code>SiteInfo.HomeMissing</code>, computed by <code>launch.homeMissing</code> from the home profile and <code>clusters.yaml</code>, is named in the prompt; <code>site</code> is then the home domain and <code>username</code> may be left empty for any institution: <code>Env.KnownUsername(site)</code> supplies the account already used there, from the login host of a configured cluster of that institution; the proposal names the cluster it came from, and an existing SSH entry's own <code>User</code> wins over it). It goes through the same plan/apply code (<code>planAddCluster</code>, <code>addSiteCluster</code> over the home profile plus the others), appends to <code>clusters.yaml</code> without <code>site:</code> (Cluster.yaml's <code>order</code> only orders the first-run list) and reuses an alias that already points at the host (<code>AddClusterHost.ReusedAlias/ReusedUser</code>, shown in the proposal and the preview; the entry's own User wins at sign-in, so <code>AddClusterPlan.AccountConflict</code> and a guard in <code>addSiteCluster</code> refuse a different account). "Missing" is <code>site.Site.MissingClusters</code>: not configured by name, nor by the same Slurm login HostName under another name; the settings page and the prompt share it. The settings path reads only the locked <code>Config</code> and the files (<code>Runtime.CheckHomeCluster</code> before the add starts), never <code>Env.Site</code>; a home add keeps the home key hosts non-foreign (<code>connCache.noteAddedCluster</code>). The GUI settings page lists these clusters (<code>settings.View.MoreClusters</code>) with an Add button: <code>SettingsAPI.MoreClusterPlan</code> previews, <code>AddMoreCluster</code> runs <code>Runtime.AddHomeCluster</code> as a turn of its own (the click is the approval); the TUI's <code>/settings</code> text lists them.</li>
+<li><strong>Gated except read-only commands:</strong> <code>remote_command</code> (one command on a cluster's login node; see "Commands on the login node" below).</li>
+</ul>
+<p><code>ask_user</code> takes <code>{question, options: [{label, description}], allow_other}</code> (question at most 300 characters, 2 to 8 options with unique labels of at most 60 characters, descriptions at most 300, <code>allow_other</code> default true). It reaches the user through <code>app.Env.Choose</code>, which <code>launch.Build</code> wires to the front end's <code>agent.Chooser</code> (part of <code>launch.UI</code>): the TUI shows a modal list, the GUI a <code>labmill:choice</code> dialog. The result is "The user chose: <label>", "The user answered: <text>" or "The user skipped the question.". A dismissed dialog or a turn that ends answers skipped. It changes nothing, so it is not gated, and the system prompt tells Claude never to use it to ask permission for an action that has its own approval. The system prompt also tells Claude to call it whenever it offers the user a choice, instead of a numbered list the user has to type an answer to.</p>
+<p><strong>Slurm placement rules.</strong> <code>draft_job</code> on a Slurm cluster reads the cluster's <code>rules.SlurmHints</code> (Cluster.yaml <code>preemptible</code>, <code>local_scratch</code>, <code>global_scratch</code>; <code>SiteInfo.SlurmFor</code>, stated by <code>cluster_info</code>). Inputs: <code>scratch</code> (<code>local</code>, <code>global</code> or <code>job_folder</code>, the default) and <code>preemptible</code> (leave out to use the preemptible partition when the profile names one, the partition was not chosen explicitly and the time limit fits; <code>false</code>; <code>true</code> to insist), plus <code>spec.nodes</code>. <code>local</code> needs a known node-local scratch and a single node: <code>slurm.Render</code> then wraps the command in a stage-in / run / stage-out of the whole job folder (the live <code>%x-%j.out</code> excluded) with a <code>trap ... EXIT</code> that removes the job's own local folder only after a good rsync back. <code>global</code> needs the work folder below the profile's <code>global_scratch</code> (a job without data must be given its own <code>work_dir</code> there; Labmill invents no folder shared with other users). Preemptible sets <code>--partition</code>, <code>--qos</code>, <code>--requeue</code> from the profile (a partition the model named becomes the fallback; with no fallback and no default partition the plan says the last step needs one); the local-scratch script also gets <code>--signal=B:USR1@n</code> and a USR1 trap that stops the program so the stage-out has time (<code>JobSpec.Partition</code>, <code>QOS</code>, <code>Requeue</code>). The draft records a <code>plan</code> event (<code>placementPlan</code>: storage, partition, fallback partition, resubmit limit of 2, the <code>sbatch --test-only</code> estimate) next to the <code>spec</code> event; automatic resubmission reads the fallback from it. <code>submit_job</code>'s summary and the draft's answer show the plan in plain words, so the approval covers the resubmissions. An estimate that can't be made is not an error.</p>
+<h4 id="commands-on-the-login-node-remote_command">Commands on the login node (<code>remote_command</code>)<a class="headerlink" href="#commands-on-the-login-node-remote_command" title="Permanent link">&para;</a></h4>
+<p>(Approvals can also be given automatically by <code>agent.AutoApprover</code>, the "Approve everything automatically" setting; proposals with <code>Proposal.Secret</code>, such as a secret-file read here, are excluded. See security.md.) <code>remote_command {cluster, argv[]?, script?, timeout_seconds?}</code> runs one command on the cluster's <code>ssh_host</code> over the cached SSH login (<code>Env.LoginRunner</code>, <code>connCache.loginRunner</code>), never on the laptop. The argv is joined with <code>backend.Quote</code>, so each element is one literal word for the login shell (no pipes, redirections, variables or globs); control and format characters are rejected (they could hide what an approval shows), and argv is capped at 64 words, 4 KB each, 16 KB in all. These are mechanics. <strong>Labmill puts no restrictions on what runs on the remote HPC system (owner rule)</strong>: no path limits, no secret-file list, no interactive-program list, no check of resolved paths. The cluster's own permissions decide, and an interactive program (no terminal) just hangs until the timeout, which the tool description says. The only decision Labmill makes is whether a command waits for the user's OK, in <code>remoteNeedsApproval</code> (one function; the user setting "Run commands on the cluster without asking" lives in <code>gui.json</code> as <code>runWithoutAsking</code>, is read per command through <code>Env.AutoRunRemote</code> (<code>settings.AutoRunRemote</code>, so the GUI and the TUI share it and a change applies at once), and makes every non-secret command run at once). <strong>Scripts.</strong> Multi-line shell code goes in the optional <code>script</code> field (up to 64 KB, UTF-8, no NUL), never in an argv word (the control-character error says so). It is sent on stdin (<code>Runner.Run</code>'s stdin) to the interpreter in argv, default <code>bash -s</code> (argv may name another, e.g. <code>["sh","-s"]</code>), under <code>timeout</code> like any command; the script text never appears in the command line, so the login shell's quoting (tcsh included) and newlines don't matter. A script is always <code>remoteGated</code> (<code>scriptPlan</code>; there is no way to judge shell code read-only), the approval Details show the whole script, and <code>Run</code> re-plans and compares with the approved Details, so an edited script is refused. With the user's setting it runs at once, but the secret-file name check (<code>secretArg</code> over the script's words) still asks, and an auto-run's output is redacted. <strong>Steering.</strong> The prompt, the tool description and <code>skillToolMap</code> tell Claude: job and helper scripts come from <code>draft_job</code> files, submit only with <code>submit_job</code>, monitor with <code>job_status</code>/<code>job_logs</code>, fetch with <code>fetch_results</code>. A command (argv, a <code>bash -c</code> string, or a script line) that starts <code>sbatch</code> or <code>srun</code> is not refused; after the usual approval it runs, and its result starts with "(Use submit_job for submissions: it records the job, shows the review and monitors it.)" (<code>submitsJob</code>).</p>
+<p><code>classifyRemote</code> (<code>internal/app/remote.go</code>) decides:</p>
+<ul>
+<li><strong>Read-only, runs at once</strong> (Propose returns <code>agent.ErrNoApproval</code>, so the loop runs the tool with the zero Decision and Run checks the class again): <code>squeue</code>/<code>sinfo</code> (not <code>--iterate</code>/<code>-i</code>), <code>sacct</code> (not <code>-f</code>/<code>--file</code>), <code>sshare</code>, <code>sprio</code>, <code>sstat</code>, <code>seff</code>, <code>scontrol show job|node|partition|reservation|config [id]</code>, <code>sacctmgr show|list</code> (not <code>-i</code>), <code>module avail|spider|list|show|whatis|keyword</code> with plain module names (leading options only from a known no-value set such as <code>-t</code>, <code>-r</code>, <code>--terse</code>; no word starting with <code>-</code>, <code>/</code> or <code>~</code>, none containing <code>..</code>, a leading <code>.</code> only as a pattern for avail/spider/keyword; every <code>module</code> and <code>ml</code> call, approved ones too, goes via <code>bash -lc</code>; run through <code>bash -lc 'module "$@" 2&gt;&amp;1'</code>, since <code>module</code> is a shell function), <code>command -v|-V &lt;names&gt;</code> (names not starting with <code>-</code>; run through <code>bash -c 'command "$@"'</code> with the flag, <code>--</code> and the names as parameters, since <code>command</code> is a builtin), and <code>ls</code>, <code>cat</code>, <code>head</code>, <code>tail</code> (not <code>-f</code>/<code>-F</code>/<code>--follow</code>/<code>--pid</code>), <code>wc</code>, <code>du</code>, <code>df</code>, <code>findmnt</code> (not <code>--poll</code>/<code>--tab-file</code>), <code>lsblk</code>, bare <code>mount</code>, <code>stat</code>, <code>file</code> (no options that read file names from a file or write; an exact long option wins over an abbreviation, and a long option's value may be the next word only when the option is written in full) on any path the account can read (a leading <code>~/</code> becomes <code>./</code>, since argv has no shell and the command runs in the home folder; every other path is passed on as given, hidden and secret-looking ones included).</li>
+<li><strong>Everything else needs approval.</strong> The proposal shows the command, the host (<code>alias (HostName)</code>), the exact line that runs (with the <code>timeout</code> wrapper), the time limit, "This command can change files on the cluster. Approve it only if you want it to run." and why Labmill asks (it is not on the read-only list). This is consent, not a restriction. Run rebuilds the proposal and refuses any difference (<code>sameAsApproved</code>).</li>
+<li><strong>Nothing is refused, but secrets are not piped into Claude's context unasked.</strong> Reading <code>~/.ssh/config</code>, <code>.bashrc</code>, a hidden file or <code>/etc/passwd</code> runs at once like any other read, and an approved command may do anything the account may. The one exception is a read-only command that prints content (<code>cat</code>, <code>head</code>, <code>tail</code>, <code>file -z</code>; not <code>ls</code>, <code>stat</code>, <code>du</code>, <code>wc</code>) and names a sign-in secret (<code>secretArg</code>, name-based only: symlinks, hard links, <code>/proc/*/environ</code> and tokens inside ordinary files such as <code>.bashrc</code> aren't detected; a minimal use of <code>privacy.go</code>'s <code>hardSecretPath</code>: SSH private keys, <code>.netrc</code>, cloud credentials, Hugging Face and other tokens, <code>*.pem</code>, <code>*.key</code>, shell histories; not <code>*.pub</code>, <code>~/.ssh/config</code>, <code>config.d/*</code>, <code>known_hosts</code>, <code>authorized_keys</code>): <code>remotePlan</code> moves it to approval, and the approval says "This file's content will be sent to Claude." instead of the change warning. After approval it runs as given. This is about a credential leak into the model's context, not a limit on the user. For the same reason the output of those content commands goes through <code>redactSecrets</code> (<code>localdata.go</code>, as <code>preview_file</code> does): lines that assign a password, token or key show «redacted». The laptop side is different and unchanged: <code>privacy.go</code>'s rules for local files (and <code>hardSecrets</code>) still protect the user's own computer.</li>
+</ul>
+<p>Every command runs under coreutils <code>timeout -k 5 &lt;N&gt;</code> (default 60 s, max 600 s; Labmill itself gives up 20 s later), with stdin closed and no PTY. The result has the exit code (124 explained as the time limit, 127 as "not found") and the last 64 KB of stdout and 16 KB of stderr; when <code>SSHRunner</code> already cut a stream at 4 MB (<code>backend.TruncatedMarker</code>), its first part is kept instead and the heading says so. Output is cleaned with <code>textsafe.Clean</code>, then the whole result with <code>cleanText</code> like <code>job_logs</code>.</p>
+<h4 id="the-chosen-folders">The chosen folders<a class="headerlink" href="#the-chosen-folders" title="Permanent link">&para;</a></h4>
+<p>The user can choose a data folder and a code folder (desktop: the + menu in the chat box, dialog or drop; terminal: <code>/data</code> and <code>/code</code>). With only a data folder, <code>Workspace.Prompt</code> tells Claude to offer writing the analysis code (shown before anything runs). <code>app.Env.Workspace</code> holds them; <code>app.CheckFolder</code> refuses drive roots, folders that contain home, system folders and hidden or secret-looking paths. They are extra allowed roots and the defaults of the local tools: <code>find_local_data</code> searches them when <code>under</code> is empty, <code>preview_file</code> resolves relative paths in them (code first), and <code>stage_data</code> stages from the data folder (else the code folder) when <code>root</code> is empty. The privacy rules and approvals don't change. <code>workspace.json</code> next to <code>clusters.yaml</code> keeps the choice and the last five folders per kind for both front ends. Details: <a href="../gui/#folders-and-open-folder">GUI</a>.</p>
+<p>The expected order is find, stage, upload (approval), draft, submit (approval), status/logs, fetch (approval). <code>draft_job</code> uses the remote folder that <code>upload_data</code> records when there is local data.</p>
+<p><strong>Samples without run scripts.</strong> <code>preview_file</code> never guesses: a missing path is answered by <code>toolset.missingFile</code> (<code>localdata.go</code>) with "<name> doesn't exist in <folder>; list the folder (find_local_data) instead of guessing names" plus up to 20 real entries of that folder (privacy skipper: no hidden or secret-looking names, only inside the allowed roots); after 3 such answers in a row (reset by <code>find_local_data</code> or a successful preview) it says to stop guessing. README and build files are paged and the prompt and tool description tell Claude to read all pages. <code>draft_job</code> takes an optional <code>files</code> list of <code>{name, content}</code> (<code>jobfiles.go</code>): plain names (no slash, no leading dot, 64 characters), text up to 64 KiB each, at most 8, checked with <code>backend.CheckText</code>. They are saved as a <code>files</code> job event, appended to the submit review below the script after marker lines (<code>reviewWithFiles</code>; <code>splitReviewFiles</code> parses the possibly edited text back, so the user can edit both), and <code>submit_job</code> writes them through the login-node runner (<code>Env.LoginRunner</code>, <code>sh -c</code> program with the content on stdin, temp file, <code>chmod 755</code>, <code>mv -n</code>) into <code>spec.WorkDir</code> just before <code>Backend.Submit</code>, under the submit approval. A different existing file is never overwritten (exit 3 and a message to pick another name), a symlinked folder is refused. <code>safeJobName</code> suggests a valid job name when a folder name such as "OneDrive - Example University" is given; <code>transfer</code> tests cover manifests and quoted remote paths with spaces.</p>
+<h3 id="background-job-monitor">Background job monitor<a class="headerlink" href="#background-job-monitor" title="Permanent link">&para;</a></h3>
+<p><code>launch.Build</code> starts a job monitor (<code>internal/launch/monitor.go</code>) and <code>Runtime.Close</code> stops it first, before the connections and the store close. Every 45 s (the pause starts when a check ends, so checks never overlap) it lists the store's jobs in <code>submitted</code>, <code>pending</code> or <code>running</code> with a remote ID, looks up each cluster's backend once per check, and makes at most one <code>Status</code> call per job, each with a 20 s timeout. A changed state or reason is saved with <code>UpdateJob</code>, but only if the job is still in a monitored state with the same remote ID (a <code>job_status</code> call or another Labmill process may have saved a newer state meanwhile). When the save moves a job to <code>completed</code>, <code>failed</code> or <code>canceled</code>, the monitor calls <code>UI.JobNotice</code> with a sentence such as "Job #12 (train) on bigcluster finished. Ask me to fetch the results." or "... failed (TIMEOUT). Ask me to look at the logs.". The notice goes to the UI only, not into the conversation. The TUI shows it as a highlighted chat line, the GUI as a <code>labmill:job</code> system line, and both refresh their job list at once. With two Labmill processes open, only the one whose save made the change shows the notice.</p>
+<p>The monitor never logs in. It gets backends from <code>connCache.backendNoLogin</code>, which returns nothing (the cluster is skipped until the next check) unless the cluster can be reached without a login or a question. Slurm needs an open SSH login. <code>connCache.existingClient</code> uses the session's cached client if it is still alive, or else <code>sshx.ConnectCached</code>, which joins a login the helper already holds and never starts a helper or logs in. If the cache is busy (a login dialog may be open), it gives up at once.</p>
+<p><code>sshx.ConnectCached</code> connects to the helper with the user name <code>labmill-cached-only:&lt;alias&gt;</code>. The helper accepts that only while it holds a live upstream for the alias, without waiting for a login another client is running, and treats the connection as one for <code>&lt;alias&gt;</code>. An older helper that doesn't know the prefix tries to resolve the whole name as a host, which fails without prompting.</p>
+<h3 id="ssh-helper-and-ssh-exec">SSH helper and <code>ssh-exec</code><a class="headerlink" href="#ssh-helper-and-ssh-exec" title="Permanent link">&para;</a></h3>
+<p>SSH does not use an OpenSSH binary. <code>sshx.Connect</code> finds the per-user helper socket (<code>$XDG_RUNTIME_DIR/labmill/ssh-v1.sock</code>, else <code>~/.local/state/labmill/ssh-v1.sock</code>; the number is <code>sshx.HelperVersion</code>, also in the lock file name <code>ssh-v1.lock</code>, so a Labmill never talks to a helper of another version: after an upgrade that bumps it the old helper serves old Labmill processes on its own socket and idles out, and the new Labmill starts a matching helper, which costs one extra login) and starts <code>labmill ssh-helper</code> if nothing answers. The helper holds the authenticated upstream connection per alias (ProxyJump chains included) and exits after 10 idle minutes. It speaks SSH on the local socket, with the alias as the user name, and proxies every channel (exec, sftp subsystem, direct-tcpip) 1:1 upstream. When it must log in, it relays the prompts (password, Duo, host-key question) to the foreground process, so the dialog always appears in the UI. <code>sshx.ConnectCached</code> is the variant that only reuses an existing login (see "Background job monitor"). <code>launch.Build</code> caches one client per alias for the session (<code>connCache</code> in <code>internal/launch/launch.go</code>).</p>
+<p><code>labmill ssh-exec &lt;alias&gt; [-s sftp | &lt;command&gt;...]</code> bridges stdin/stdout to a channel on that connection. <code>internal/transfer</code> points rclone's sftp backend at it through rclone's <code>ssh</code> option, so uploads and downloads run through the same login without a second one. <code>TransferCheck</code> makes sure a login exists first, so a transfer doesn't fail late. The cluster's <code>files_host</code> (a dedicated transfer host, e.g. <code>files.example.edu</code>) is the host <code>upload_data</code> and <code>fetch_results</code> use when set (the transfer check and <code>ssh-exec</code> run against that alias); without it they fall back to <code>ssh_host</code>, whose shell host may have the sftp subsystem disabled (some login hosts do, so <code>ssh-exec</code> falls back to running <code>sftp-server</code> as a command, which a site may not accept). Upload destinations are home-relative or absolute group folders such as <code>/data/mygroup/...</code>; hidden and system folders are refused, and approvals show home-relative folders as <code>cluster:~/dir</code>. The approval text names the transfer host. The first-run setup writes an OpenSSH entry for it (reusing the user's own alias for that HostName) and sets <code>files_host</code>.</p>
+<h3 id="how-rclone-is-used">How rclone is used<a class="headerlink" href="#how-rclone-is-used" title="Permanent link">&para;</a></h3>
+<p>rclone is linked in as a library (<code>internal/transfer</code>); no <code>rclone</code> binary is run. Its sftp backend is pointed, through the <code>ssh</code> option, at <code>labmill ssh-exec &lt;alias&gt; -s sftp</code>, so the SFTP subsystem runs on the helper's existing connection. The s3 backend uses the AWS SDK credential chain (<code>env_auth</code>, optional profile) and never an access key. Backends are built directly with <code>NewFs</code> and the option defaults, never from a config file or <code>RCLONE_*</code> environment (the config is effectively <code>/dev/null</code>). Transfers copy file by file (<code>CopyFile</code> per manifest entry or requested path): never sync and never a delete. Before each send the local file is re-hashed (sha256) against the manifest; downloads check the file names (no <code>..</code>, no names the local OS can't hold) and refuse to replace existing files. <code>Remote.RcloneCommand</code> and <code>S3Remote.RcloneCommand</code> render the rclone-compatible parameters as a line starting <code>rclone-lib: copy ...</code> (quoted for POSIX or PowerShell by GOOS; the prefix makes clear that no rclone process exists; swapping it for <code>rclone</code> gives a stand-alone command). <code>upload_data</code> and <code>fetch_results</code> do not put it in the approval (the user approves the file list and destination, not the copy command); it goes into the tool result and is announced at the start of the transfer. Live progress: <code>Progress</code> carries bytes, files and the current file; <code>transfer.Meter</code> smooths the rate, computes the ETA and throttles to at most one line per 500 ms (the poller reports at 1 Hz, so in practice one per second); <code>Env.Transfer</code> receives <code>transfer.Update</code> values (start, progress, end), which <code>launch.UI.Transfer</code> hands to the front end (GUI event <code>labmill:progress</code> drives a bar row, the TUI shows the rclone-style line in its status bar). The result ends with <code>Transferred 4.0 GiB in 1m31s (45 MiB/s), 10 files</code>. Display only; never any credentials.</p>
+<p><strong>Download verification.</strong> After an SFTP download, <code>transfer</code> (<code>verify.go</code>) runs <code>sha256sum</code> on the cluster through the same transfer connection, in batches (at most 200 files, about 16 KiB of quoted command and 16 GiB of file data per call, with a timeout that grows with the bytes), and compares it with the SHA-256 of each local file. A file that differs is renamed <code>&lt;name&gt;.mismatch</code> (then <code>.mismatch2</code>, ...; never deleted) and is not in the result list; <code>fetch_results</code> then reports a WARNING naming the files, doesn't set the job to <code>fetched</code> and leaves its <code>LocalDir</code> empty, so the results can be fetched again. Where <code>sha256sum</code> isn't available, can't read a file or times out, the affected files are checked by size only and the result says so (<code>Verification.SizeOnly</code>, <code>Failed</code>). An S3 download relies on rclone's own checks (size and MD5). The skill side is <code>research-computing</code> <code>filesystems-and-storage.md</code>, "Integrity: checksums".</p>
+<p>Every fenced code block in the GUI chat also has a Copy button (<code>md.js</code> <code>copyButton</code>, aria-label "Copy", attached with <code>addEventListener</code>; the CSP still allows no inline handlers).</p>
+<h2 id="job-records-for-the-labmill-account">Job records for the Labmill account<a class="headerlink" href="#job-records-for-the-labmill-account" title="Permanent link">&para;</a></h2>
+<p><code>launch.Build</code> starts <code>account.Uploader</code> (<code>internal/launch/upload.go</code>) next to the job monitor; <code>Runtime.Close</code> stops it before the store closes. Every 60 s a pass reads <code>account.json</code>; with no file it does nothing (no request, no queue row). Otherwise it:</p>
+<ol>
+<li><strong>Queues.</strong> Each job in <code>completed</code>, <code>fetched</code>, <code>failed</code> or <code>canceled</code> with a remote ID, saved after <code>LinkedAt</code>, whose last final <code>state</code> event is not before <code>LinkedAt</code>, and with no <code>uploads</code> row for its <code>(job_id, remote_id)</code>, gets one row: a random <code>client_job_ref</code> (<code>lmc-</code> + 32 hex) and the report (<code>account.BuildReport</code>) as JSON. A resubmitted job (new remote ID) is a new report.</li>
+<li><strong>Sends.</strong> Due rows (<code>next_at</code> passed, not sent) go to <code>POST /api/jobs</code> with <code>hpc_system_id</code> filled in: first <code>GET /api/systems/resolve</code> with the login host (the ssh HostName of the cluster's alias), the cluster name and the site domain; when that gives no single system (400, 404, 409, or an older server without the route), <code>GET /api/systems?q=&lt;cluster&gt;</code> and the one entry with the same name and the institution of the cluster's site profile. The answer is cached per process. Success marks the row sent. A failure sets <code>next_at</code> by <code>account.Backoff</code> (1 min doubling, at most 6 h); a 400 stops the row (<code>store.Never</code>); a 401/403 stops the pass, so the rows wait for a new token. The API stores a <code>client_job_ref</code> once, so two Labmill processes sending the same row make one job.</li>
+</ol>
+<p>The report has only scheduler facts: Slurm state (the raw state of a failed job such as <code>TIMEOUT</code> or <code>OUT_OF_MEMORY</code>, else <code>FAILED</code>; <code>CANCELLED</code>; <code>COMPLETED</code>), the failure category for time-out and out of memory, submit/start/end times and queue wait from the <code>state</code> events, <code>req</code> (cpu, mem, gpu, gpu_type, time, nodes) and the partition from the draft's <code>spec</code> event, and module names (<code>ecosystem: module</code>; a module given as a path is left out). It never holds the script, command, environment, job name, folders, venv/conda/container names, log lines or the failure memory, so no free text needs redaction; the tests assert this.</p>
+<p><code>internal/store</code> is one SQLite database (pure-Go driver, WAL mode, 5 second busy timeout) at <code>$XDG_STATE_HOME/labmill/labmill.db</code>, falling back to <code>~/.local/state/labmill/labmill.db</code>. The TUI, GUI and headless agent all open it, so there is no daemon. A job has a <code>JobState</code> (draft, staging, uploading, submitted, pending, running, completed, fetched, failed, canceled), the approved script, a manifest of staged files (path, size, SHA-256) and an append-only event history. <code>UpdateJob</code> runs in one transaction and records state changes as events. Schema changes are migrations tracked with <code>PRAGMA user_version</code>; a database from a newer Labmill is refused. The scheduler remains the source of truth for live status.</p>
+<h2 id="skills">Skills<a class="headerlink" href="#skills" title="Permanent link">&para;</a></h2>
+<p>Skills are Anthropic/Claude Code-format directories: <code>SKILL.md</code> (YAML frontmatter with <code>name</code> and <code>description</code>, then a markdown body) plus optional <code>tools/*.sh</code> and <code>tools/*.md</code> (helper scripts and notes; <code>read_reference</code> serves them as text as <code>tools/&lt;file&gt;</code>, and Labmill never runs them), <code>references/*.md</code> and <code>&lt;sub&gt;/references/*.md</code> (a site skill keeps one subfolder per cluster; <code>read_reference</code> names those files <code>&lt;sub&gt;/&lt;file&gt;.md</code>). They are embedded in the binary with <code>go:embed</code>.</p>
+<ul>
+<li><strong>One set of skills, two hosts.</strong> The same skills work on their own in Claude Code and inside Labmill; Labmill adapts to them and never forks them. Some users only ever use the skills in Claude Code (see <code>sites/README.md</code>).</li>
+<li><strong>Generic skills plus a site skill.</strong> <code>skills/</code> holds the generic <code>slurm-user</code> and <code>research-computing</code> (see <code>skills/SOURCE.md</code>); they contain no site facts and say "see your site skill" where a value differs per site. A <code>sites/&lt;domain&gt;/</code> folder is a site skill named <code>site-&lt;domain with dashes&gt;</code> with the institution's hosts, accounts and 2FA, partitions and GPUs, storage, proxy and software notes, plus <code>Site.yaml</code> for Labmill (<a href="../sites/">Sites</a>). Only <code>sites/generic/</code> is part of this repository. <code>launch.Build</code> loads the generic skills plus the chosen site's skill (<code>Site.SkillsFS(skills.FS)</code>); <code>sites/generic</code> supplies <code>site-generic</code>, which explains how to find site facts without a profile.</li>
+<li>
+<p><strong>Shell steps map to typed tools.</strong> The skills were written for a shell. Labmill's system prompt names the site and its skill and carries a fixed mapping (<code>app.skillToolMap</code>): <code>sinfo</code> → <code>cluster_info</code>, <code>squeue</code>/<code>sacct</code> → <code>job_status</code> and <code>job_logs</code>, <code>sbatch</code> → <code>draft_job</code> and <code>submit_job</code>, looks at the code → <code>find_local_data</code> and <code>preview_file</code>, <code>AskUserQuestion</code> → <code>ask_user</code>, any other login-node step (<code>module avail</code>, <code>sacctmgr show</code>, <code>scontrol show node</code>, <code>ls</code> of a job folder, ...) → <code>remote_command</code>, and so on; logins, installs and proxy fixes are Labmill's job. The skills stay unmodified.</p>
+</li>
+<li>
+<p><strong>Embedded plus override directory.</strong> <code>skill.LoadWithOverride</code> loads the embedded skills, then the skills in an override directory such as <code>~/.config/labmill/skills</code>. An override skill replaces an embedded one with the same name, and new names are added, so a skill can be updated without a new release. The override can never disable the embedded set: problems come back as warnings and the embedded skills still load. Override files are read into memory through an <code>os.Root</code> (symlinks cannot escape the directory) and capped at <code>skill.MaxFileSize</code> (256 KiB).</p>
+</li>
+<li><strong>Progressive disclosure.</strong> The system prompt (<code>Set.SystemPrompt</code>) lists only each skill's name and description. Claude pulls in a skill's body with the <code>load_skill</code> tool and individual reference files with <code>read_reference</code>; both come from <code>agent.SkillTools(set)</code>. Both are read-only and need no approval. <code>Set.Preamble</code> is put on top of every loaded skill to say that shell instructions must be carried out with Labmill's typed tools, never by installing software.</li>
+<li><strong>Skills are guidance only.</strong> They never override the approval rules.</li>
+</ul>
+<h2 id="know-how-from-a-broker">Know-how from a broker<a class="headerlink" href="#know-how-from-a-broker" title="Permanent link">&para;</a></h2>
+<p>When a broker is configured, it can serve newer skill bundles (<code>internal/launch/knowledge.go</code>): once per session, in the background, the client fetches the manifest, downloads a newer bundle, verifies the version hash and every file's sha256, and stores it under <code>os.UserCacheDir()/labmill/knowledge/&lt;domain&gt;/&lt;version&gt;/</code> with a <code>current</code> pointer. Bundles are swapped only at startup. Skill source priority: the override folder (<code>~/.config/labmill/skills</code>, always wins), the verified cached bundle, the embedded copy. Without a broker, or offline, the embedded copy is used.</p>
+<h3 id="key-only-ssh-hosts">Key-only SSH hosts<a class="headerlink" href="#key-only-ssh-hosts" title="Permanent link">&para;</a></h3>
+<p>A host with <code>auth: key</code> in <code>Site.yaml</code> (schema in <a href="../sites/">Sites</a>) accepts SSH keys only. The pieces:</p>
+<ul>
+<li><strong>Offering keys (<code>sshx.Dial</code>).</strong> Password+2FA hosts are offered the host's <code>IdentityFile</code> keys only, as before. On a key-only host <code>Dial</code> offers, in this order, <code>opts.Signers</code>, the <code>IdentityFile</code> keys (or, when there is none, the default <code>id_ed25519</code>, <code>id_ecdsa</code> and <code>id_rsa</code> in the ssh folder) and the keys of the SSH agent, de-duplicated by fingerprint and capped at <code>maxOfferedKeys</code>. The scope keeps a password host from seeing every key (and from counting them against <code>MaxAuthTries</code>). Key files must exist, parse and, off Windows, be private (no group/other bits); loose configured keys are noted once, loose default keys are skipped silently. The agent is <code>SSH_AUTH_SOCK</code> (a Unix socket) or, on Windows, the OpenSSH agent's named pipe through go-winio (<code>agent_windows.go</code>); listing its keys has a 3 s deadline and ends with the login's context, so a stuck agent cannot hang the sign-in. <code>agentDial</code> is the test seam, and the tests of <code>sshx</code>, <code>launch</code>, <code>e2e</code> and <code>transfer</code> switch the developer's own agent off. The agent connection is open only while the login runs.</li>
+<li><strong>Passphrases.</strong> On a key-only host (<code>LoginOptions.KeyOnlyHosts</code>, set by <code>RunHelper</code> from the site profile; matched by <code>HostName</code>, case-insensitive) the agent's keys are loaded first; an encrypted key file whose <code>.pub</code> fingerprint is among them is skipped without a question, any other encrypted key makes <code>Dial</code> ask <code>AskKeyPassphrase</code> (up to three tries per key, empty skips the key, a canceled dialog aborts). The question travels through the helper relay like the password. On password hosts encrypted keys are still skipped silently.</li>
+<li><strong>Errors.</strong> A key-only server that accepts none of the keys gives <code>ErrKeyRejected</code> (or <code>ErrNoKey</code> when no key was offered) instead of <code>ErrAuthDenied</code>; both cross the helper relay as codes <code>key</code> and <code>nokey</code>. No password is ever asked on such a host, and there is no retry without keys: a server that hangs up after too many offered keys also gives <code>ErrKeyRejected</code>, with a hint to name the right key (<code>IdentityFile</code>, <code>IdentitiesOnly</code>).</li>
+<li><strong>Guided setup (<code>sshx.KeyGuide</code>, <code>launch.connCache.connect</code>).</strong> <code>connCache</code> knows the site's key-only host names and <code>key_upload</code> text; <code>keyGuideFor</code> maps the alias to its <code>HostName</code> through <code>sshconfig.Lookup</code>. <code>KeyGuide.Run</code> wraps the helper connect and always signs in first (the helper may already hold a login or see another agent): <code>ErrNoKey</code> goes to the setup, and <code>ErrKeyRejected</code> offers a new key once. The setup asks <code>AskKeyCreate</code>, <code>AskNewPassphrase</code> (twice when one is typed), runs <code>GenerateKey</code>, writes <code>IdentityFile</code> into Labmill's file with <code>sshconfig.AddLabmillIdentityFile</code> (an alias that only the user's own config defines is never edited; a notice then gives the line to add and the upload step still follows), and asks <code>AskKeyUpload</code> with the public key in <code>Question.Data</code>. If the sign-in is rejected afterwards it asks for the upload again, at most three times; declining ends with <code>ErrKeySetupDeclined</code>.</li>
+<li><strong>Reusing a key before creating one (<code>internal/sshx/keyquery.go</code>, <code>keyreuse.go</code>).</strong> <code>KeyGuide.useExistingKey</code> runs before the create step. <code>LocalKeys</code> lists the key files in the ssh folder that have a private sibling, plus the agent's keys. <code>ListRemoteKeys</code> runs one read-only POSIX script over an already-open connection to the home login node (<code>HomeKeys.Client</code> never logs in or asks; without a live connection the step is skipped silently) and returns file name, type, fingerprint and comment from the <code>.pub</code> files, at most 16, skipping symlinks that point outside <code>~/.ssh</code> and names with control characters. <code>QueryKeys</code> asks the key-only host with the public-key query of RFC 4252 section 7: several keys per connection (at most 5, fewer after a "too many authentication failures" disconnect; 7 s pause between connections; partial results are returned when a later connection fails), authenticating with signers whose <code>Sign</code> never signs, so the server's <code>SSH_MSG_USERAUTH_PK_OK</code> ends the attempt before any login and no private key is needed. Jump hosts are dialed like <code>Dial</code> does (<code>dialChain</code>, same <code>LoginOptions</code>, shared <code>hostKeyCheck</code> for unknown-host questions); when a jump host is not key-only the check is skipped with one notice, because it would need a password and 2FA just for this. A local accepted key gets an <code>IdentityFile</code> entry (<code>AddLabmillIdentityFile</code>). An accepted key that exists only on the home cluster goes to <code>askCopy</code> (<code>AskKeyCopy</code>: the prompt names file, source, destination and the risk; default No; never auto-approved, as it counts as a secret read), then <code>copyKeyFile</code> reads the private key in memory (64 KB cap, 30 s timeout), checks it matches the accepted public key, writes it to a new file named <code>id_&lt;type&gt;_&lt;home alias&gt;</code> (type ed25519, rsa, ecdsa or key; <code>_2</code>, <code>_3</code> when the name is taken) with mode 0600 (never overwriting) and adds the <code>IdentityFile</code>; the contents never reach Claude, the chat, logs or the store, and the notice after the copy says whether the key has a passphrase (asked at sign-in, never stored). A host that closes the connection before the handshake (OpenSSH per-source penalties) gives <code>ErrHostLimiting</code>: and when no key has been accepted yet the guide notifies, waits a minute, asks only the keys not yet asked, once, and if the host still refuses ends with "... is still refusing connections; wait a few minutes and try again" instead of creating a key (details in <a href="../ssh/">SSH</a>). When nothing is accepted, the user declines, or the check was skipped because of a password jump host, the create-and-upload path above follows, naming the right institution (<code>siteLabel</code>) and its <code>key_upload</code> text.</li>
+<li><strong>Key files.</strong> <code>GenerateKey</code> makes an ed25519 key in OpenSSH format (private 0600 with <code>O_EXCL</code>, <code>.pub</code> 0644, the folder 0700), named <code>id_ed25519</code> when neither it nor its <code>.pub</code> exists, else <code>id_ed25519_labmill_&lt;alias&gt;</code> (then <code>_2</code>, <code>_3</code>, …); it never overwrites. On Windows Labmill does not touch ACLs: the files inherit the profile folder's, which is what Win32-OpenSSH accepts.</li>
+<li><strong>Front ends.</strong> The questions are four new <code>sshx.QuestionKind</code> values. The GUI bridge maps them to prompt kinds <code>keycreate</code>, <code>newpassphrase</code>, <code>keypassphrase</code> and <code>keyupload</code> (the last carries <code>PromptEvent.Data</code> with the key; the page shows it as text with a Copy button, and <code>make gui-selftest</code> drives the whole dialog). The TUI renders <code>AskKeyCreate</code> as the yes/no confirm, <code>AskKeyUpload</code> as the instructions plus key above a confirm (Ctrl+Y copies), and the passphrases as masked inputs.</li>
+<li><strong>Tests.</strong> <code>sshtest.Options.KeyOnly</code> makes a server that accepts only keys (<code>Server.Authorize</code> simulates the registry upload); <code>internal/sshx/keys_test.go</code> covers default-key discovery, the in-process agent, passphrases, key generation and the whole guide; <code>internal/launch/keysetup_test.go</code> covers the wiring.</li>
+</ul>
+<p>No typed tool maps to this flow (it happens inside the sign-in dialog), so <code>toolSkills</code> has no anchor for it; the skill text is the research-computing ssh reference's "Clusters that accept only keys", and <code>skillToolMap</code> tells Claude that Labmill does the setup itself.</p>
+<h2 id="ssh-config-files">SSH config files<a class="headerlink" href="#ssh-config-files" title="Permanent link">&para;</a></h2>
+<p>Labmill keeps SSH settings in OpenSSH format, so a user who later opens a terminal can run <code>ssh &lt;alias&gt;</code> and get the same connection.</p>
+<ul>
+<li>Labmill owns exactly one file, <code>~/.ssh/config.d/labmill</code>, written by <code>sshconfig.WriteHosts</code> (validated, atomic, mode 0600). <code>clusters.yaml</code> stores only an alias (<code>ssh_host</code>), never host names or users.</li>
+<li><code>sshconfig.EnsureInclude</code> puts <code>Include config.d/labmill</code> at the top of <code>~/.ssh/config</code>. It has to be first: an <code>Include</code> after a <code>Host</code> or <code>Match</code> block only applies inside that block. If the line is missing, the original file is backed up as <code>config.labmill-backup-&lt;timestamp&gt;</code> and the rest of it is kept unchanged.</li>
+<li>Labmill's own Go SSH client does not depend on the parser following <code>Include</code>. <code>sshconfig.Lookup</code> reads the Labmill file first and the user's file second, and the first value for each keyword wins, which is what OpenSSH does.</li>
+<li><code>sshconfig.AddLabmillIdentityFile</code> adds one <code>IdentityFile</code> line to an alias's block in Labmill's file (the key setup of key-only hosts); nothing else in the file changes.</li>
+<li>Values are validated before writing (<code>Host.Validate</code>, <code>ValidAlias</code>), because a newline in a host name would inject directives into a file that every <code>ssh</code> reads. <code>ControlMaster</code> options are left out on Windows, where Win32-OpenSSH rejects them.</li>
+</ul>
+<h2 id="dependency-direction">Dependency direction<a class="headerlink" href="#dependency-direction" title="Permanent link">&para;</a></h2>
+<p><code>cmd/labmill</code> → (<code>tui</code>, <code>app</code>, <code>site</code>) → <code>agent</code> → (<code>skill</code>, <code>broker</code>, <code>backend</code>, <code>transfer</code>, <code>store</code>, <code>knowledge</code>, <code>rules</code>) → (<code>sshx</code>, <code>config</code>, <code>sshconfig</code>). <code>cmd/labmill</code> and <code>cmd/labmill-gui</code> wire the pieces together through <code>launch</code>; <code>app</code> takes everything through the <code>app.Env</code> function fields. <code>rules</code> has no internal dependencies on the heavy packages. Every backend, transfer target and the model client has an interface, so tests use in-process fakes and need no network.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Developer documentation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Developer documentation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../ssh/" class="md-footer__link md-footer__link--next" aria-label="Next: SSH login and OpenSSH config (design decisions)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                SSH login and OpenSSH config (design decisions)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1665 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/dev/gui/">
+      
+      
+      
+        <link rel="prev" href="../tui/">
+      
+      
+        <link rel="next" href="../voice/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Desktop app (GUI) - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Desktop app (GUI)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Build and run
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Smoke test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Self-test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tray-and-closing-the-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tray and closing the window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folders-and-open-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folders and "Open folder"
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#busy-feedback-the-hourglass" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Busy feedback: the hourglass
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Settings page
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Architecture
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-and-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Build and run
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Smoke test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Self-test
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Windows
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tray-and-closing-the-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tray and closing the window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folders-and-open-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folders and "Open folder"
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#busy-feedback-the-hourglass" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Busy feedback: the hourglass
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Settings page
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Architecture
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="desktop-app-gui">Desktop app (GUI)<a class="headerlink" href="#desktop-app-gui" title="Permanent link">&para;</a></h1>
+<p><code>cmd/labmill-gui</code> is Labmill's desktop app, built with Wails v2 (system webview, plain HTML/CSS/JS, no npm build step). It shares the runtime with the terminal interface.</p>
+<h2 id="build-and-run">Build and run<a class="headerlink" href="#build-and-run" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make gui-linux      # go build -tags desktop,production,webkit2_41 -o bin/labmill-gui ./cmd/labmill-gui
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bin/labmill-gui
+</span></code></pre></div>
+<p>Linux needs <code>webkit2gtk-4.1</code> and cgo. macOS and Windows use the same command on those hosts, without <code>webkit2_41</code>. The package is behind the <code>desktop</code> build tag, so <code>make check</code> and the cross builds need no webkit.</p>
+<h2 id="smoke-test">Smoke test<a class="headerlink" href="#smoke-test" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make gui-smoke
+</span></code></pre></div>
+<p>It builds the app and runs it with a throwaway <code>HOME</code> and <code>XDG_*</code> folders, so it shows the first-run setup page and never touches your real configuration. With <code>LABMILL_GUI_SMOKE=1</code> the app quits 3 seconds after the page has loaded; the target fails unless the exit status is 0. It works under WSLg. No screenshot tool works there (X <code>get_image</code> fails), so there are no screenshots yet.</p>
+<h2 id="self-test">Self-test<a class="headerlink" href="#self-test" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make gui-selftest
+</span></code></pre></div>
+<p><code>LABMILL_GUI_SELFTEST=1</code> skips <code>launch.Build</code> and wires a scripted fake session (<code>cmd/labmill-gui/selftest.go</code>) through the real <code>gui.Bridge</code>. The page learns of the mode through <code>PageAPI.SelfTest</code> and loads <code>frontend/selftest.js</code>, which drives the real DOM: a hostile summary (<code>&lt;img src=x onerror=...&gt;</code>) must stay text, Decline must be focused, input during the grace period must send nothing, Approve must work afterwards, the login field must be a password input and be cleared after submit, and <code>labmill:done</code> must arrive. After the login, a choice dialog (<code>ask_user</code>) with markup in its question and an option description must keep that markup as text and focus the first option; a number key and a click inside the grace period must pick nothing, and ArrowDown + Enter afterwards must pick option 2 (Go checks that <code>Choose</code> was called once with index 1 and the session received <code>ChoiceAnswer{Index: 1}</code>). The scripted reply is Markdown streamed in small pieces: <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code>, a heading, a list and a quote must be rendered, while <code>[x](javascript:alert(1))</code>, <code>![p](data:...)</code>, raw <code>&lt;img onerror&gt;</code> and <code>&lt;a href&gt;</code> markup and an unterminated code fence must create no <code>&lt;a&gt;</code>, <code>&lt;img&gt;</code> or <code>&lt;script&gt;</code> element and leave <code>window.__pwned</code> undefined (links show as "x (javascript:alert(1))"). It also checks the chat font size (at least 15 px), monospace code, a collapsed tool line ("load_skill · 40 lines") and that job-table cells don't wrap. The self-test also checks the divider: it is a focusable vertical separator between chat and jobs, the width seeded by Go (30 %) is applied at start, Left widens the panel by 2 %, a drag and Home/End change the column, a double-click resets, the value reaches <code>SetJobsWidth</code> (Go checks that a widened width (at most 60 %) was saved and the last save, from the reset, is 0), squeezing the window and restoring it brings the panel back to the chosen width, and the narrow layout hides it. A job notice sent while the first reply is still open must render as a system line with its markup as text, placed above that reply. Then the page sends "slow" (a turn that waits for Cancel). While it runs, the input and Send must stay enabled, Send must read "Queue", Send queues "queued one", and Enter replaces it with "queued two". Cancel must send "queued two" (shown as a user message, queued line gone), and "queued one" must never be sent. The self-test job list must show Status, Logs and Cancel for the running job, Status, Logs and Fetch for the completed one, and nothing for the draft. Clicking Status must send "Show the status of job #12". Go checks that the turns were exactly "self-test", "slow", "queued two" and "Show the status of job #12". While "slow" runs, Go sends a transfer start, one progress update and (after Cancel) the end notice: the page must show the rclone-style line and a 25% bar in the progress row, the <code>rclone-lib:</code> start line as text, and remove the row when the transfer ends. The page reports through <code>PageAPI.SelfTestReport</code>; a second approval is declined with the reason "use the gpu partition" typed into the reason input (Enter inside the input must send nothing); Go also checks that <code>Decide</code> was called twice (approve=true, then approve=false with that reason, arriving as <code>Decision.Reason</code>) and <code>Answer</code> once with "pw". After the page has reported, Go closes the window the way the X button does (<code>runtime.Quit</code>, which runs OnBeforeClose on every platform): the window must hide (<code>gui.Lifecycle.Hide</code> ran), the app must not shut down or quit within 0.7 s, the first hide must ask for the one-time tray notice, and the notice must be remembered in the prefs file. Where the desktop has no tray host (WSLg) the hide path runs with a simulated tray; the output says whether a real tray icon was up. Then the tray menu's Quit path (<code>gui.Lifecycle.Quit</code>) must run the shutdown and end the app with status 0. The make targets also launch a second copy once the first has hidden its window and written the "ready" marker (<code>labmill-selftest-second</code>; <code>LABMILL_GUI_SELFTEST_SECOND=1</code> on the first): it must hand over to the running one (single-instance lock, a self-test-only lock name) and exit at once, and the first must see the handover. After the job buttons the page checks the folders: the old buttons above the chat must be gone; the + button (aria-label "Add folder", <code>aria-haspopup="menu"</code>) must sit at the upper left inside the input box, which must be the only drop target (<code>--wails-drop-target</code>, not on the conversation). Enter on + must open the menu with "Add data folder…" first and "Add code folder…" second, focus the first item, ArrowDown must move and wrap, and Esc must close it and return the focus to +. Space opens it again and Enter on "Add data folder…" calls <code>PageAPI.PickFolder("data")</code>, whose stub dialog returns <code>labmill-selftest-folders/home/data</code> next to the executable (the code folder for the code title): a "Data: ~/data" chip must appear above the text with the full path in its tooltip and an × labelled "Remove the data folder". The next message ("data only check") must carry the data folder and the data-only sentence (<code>app.DataOnlyPrompt</code>) in the system-prompt addition (Go records <code>Workspace.Prompt()</code> at the start of every turn, as <code>agent.SystemExtra</code> would). Then "Add code folder…" adds a Code chip after the Data chip, and "workspace check" must carry both folders (data first) without the data-only sentence. The Code chip's × removes only the code folder; the menu must offer it as a recent folder labelled "Code: ~/code" (after a separator, not the data folder in use) and set it again; "Remove code folder" removes it, and the Data chip's × leaves no chips and the focus on +. A simulated Wails drop (<code>__labmillTest.drop(x, y, paths)</code>, the handler <code>runtime.OnFileDrop</code> calls) onto the conversation must be ignored; onto the input box it must show the choice "Add as data folder" (focused) / "Add as code folder" naming the folder as text; a hidden folder added as data must be refused with a message, Esc must cancel the choice, and the data folder dropped and added as data must be set. The "fetch check" turn then sends a successful <code>fetch_results</code>: the chat must show an "Open folder" button, the fetched job (#15) must offer Status, Logs and Open folder, and both Open folder buttons must reach the stub opener with the job's results folder (Go checks; no chat message is sent). Go also checks the turn list (now ending in "data only check", "workspace check", "fetch check"), that the dialog opened twice with the titles "Choose your data folder" then "Choose your code folder", that "fetch check" carried only the data folder plus the data-only sentence, that the turns before any choice added nothing, and the final workspace (code cleared, data set, each remembered as recent). Busy feedback: before anything else the page checks that the startup splash was visible and animated when <code>app.js</code> first ran (<code>__labmillTest.splashAtLoad</code>, recorded at script start), that <code>index.html</code> itself (fetched and parsed) shows the hourglass and "Starting labmill…" (aria-live polite) with the chat hidden and has no inline script or style, and that <code>app.css</code> has a <code>prefers-reduced-motion</code> rule that sets the hourglass animation to <code>none</code>. At the end the "working check" turn (Go waits 300 ms, sends the step "Connecting to selftest.example…", then "Waiting for Claude…", then the text) must show the "Working…" row within 100 ms of Enter (before Go said anything), with an hourglass and an aria-live polite text, then each step before the first token with Cancel available, the elapsed seconds (the threshold shortened to 1 s through <code>__labmillTest.elapsedAfter</code>), and no row once the text started and after the turn. Then, with <code>navigator.clipboard</code> stubbed, every code block in the chat must have a Copy button (aria-label "Copy", no inline handler, not part of the block's text) that copies the block's text. Exit status: 0 passed, 1 failed, 2 timed out (45 s). Like the smoke test it uses a throwaway <code>HOME</code> under <code>tmp/</code>. The self-test never reads or writes the real <code>gui.json</code> or <code>workspace.json</code>: it starts from default prefs and writes <code>labmill-selftest-gui.json</code> next to its executable (<code>bin/</code> here, <code>%TEMP%\labmill-selftest</code> on Windows), and creates (never deletes) the folder tree <code>labmill-selftest-folders/</code> there for the folder checks; its workspace stays in memory.</p>
+<h2 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h2>
+<p>Wails v2 on Windows uses WebView2 through pure Go (no cgo), so the Windows GUI cross-compiles on Linux:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make gui-windows            # bin/cross/labmill-gui.exe
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>make gui-windows-selftest   # WSL only: runs the self-test on the Windows host
+</span></code></pre></div>
+<p><code>gui-windows</code> first runs <code>cmd/labmill-winres</code>, which writes <code>cmd/labmill-gui/rsrc_windows_amd64.syso</code> (gitignored, overwritten each build): the Labmill icon (<code>assets/icon/labmill.ico</code>, 16-256 px) as icon group ID 3, which is both the exe's icon in Explorer and the window icon Wails v2 loads, plus version information. It uses <code>github.com/tc-hib/winres</code> (0BSD; new to this module's own imports, it was only an indirect Wails dependency), pure Go, so it runs on Linux; <code>go build</code> links the <code>.syso</code> automatically. A build on a Windows host runs the same <code>go run ./cmd/labmill-winres</code> first.</p>
+<p><code>gui-windows-selftest</code> copies the exe to <code>%TEMP%\labmill-selftest</code> (overwritten each run) and starts it through WSL interop. It passes <code>LABMILL_GUI_SELFTEST</code> with <code>WSLENV</code>. Self-test mode builds no runtime and writes no Labmill files except <code>labmill-selftest-gui.json</code> and the <code>labmill-selftest-folders</code> tree next to the exe; WebView2 creates its usual cache folder and the tray library writes its icon to <code>%TEMP%\systray_temp_icon_&lt;hash&gt;</code>. Its tray icon shows for a few seconds, but the window never does: in self-test mode on Windows the app starts with <code>StartHidden</code>, <code>showWindow</code> (tray Open, the second-launch handover, attention wake-ups) only records the internal "shown" state and shows nothing, so the desktop gets no window, focus change or taskbar button while the test runs. WebView2 loads the page and runs the full DOM script while hidden. The self-test proves it from inside (<code>windowProbe</code> in <code>selftest_windows.go</code>: <code>EnumWindows</code> over the process's top-level windows with <code>IsWindowVisible</code>, <code>GetForegroundWindow</code>, the rect and the tool-window style), before the close and again after the second-launch handover, prints the result as INFO lines and fails if any window is visible or foreground; the handover is asserted through the internal state. Linux needs no such mode (Xvfb), and its hidden window would throttle the page's timers. It passes all checks in real WebView2, including the close sequence (<code>gui.Closer</code>), close-to-tray with a real tray icon, the tray Quit path and the single-instance handover. Not covered yet: the real first-run flow on Windows (setup page plus SSH login with Duo), an installer, Authenticode signing, and voice.</p>
+<h2 id="tray-and-closing-the-window">Tray and closing the window<a class="headerlink" href="#tray-and-closing-the-window" title="Permanent link">&para;</a></h2>
+<p>Closing the window must not end the SSH logins, so the app stays running in the tray like OneDrive or Teams and quits only from the tray menu.</p>
+<ul>
+<li><strong>Library: <code>fyne.io/systray</code> v1.12</strong> (Apache-2.0, maintained by the Fyne project). Compared: <code>github.com/getlantern/systray</code> uses GTK/libappindicator on Linux (a second GTK main loop next to Wails' one) and is unmaintained; <code>github.com/energye/systray</code> is a fork of the same code with click handlers but older and less maintained. fyne's version has a pure-Go D-Bus StatusNotifierItem on Linux (no GTK), left-click handling (<code>SetOnTapped</code>) on Windows, and checkbox items. None of the three can show a balloon notification.</li>
+<li><strong>Windows (primary):</strong> <code>systray.Run</code> runs in its own goroutine locked to an OS thread (its hidden message window and its message loop must share a thread; <code>RunWithExternalLoop</code> starts the loop in an unlocked goroutine, which can't work on Windows). This coexists with Wails' UI thread. Icon: <code>tray-dark.ico</code> when the taskbar is light (<code>HKCU\...\Themes\Personalize\SystemUsesLightTheme</code> = 1), else <code>tray-light.ico</code>; read once at start. Left click opens the window, right click shows the menu. Verified on Windows 11 with WebView2.</li>
+<li><strong>Linux (best effort):</strong> the tray needs a StatusNotifierWatcher on the session bus (KDE, most panels, GNOME with the AppIndicator extension). <code>trayAvailable</code> asks D-Bus whether <code>org.kde.StatusNotifierWatcher</code> has an owner; without one there is no tray and closing the window quits as before. Icon: <code>tray-light-32.png</code>. WSLg has no tray host, so only the simulated hide path is tested here.</li>
+<li><strong>macOS:</strong> no menu-bar icon yet. fyne's menu-bar item has to be created on the main thread, which Wails v2's <code>NSApp</code> loop owns; that needs a small main-thread shim and a Mac to test it, so it is deferred. Instead the Mac behaves like a Mac app: <code>HideWindowOnClose</code> hides the app on the red close button (Wails then doesn't call OnBeforeClose), File &gt; Close Window (Cmd+W, our menu: Wails' default App/Edit/Window menus plus File) hides it the same way, a click on the Dock icon shows it again, and Quit (Cmd+Q) goes through OnBeforeClose and quits. The bundle icon (<code>assets/icon/labmill.icns</code>) goes into the <code>.app</code> bundle once macOS builds exist. There is no one-time notice on the Mac. The darwin file can't be compiled here (Wails on macOS needs cgo and the SDK); it was type-checked by compiling a copy of the package with it as a Linux file.</li>
+<li><strong>Menu:</strong> Open Labmill; a disabled status line, <code>gui.TrayStatus</code> ("2 jobs running, 1 waiting · logged in to bigcluster"), from the job store (submitted, pending, running) and the helper's logins (<code>sshx.Keeper</code>), refreshed every 10 s and at once when the runtime is ready ("Labmill is starting…" until then); Start in the tray when I log in (checkbox); Quit Labmill.</li>
+<li><strong>Close → hide (<code>gui.Lifecycle</code>):</strong> OnBeforeClose calls <code>Lifecycle.BeforeClose</code>. While a tray icon is up it hides the window (in a goroutine; it never blocks the UI thread) and keeps the app running. The first hide ever shows <code>gui.TrayNotice</code> as a chat line (<code>labmill:notice</code>) and in a native message box shown before the window hides (no tray library offers a balloon; Wails' toast notifications were not used because they register a COM activator under <code>HKCU\Software\Classes</code>), and records <code>trayNoticeShown</code> in <code>gui.json</code>. Without a tray, or once a quit was requested, it hands over to <code>gui.Closer</code> (unchanged: hide, cancel the turn, decline pending dialogs, close the runtime, quit; 30 s watchdog). A shutdown is never turned back into a hide, even if a tray appears meanwhile.</li>
+<li><strong>Quit:</strong> the tray's Quit calls <code>Lifecycle.Quit</code>, which starts the Closer; its final <code>runtime.Quit</code> re-enters OnBeforeClose and is let through. After <code>wails.Run</code> returns the tray icon is removed.</li>
+<li><strong>Logins stay up:</strong> <code>sshx.Keeper</code> holds a <code>sshx.Hold</code> connection to the helper while the app runs, shown or hidden. The helper never idle-expires while a client is connected, and a hold client is accepted without any question and opens no channels, so it never logs in or triggers a Duo push; it also answers <code>logged-in@labmill</code> with the aliases it holds logins for (the tray's status line). The Keeper only attaches to a helper that is already running (it never starts one) and retries every 15 s; after a handshake error other than <code>ErrNoHelper</code> (an older helper) it backs off 10 min. Quitting cancels it; the helper's normal 10-minute idle expiry then applies.</li>
+<li><strong>Single instance:</strong> <code>options.SingleInstanceLock</code> (<code>singleInstanceID</code> in <code>main.go</code>): a second launch hands over to the running app, which shows its window (with a short always-on-top so Windows brings it to the front), and exits. Not in smoke mode; the self-test uses its own lock name.</li>
+<li><strong>Start in the tray at login:</strong> the tray checkbox (off by default) calls <code>internal/autostart</code>: Windows <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run\labmill</code> = <code>"&lt;exe&gt;" --tray</code> (turning it off deletes that value); macOS a plist in <code>~/Library/LaunchAgents</code> named after the entry's reverse-DNS label (RunAtLoad; off rewrites it with <code>Disabled</code>); Linux <code>~/.config/autostart/labmill.desktop</code> (off rewrites it with <code>Hidden=true</code>). The checkbox shows whether the entry is registered; <code>startInTray</code> in <code>gui.json</code> records the choice. <code>enabled</code> accepts whatever command the entry runs (Windows: the Run value exists; Linux: the file exists without <code>Hidden=true</code>; macOS: no <code>Disabled</code> key). Started with <code>--tray</code>, the app starts hidden (<code>StartHidden</code>) when a tray is available and no first-run setup is needed; if the tray then never comes up (<code>startTray</code> gives up after 5 s), the window is shown. While hidden, <code>gui.WakeOnAttention</code> (wrapping the Bridge's emitter) shows the window when an approval, login prompt or choice event arrives; job notices never do.</li>
+<li><strong>Prefs:</strong> <code>gui.json</code> next to <code>clusters.yaml</code> (<code>gui.Prefs</code>: <code>trayNoticeShown</code>, <code>startInTray</code>, <code>window</code>, <code>jobs_width</code>), written atomically with mode 0600.</li>
+<li><strong>Window geometry (<code>internal/gui/window.go</code>, <code>windowwatch.go</code>).</strong> <code>gui.json</code> <code>window</code> holds <code>WindowGeom</code> (x, y, width, height, maximized). <code>WindowWatcher</code> polls the window about once a second through a <code>WindowProbe</code> (Wails v2 has no move or resize event), saves when the geometry has been stable, and saves again when the window hides to the tray and on close; while maximized it keeps the last normal size. <code>Restore</code>/<code>RestoreScaled</code> run once, at start (<code>applyGeom</code> in OnStartup); a window that starts hidden in the tray gets its saved maximized state at the first show (<code>pendingMax</code>), and hiding and showing it again does not move it. A saved position outside every monitor falls back to centered at the default size, a size below the minimum is raised to it, and on Windows the size is scaled for display scaling. Windows sets the position with <code>SetWindowPos</code> (no activation), Linux uses a small cgo helper, macOS restores only an offset on the same screen. The self-tests restore 820x610 at 120,90.</li>
+<li><strong>Jobs panel divider.</strong> A vertical divider (<code>#divider</code>, <code>role="separator"</code>, <code>aria-orientation="vertical"</code>, focusable, <code>aria-valuenow</code> in percent) sits between <code>.chat</code> and <code>aside.jobs</code>. Pointer drag, Left/Right arrows (2 % per step), Home/End and a double-click (back to the default) move it. The jobs panel's share of the main area defaults to 40 % (<code>gui.DefaultJobsWidth</code>) and is clamped to 15 to 60 % (<code>MinJobsWidth</code>, <code>MaxJobsWidth</code>; <code>gui.ClampJobsWidth</code>, where 0, negative, NaN and Inf mean the default), and the frontend also keeps both sides at a readable width. It is saved as a fraction in <code>gui.json</code> <code>jobs_width</code> (<code>Prefs.JobsWidth</code>, omitted when default) through <code>SettingsAPI.SetJobsWidth</code> (debounced by the page) and read at start with <code>SettingsAPI.JobsWidth</code> (0 = default). It is stored apart from <code>window</code>, so a window move and a divider move are saved independently. The frontend keeps the chosen width (<code>jobsWant</code>) apart from the shown one, so a narrow window never shrinks the choice; a drag saves at once, a key change after 400 ms, and saves are chained so a later one can't be overtaken. Under the <code>@media (max-width: 760px)</code> layout the panel sits below the chat and the divider is hidden.</li>
+</ul>
+<h2 id="folders-and-open-folder">Folders and "Open folder"<a class="headerlink" href="#folders-and-open-folder" title="Permanent link">&para;</a></h2>
+<p>The user points Labmill at their code and their data without typing paths.</p>
+<ul>
+<li><strong>Workspace (<code>internal/app/workspace.go</code>).</strong> <code>app.Workspace</code> holds the chosen code and data folders and the last 5 of each. <code>app.CheckFolder</code> decides whether a folder may be chosen: it must exist and be a directory, not a drive root, not home's parent or any folder containing home; inside home it must pass the usual privacy rules relative to home (no hidden or secret-looking component, not <code>~/Library</code> on macOS or <code>AppData</code> on Windows); outside home it must not be a system folder (<code>/etc</code>, <code>/usr</code>, <code>/opt</code>, <code>/System</code>, <code>/private</code>, <code>C:\Windows</code>, <code>Program Files</code>, <code>ProgramData</code>, <code>Users</code>, and WSL's <code>/mnt/c</code> with its Windows system folders) and no component may be hidden. <code>/mnt/&lt;x&gt;</code>, <code>/media/&lt;x&gt;</code>, <code>/Volumes/&lt;x&gt;</code> and <code>/run/media/&lt;user&gt;/&lt;x&gt;</code> (mounted drives) are fine. The workspace is saved to <code>workspace.json</code> next to <code>clusters.yaml</code> (0600, atomic), shared by the terminal and the desktop app; <code>launch.Build</code> loads it (a saved folder that no longer passes is dropped with a startup warning). Each process keeps its own copy in memory; <code>SetFolder</code> re-reads the file and merges the other kind and the recent lists before saving, so a stale process doesn't overwrite the other's choice, but a change in one shows in the other only after a restart. On macOS and Windows the home and system-folder rules compare case-insensitively, <code>/Users/&lt;name&gt;/Library</code> is refused outside home, and macOS's hidden flag counts as hidden. <code>PageAPI.SetFolder</code> accepts only "" or a folder from that kind's recent list.</li>
+<li><strong>Conversation context.</strong> <code>agent.Agent.SystemExtra</code> (new) is called once per <code>Send</code> and appended to the fixed system prompt; <code>launch.Build</code> sets it to <code>Workspace.Prompt</code>, which names the folders (data first) and says they are the default roots and that choosing one sent nothing. With a data folder and no code folder it adds <code>app.DataOnlyPrompt</code>: "The user has data but no code yet: offer to write the analysis code for them (it is shown to the user before anything runs)." Many users have no code; the usual approvals still show any generated script before it runs. The fixed prompt stays prompt-cache friendly.</li>
+<li><strong>Tool defaults.</strong> The Workspace folders are extra allowed roots (only the ones outside <code>LocalRoots</code> are added). <code>find_local_data</code> without <code>under</code> searches them (else every root); <code>preview_file</code> resolves a relative path in the code folder, then the data folder; <code>stage_data</code> without <code>root</code> stages from the data folder, else the code folder. The privacy rules and the approvals are unchanged; staging still only builds a list.</li>
+<li><strong>Page.</strong> A "+" button (aria-label "Add folder", <code>aria-haspopup="menu"</code>) at the upper left inside the chat input box (<code>#composer</code>) opens a menu that follows the menu-button pattern: Enter, Space and ArrowDown open it at the first item, ArrowUp at the last; arrows (wrapping), Home and End move; Esc closes it and returns the focus to +; Tab or a click elsewhere closes it. Items: "Add data folder…" (first, because many users only have data), "Add code folder…" (both <code>PageAPI.PickFolder</code> → <code>gui.App.PickFolder</code> → <code>FolderHost.Pick</code> = <code>runtime.OpenDirectoryDialog</code>, starting in the current folder or home), a separator and up to 5 recent folders not in use, taken from the data and code lists in turn and labelled "Data: …" / "Code: …" (<code>SetFolder(kind, path)</code>, recent-only), and "Remove data folder" / "Remove code folder" when set (<code>SetFolder(kind, "")</code>). Chosen folders show as chips above the text inside the box, data first: "Data: " + <code>FolderView.Short</code> (<code>app.ShortFolder</code>: <code>~</code> for home, "…/last/two" when long), the full path in the tooltip, an × (aria-label "Remove the data folder"). All text is set with <code>textContent</code>. Refusals show as an error line just above the box. <code>gui.FolderHost</code> (<code>Env</code>, <code>Pick</code>, <code>Open</code>) connects <code>gui.App</code> to the runtime; the self-test installs stubs.</li>
+<li><strong>Drop.</strong> Wails file drop is on (<code>EnableFileDrop</code>); the webview's own drop also stays on because WebView2 delivers no drop at all with <code>DisableWebViewDrop</code> (it sets <code>AllowExternalDrag(false)</code>). Only the chat input box carries <code>--wails-drop-target: drop</code> (custom properties inherit, so its children count too), the page registers <code>runtime.OnFileDrop(handler, true)</code>, and its handler also requires the element under the drop point to be inside the box; a dragover elsewhere gets <code>dropEffect = 'none'</code>, and every dragover and drop is <code>preventDefault</code>ed, so the page never navigates to or opens a dropped file. A drop shows a small inline choice in the box, "Add as data folder" (focused) / "Add as code folder" / × (Esc cancels), naming the folder's last component as text; the choice calls <code>PageAPI.DropFolder(kind, [path])</code>, which uses only the first path, through the same <code>CheckFolder</code>. A real drop needs a desktop session; the self-test simulates the handler call.</li>
+<li><strong>Open folder.</strong> <code>gui.Bridge</code> remembers the <code>job_id</code> of a <code>fetch_results</code> call and puts it on the successful result's <code>ToolEvent</code> (<code>jobId</code>); the page then adds an "Open folder" button. Fetched jobs with a local folder get the action <code>open</code> in the job list. Both call <code>PageAPI.OpenJobFolder(id)</code>: <code>gui.App</code> takes the folder from the job store (state <code>fetched</code>), checks it with <code>app.Env.OpenableFolder</code> (an existing directory inside the results folder or an allowed root that passes the privacy rules) and calls <code>gui.OpenFolder</code>, which starts <code>explorer.exe</code> (from <code>%SystemRoot%</code>; names with <code>,</code> or <code>"</code> are refused because Explorer parses them), <code>/usr/bin/open</code> or <code>xdg-open</code> with the folder as the only argument. No shell and no <code>file://</code> URL are involved, and nothing is sent to the model.</li>
+<li><strong>Terminal.</strong> <code>/data &lt;folder&gt;</code> and <code>/code &lt;folder&gt;</code> (<code>tui.Options.Folders</code>, the same Workspace): a relative folder is taken from the current folder, <code>~</code> is home, one pair of quotes is dropped; <code>/data</code> shows it, <code>/data -</code> clears it. They never start a turn. Tab completes folder names while the input is such a command; the status bar shows "Data: …" then "Code: …", and the welcome tip names <code>/data</code> first and says no code is needed.</li>
+</ul>
+<h2 id="busy-feedback-the-hourglass">Busy feedback: the hourglass<a class="headerlink" href="#busy-feedback-the-hourglass" title="Permanent link">&para;</a></h2>
+<p>The app shows activity before anything slow happens, so the user can tell that Labmill is doing something while it loads.</p>
+<ul>
+<li><strong>Startup splash.</strong> <code>index.html</code> itself contains <code>#starting</code> (<code>data-splash="1"</code>): a pure-CSS hourglass (<code>.hourglass</code>, two border triangles in a frame; the top one fades while the bottom one fills, then the glass turns over) and "Starting labmill…" in an <code>aria-live="polite"</code> status. It is visible on the first paint, before <code>app.js</code> or the Wails runtime load; the CSP stays strict (no inline style or script). <code>main.go</code> builds the runtime with <code>launch.BuildWithProgress</code>, whose <code>Progress</code> callback reports <code>launch.StartLoadingSettings</code> ("Loading your settings…"), <code>StartOpeningDatabase</code>, <code>StartLoadingSkills</code> and <code>StartReady</code>. Each step is emitted as <code>labmill:startup</code> (<code>{step}</code>) and stored in <code>State.Step</code>, so a page that loads late starts with the current one. After 10 s on the splash a second line says "This is taking a while. Still waiting for: loading skills (14 s)." (before the first step: "Labmill to start"); it counts again from the first-run form's submit. The chat replaces the splash as soon as the page has its Go bindings (phase "starting"): the input works at once, the status line shows the startup step, and a message sent before the runtime exists waits in <code>gate.Send</code> (a running turn) and is forwarded once. <code>labmill:ready</code> sets the status line. The runtime starts before the window on Windows (a second launch is detected with <code>otherInstanceRunning</code> first). Windows exe flags: <code>-trimpath -s -w</code> (smaller, faster loader). WebView2 uses one fixed user-data folder, <code>%LocalAppData%\labmill\WebView2</code> (<code>webviewUserDataPath</code>); the old default folder (<code>%AppData%\labmill-gui.exe</code>) is left behind, never deleted.</li>
+<li><strong>Native start splash on Windows.</strong> The page-level splash above only exists once the window and WebView2 are up; before that (loader, antivirus scan of a new exe, Go init, tray, Wails) Windows showed nothing, and the tray's message loop ends the app-starting cursor at once. So <code>main</code> starts a native splash right after the helper-subcommand check and before the tray and <code>wails.Run</code> (<code>startSplash</code> in <code>splash_windows.go</code>; <code>splash_other.go</code> is a no-op). It is a borderless popup (<code>WS_POPUP|WS_BORDER</code>, <code>WS_EX_TOOLWINDOW</code> so no taskbar button, <code>NOACTIVATE</code>, not topmost (the new main window covers it), shown with <code>SW_SHOWNOACTIVATE</code> so it never takes focus), 360x120 at 96 DPI scaled by the system DPI, centered on the rectangle the saved window geometry (read alone from <code>gui.json</code> by <code>savedWindowGeom</code>) opens in, else the primary work area (<code>splashRect</code>, clamped into the work area). It shows the app icon (exe resource 3, <code>cmd/labmill-winres</code>), "Starting labmill…", a self-drawn moving bar (a progress control's marquee needs common controls v6, which needs a manifest) and the app-starting cursor (<code>WM_SETCURSOR</code>), in the dark or light colours of the Windows app theme (<code>AppsUseLightTheme</code>). It runs on its own locked OS thread with its own message loop. <code>closeSplash</code> (thread-safe, idempotent: posts <code>WM_CLOSE</code>) is called from <code>OnDomReady</code>, <code>showWindow</code> (tray open), <code>OnShutdown</code> and after <code>wails.Run</code> returns; the window also closes itself after 60 s. Skipped (<code>splashWanted</code>): <code>--tray</code> starts (also when a setup form would show), the self-test and smoke test, and a second launch that only hands over: Wails exits that process inside <code>Run</code>, so <code>main</code> probes the single-instance mutex first (<code>otherInstanceRunning</code>, the same cheap probe the tray uses) and shows no splash, so there is no flash. Timing marks: "gui: splash shown", "gui: splash closed". The Windows self-test checks <code>splashStarts == 0</code> and that no splash step is in the timing list; the visible splash itself is not checked by any test.</li>
+<li><strong>Tray.</strong> The tray icon is started before <code>wails.Run</code> (it needs nothing from Wails) with the tooltip and status line <code>gui.TrayStarting</code> ("Labmill is starting…"); the status loop is refreshed at once when the runtime is ready or failed (not only every 10 s), and the tooltip becomes <code>gui.TrayTooltip</code> ("Labmill: no jobs running · …"). A tray click before the window exists is remembered and shown in OnStartup; the tray's Quit does nothing until the window exists.</li>
+<li><strong>"Working…" row.</strong> <code>#working</code> sits under the conversation (outside the <code>role="log"</code> region, so its updates aren't read as chat): a small hourglass, <code>#working-text</code> (<code>role="status"</code>, <code>aria-live="polite"</code>) and <code>#working-time</code>. <code>send()</code> shows "Working…" synchronously when a new turn starts (not when the message is only queued), so it appears before Go answers; <code>labmill:turn</code> restarts it. <code>labmill:step</code> (<code>{text}</code>, from <code>agent.EventStep</code> via <code>gui.Bridge</code>) and a tool call ("Running <tool>…") set its text; <code>labmill:text</code> hides it (a later step or tool call shows it again); <code>labmill:done</code> hides it. After 5 s it shows the seconds since it appeared (a 250 ms timer), so it never looks frozen. Cancel stays available, transfers keep their own progress row (<code>#xfer</code>), and <code>#progress</code> now shows only the latest <code>labmill:notify</code> line (the tool activity moved into the row).</li>
+<li><strong>Where the steps come from.</strong> <code>agent.Agent</code> emits <code>EventStep</code> <code>agent.StepWaitingForClaude</code> before every model call. Below the agent, <code>launch</code>'s <code>stepTracker</code> emits "Connecting to <alias>…" while <code>connCache.client</code> opens an SSH login (not for a cached client, and never for the background job monitor, which uses <code>existingClient</code>). When such a part ends the tracker puts the previous step back ("Waiting for Claude…", "Running cluster_info…"), unless a newer step replaced it or the reply text already started; it learns the agent's steps by wrapping <code>Agent.OnEvent</code>. Approvals are unchanged: steps never ask or decide anything.</li>
+<li><strong>Reduced motion.</strong> <code>@media (prefers-reduced-motion: reduce)</code> sets <code>animation: none</code> on the hourglass and its triangles: a still hourglass with the sand on top.</li>
+<li><strong>Terminal.</strong> The TUI's status bar shows its Bubbles spinner followed by the same texts (<code>model.step</code>: "Working…", the <code>EventStep</code> texts, "Running <tool>…") and the elapsed seconds after 5 s; while a turn runs a shorter key hint makes room for it, and a <code>NotifyMsg</code> follows the step instead of replacing it. Startup in the terminal is not shown step by step (<code>launch.Build</code>).</li>
+</ul>
+<h2 id="settings-page">Settings page<a class="headerlink" href="#settings-page" title="Permanent link">&para;</a></h2>
+<p>The Settings page shows and edits every setting Labmill keeps; see the user page <code>docs/user/settings.md</code> for what each section does.</p>
+<ul>
+<li><strong>Opening.</strong> The header's gear button (<code>#settings-open</code>, shown once the page reaches ready or failed: <code>app.js</code> calls <code>labmillSettings.enable()</code>), the tray menu's "Settings…" and, on macOS, File &gt; Settings… (Cmd+,) both show the window and emit <code>labmill:open-settings</code>. <code>frontend/settings.js</code> hides <code>#main</code> (or <code>#fatal</code>) and shows <code>#settings</code>; "Back to chat" or Esc outside a form returns and focuses the message box. The section list is a <code>role=tablist</code> (automatic activation: ArrowUp/ArrowDown/Home/End move and open, only the selected tab is in the Tab order); the section is the <code>role=tabpanel</code>. Everything is built with <code>createElement</code>/<code>textContent</code>; the documentation address is a <code>&lt;code&gt;</code> field, never a link. Approval, login and sign-in dialogs still cover it (<code>#app</code> is inert under the overlay).</li>
+<li><strong>Binding.</strong> <code>SettingsAPI</code> (<code>cmd/labmill-gui/settings.go</code>, <code>window.go.main.SettingsAPI</code>) is a separate bound struct from <code>PageAPI</code>, so each script reaches only its own methods: <code>Get</code>, <code>SaveSite</code>, <code>SaveCluster</code>, <code>RemoveCluster</code>, <code>SaveHost</code>, <code>RemoveHost</code>, <code>SetStartInTray</code>, <code>SetRunWithoutAsking</code>, <code>ApproveAll</code>, <code>SetApproveAll</code>, <code>JobsWidth</code>, <code>SetJobsWidth</code>, <code>AutoDownload</code>, <code>SetAutoDownload</code>, <code>SetNotifyJobEnd</code>, <code>SetEmailOnJobEnd</code>, <code>ResetNotices</code>, <code>MoreClusterPlan</code>, <code>AddMoreCluster</code>, <code>OpenLogsFolder</code>, <code>Diagnostics</code>. The Folders section reuses <code>PageAPI.Folders/PickFolder/SetFolder</code> (same rules as the + menu) and refreshes the chat's chips (<code>window.labmillApp.refreshFolders</code>).</li>
+<li><strong>Rules.</strong> The logic is in <code>internal/settings</code> (testable without the <code>desktop</code> tag). <code>Get</code> reads local files only (no network, no login). Saves return a <code>settings.Result</code>: <code>errors</code> (<code>{field, message}</code>, the clusters.yaml key such as <code>ssh_host</code> or <code>s3.bucket</code>, or <code>alias</code>/<code>hostName</code>/<code>user</code>/<code>port</code>/<code>proxyJump</code>) shown under their fields with <code>aria-invalid</code>, or <code>error</code>, or <code>message</code>. Clusters are checked with <code>config.FieldErrors</code> (the rules of <code>config.Validate</code>, now tied to cluster index and field), the site with <code>site.Get</code>, SSH connections field by field with <code>sshconfig.Host.Validate</code> plus "host name required".</li>
+<li><strong>Writes.</strong> <code>clusters.yaml</code> is edited on the YAML node tree (<code>config.SetSiteYAML</code>, <code>PutClusterYAML</code>, <code>RemoveClusterYAML</code>): only touched keys change, comments and order stay, new keys go in the usual order, and the result must pass <code>config.Parse</code>. Before the first write of a session the file is backed up once (<code>config.Backup</code>: <code>clusters.yaml.labmill-backup-&lt;YYYYMMDD-HHMMSS&gt;[-n]</code>, <code>O_EXCL</code>, 0600, never overwriting), then written atomically with 0600 (<code>config.WriteFile</code>). SSH connections go only to Labmill's file: <code>sshconfig.PutLabmillHost</code> rewrites the HostName/User/Port/ProxyJump lines of one <code>Host</code> block and leaves every other line, or appends a <code>Render</code> block (then <code>EnsureInclude</code>); <code>RemoveLabmillHost</code> drops one block. The user's <code>~/.ssh/config</code> is read with <code>sshconfig.ListHosts</code> and never written; adding an alias it defines is refused. An alias can't be renamed, and one used by a cluster or as a jump host can't be removed. "Log out" is not offered: the helper has no request to close one login (logins end 10 minutes after the last client).</li>
+<li><strong>Restart.</strong> The running session loaded <code>clusters.yaml</code> and the SSH settings at startup, so every save of those says "Restart Labmill to apply" and the page shows a banner (<code>View.restart</code>). There is no restart button: quitting from the tray and starting again is the single-instance-safe path.</li>
+<li><strong>App.</strong> "Start in the tray when I log in" uses the tray's <code>startAtLogin</code> (autostart + gui.json) and updates the tray checkbox (<code>tray.SetStartAtLogin</code>); "Show the one-time tips again" clears <code>Prefs.TrayNoticeShown</code> and calls <code>Lifecycle.ResetNotice</code>.</li>
+<li><strong>Diagnostics.</strong> <code>settings.View.Diagnostics()</code>: version and platform, the broker URL (if any) without user info, query or fragment, the institution, clusters (no AWS profile or KMS key), connections (no user names) and the file paths. The page shows the exact text it copies (<code>md.js</code> <code>copyText</code>). "Open logs folder" uses <code>gui.OpenFolder</code> on the folder of <code>labmill.log</code>.</li>
+<li><strong>Terminal.</strong> <code>/settings</code> (<code>tui.Options.Settings</code>) prints <code>settings.View.Text()</code>: the same values without secrets and the file paths; it never starts a turn.</li>
+<li><strong>Self-test.</strong> The self-test writes a fixture (<code>clusters.yaml</code> with comments, Labmill's and a user SSH file) under <code>labmill-selftest-folders/settings</code> next to the executable (overwritten each run; backups accumulate there, nothing is deleted) and stubs every outside effect (autostart, folder opener, broker URL with user info and a query). <code>selftest.js</code> opens Settings with the gear, walks the section list with the keyboard, saves an invalid <code>ssh_host</code> (inline error, field focused, nothing written), fixes and saves it, checks the SSH, Folders (data first), App and About sections and that the copied diagnostics hold nothing secret-looking, then leaves with Esc. Go then checks the saved value, the kept comments, one backup equal to the original, mode 0600 and the untouched user SSH file.</li>
+</ul>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>page (frontend/*)  &lt;-&gt;  gui.App / gui.Bridge (internal/gui)  &lt;-&gt;  launch.Runtime (internal/launch)
+</span></code></pre></div>
+<ul>
+<li><code>Decide(id string, approve bool, edited, reason string) error</code> answers an approval; <code>reason</code> is the optional text typed with a decline (trimmed, <code>textsafe.Clean</code>, newlines collapsed to spaces, capped at 500 runes; ignored on approve). The dialog's "Tell Labmill why (optional)" input never takes the initial focus and Enter in it does nothing; Esc declines with whatever is typed.</li>
+<li><code>Choose(id string, index int, other string, skip bool) error</code> answers a <code>labmill:choice</code> dialog (<code>{id, question, options: [{label, description}], allowOther}</code>, sent for the <code>ask_user</code> tool): <code>skip</code> skips; otherwise a non-empty <code>other</code> is the typed answer (cleaned like a decline reason, needs <code>allowOther</code>); otherwise <code>index</code> is the 0-based option. Go side: <code>gui.Bridge.Pick</code>. A known ID is answered exactly once even on invalid input (answered skipped, with an error). The dialog's first option has the initial focus; Up/Down move between the options and the "Other" input, Enter picks the focused option, 1-9 pick directly, Esc and the Skip button skip.</li>
+<li>The page calls bound methods at <code>window.go.main.PageAPI.*</code> (Send, Cancel, Unqueue, JobAction, Decide, Choose, Answer, Jobs, Status, Folders, PickFolder, SetFolder, DropFolder, OpenJobFolder, SelfTest, SelfTestReport), <code>window.go.main.Setup.*</code> (NeedsSetup, SubmitUsername, State) and, from the Settings page, <code>window.go.main.SettingsAPI.*</code> (see "Settings page"), and listens with <code>window.runtime.EventsOn</code>. <code>PageAPI</code> is a small struct that forwards to <code>gui.App</code>; <code>gui.App</code> itself is not bound, because Wails binds every exported method and would expose <code>Shutdown</code> to the page. <code>PageAPI.Status</code> returns the runtime's status line once it is ready.</li>
+<li><code>index.html</code> carries a Content-Security-Policy (<code>default-src 'none'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline' (xterm.js writes &lt;style&gt; elements;</code>style-src-elem<code>needs the WKWebView of macOS 12.3 or newer, older systems lose the terminal's colors and layout); img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'</code>); Wails needed no extra allowance on Linux (WebKitGTK). There is no inline script or style. Dropped file contents never reach the page: only paths, and only from drops onto the chat input box after the user picks data or code, are used (see "Folders and Open folder"; drops elsewhere reach the runtime JS on macOS and Linux but are discarded), and the page cancels every dragover and drop.</li>
+<li>Chat: assistant replies are Markdown rendered by <code>frontend/md.js</code> with DOM nodes only (no <code>innerHTML</code>; links and images become plain "text (url)" with no <code>href</code>/<code>src</code>; raw HTML stays text). While a reply streams it is re-rendered at most every 50 ms, and at once before a tool line and at the end of the turn. Each tool call is one collapsed <code>&lt;details&gt;</code> line ("load_skill · 4.2 KB", "job_logs · 120 lines") that expands to the full text in monospace; errors show their first line. Font sizes are in rem (chat 1rem, code 0.875rem in a monospace stack). The job panel is at least 20rem wide; its cells never wrap and end in an ellipsis, with the full text in a tooltip.</li>
+<li>The prompt is always available. The input and Send are never disabled. <code>gui.App.Send</code> starts a turn when idle. While a turn runs, it queues the text instead: one message, and a newer Send replaces it. The queued message starts as the next turn when the running one ends, also after <code>Cancel</code>. <code>Unqueue</code> drops it, and <code>Shutdown</code> drops it too. The page doesn't guess what happened from <code>Send</code>'s return. It follows events: <code>labmill:turn</code> (<code>{text}</code>) when a turn starts (the page then shows the user message and the busy state), <code>labmill:queued</code> (<code>{text}</code>, <code>""</code> = nothing queued) for the "Queued, sent when this reply ends" line with its Remove button, and <code>labmill:done</code> when a turn ends. <code>labmill:queued</code> is emitted under the App's lock, so it always comes before the <code>labmill:turn</code> that sends that text. While busy, the Send button reads "Queue". Esc in the chat input does nothing special.</li>
+<li>Job notices: <code>gui.Bridge.JobNotice</code> (part of <code>launch.UI</code>, called by the background job monitor) emits <code>labmill:job</code> (<code>{text}</code>, cleaned). The page shows it as a small <code>.msg.system</code> line, placed above a reply that is still streaming so the reply stays whole, and refreshes the job list at once.</li>
+<li>Job buttons: <code>JobView.Actions</code> lists the buttons for each job. Status and Logs appear once the job is submitted (it has a remote ID). Fetch appears when the job is <code>completed</code> or <code>failed</code> and has a remote folder. Cancel appears while it is <code>submitted</code>, <code>pending</code> or <code>running</code>. Open folder appears once it is <code>fetched</code> with a local folder; it opens the folder (<code>PageAPI.OpenJobFolder</code>) instead of sending a message. They are real <code>&lt;button&gt;</code>s in a row under the job, with <code>textContent</code> labels and an <code>aria-label</code> naming the job. A click calls <code>PageAPI.JobAction(id, action)</code>, which checks the action against the job's current actions and sends a plain chat message through <code>Send</code>: "Show the status of job #12", "Show the last lines of the log of job #12", "Fetch the results of job #12" or "Cancel job #12". The message is queued while busy, so everything goes through the agent and its approvals (Cancel still asks). The table is rebuilt only when the job list changed, and the focused button keeps the focus.</li>
+<li>Dialogs: input is ignored for 500 ms after a dialog opens and again after the window regains focus; key repeats and clicks that began during the grace period are ignored. The title and buttons stay fixed while the body scrolls. A <code>labmill:dismiss</code> event closes dialogs that Go abandoned. When <code>altered</code> is set the page warns that the text was cleaned for display.</li>
+<li><code>gui.Bridge</code> implements <code>launch.UI</code>: approvals, choices and login questions become <code>labmill:approval</code>, <code>labmill:choice</code> and <code>labmill:prompt</code> events with an ID, and wait for exactly one <code>Decide</code>, <code>Choose</code> or <code>Answer</code>; the turn ending answers them (declined, skipped, canceled) and sends <code>labmill:dismiss</code>. Text is cleaned with <code>textsafe.Clean</code> before it leaves Go, and the page uses <code>textContent</code> only.</li>
+<li><code>main.go</code> builds the runtime with <code>launch.BuildWithProgress</code> (startup steps, see "Busy feedback") in a goroutine after startup. On first run (and when <code>clusters.yaml</code> names no known home institution, <code>launch.NeedsHomeChoice</code>, which also sets <code>State.Note</code> to <code>launch.HomeInstitutionNote</code>) its setup step blocks until the page submits the form (<code>Setup.SubmitSetup</code>: an empty or unknown institution is refused, a not-listed institution needs a login host, <code>launch.HostsRequired</code>; the account name is validated with <code>launch.ValidUsername</code>). It then sends <code>labmill:ready</code> or <code>labmill:fatal</code>; <code>Setup.State</code> lets a page that loaded late catch up.</li>
+<li>Until the runtime is ready, a small gate stands in for the session and job store: a turn ends at once with "Labmill is still starting up", and <code>Jobs</code> returns the same error.</li>
+<li>Closing the window goes through <code>gui.Lifecycle</code> (see "Tray and closing the window"): with a tray icon up it only hides the window. Quitting (the tray's Quit, or a close without a tray) goes through <code>gui.Closer</code>: OnBeforeClose returns at once (Windows calls it on the UI thread), the window is hidden, and <code>App.Shutdown</code> runs in the background (cancel the running turn, wait up to 10 s, decline pending dialogs, close the runtime) before the app quits. Wails' Quit re-enters OnBeforeClose, which then allows the close. If shutdown hangs for 30 s, the hidden process exits.</li>
+<li><strong>Terminal.</strong> The header's Terminal button, Settings &gt; Clusters and the jobs panel's "Terminal here" open xterm.js tabs wired to a login-node shell (frontend/terminal.js, internal/gui/terminal.go); see ssh.md "Desktop terminal".</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../tui/" class="md-footer__link md-footer__link--prev" aria-label="Previous: TUI stack: Charm">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                TUI stack: Charm
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../voice/" class="md-footer__link md-footer__link--next" aria-label="Next: Voice: &quot;Hey Labmill&quot;">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Voice: "Hey Labmill"
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

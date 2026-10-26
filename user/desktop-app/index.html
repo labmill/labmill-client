@@ -1,0 +1,1802 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/user/desktop-app/">
+      
+      
+      
+        <link rel="prev" href="../troubleshooting/">
+      
+      
+        <link rel="next" href="../keys/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>The desktop app and the tray - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The desktop app and the tray
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-hourglass-labmill-is-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The hourglass: Labmill is working
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#approve-everything-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approve everything automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-results-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Download results automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-data-and-code-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Your data and code folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opening-your-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Opening your results
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-terminal-on-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A terminal on the cluster
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#making-the-jobs-panel-wider-or-narrower" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Making the jobs panel wider or narrower
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#closing-the-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Closing the window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bringing-the-window-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Bringing the window back
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-tray-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The tray menu
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quitting
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-with-your-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Starting with your computer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-to-do-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The to-do list
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dev/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-hourglass-labmill-is-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The hourglass: Labmill is working
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#approve-everything-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approve everything automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-results-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Download results automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-data-and-code-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Your data and code folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opening-your-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Opening your results
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-terminal-on-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A terminal on the cluster
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#making-the-jobs-panel-wider-or-narrower" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Making the jobs panel wider or narrower
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#closing-the-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Closing the window
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bringing-the-window-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Bringing the window back
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-tray-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The tray menu
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quitting
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-with-your-computer" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Starting with your computer
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-to-do-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The to-do list
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="the-desktop-app-and-the-tray">The desktop app and the tray<a class="headerlink" href="#the-desktop-app-and-the-tray" title="Permanent link">&para;</a></h1>
+<p>The Labmill desktop app has the chat on the left and your jobs on the right. You add your data folder, and your code folder if you have one, with the <strong>+</strong> button in the chat box.</p>
+<h2 id="the-hourglass-labmill-is-working">The hourglass: Labmill is working<a class="headerlink" href="#the-hourglass-labmill-is-working" title="Permanent link">&para;</a></h2>
+<p>Labmill always shows when it is busy, so you never have to guess whether it heard you.</p>
+<p><strong>While it starts.</strong> The window opens with an hourglass and <strong>Starting labmill…</strong>. The text below it says what Labmill is doing:</p>
+<table>
+<thead>
+<tr>
+<th>Text</th>
+<th>What Labmill is doing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Loading your settings…</td>
+<td>Reading your cluster settings (the first time, it then asks for your institution and username).</td>
+</tr>
+<tr>
+<td>Opening the job database…</td>
+<td>Opening its list of your jobs on this computer.</td>
+</tr>
+<tr>
+<td>Loading skills…</td>
+<td>Loading what it knows about your clusters.</td>
+</tr>
+</tbody>
+</table>
+<p>If starting takes longer than about 10 seconds, a second line says which step it is still waiting for, for example "Still waiting for: loading skills (14 s)". The chat replaces the hourglass as soon as the window is up; the line under it shows the step still running, and a message you type meanwhile is sent when Labmill has finished starting. On Windows a small <strong>Starting labmill…</strong> window with a moving bar appears at once, even before the main window, and closes when the main window is ready; the tray icon appears early too; until Labmill is ready its tooltip reads "Labmill is starting…".</p>
+<p><strong>After you send a message.</strong> A small hourglass with <strong>Working…</strong> appears under the conversation right away, and changes to the step Labmill is on:</p>
+<table>
+<thead>
+<tr>
+<th>Text</th>
+<th>What Labmill is doing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connecting to …</td>
+<td>Logging in to a cluster (a login window or two-factor approval may follow).</td>
+</tr>
+<tr>
+<td>Waiting for Claude…</td>
+<td>Waiting for the assistant's answer.</td>
+</tr>
+<tr>
+<td>Running …</td>
+<td>Running one of its actions, for example <code>cluster_info</code> or <code>upload_data</code>. Uploads and downloads also show their own progress bar.</td>
+</tr>
+</tbody>
+</table>
+<p>After 5 seconds the row also shows how many seconds Labmill has been working, so you can tell it hasn't frozen. The row disappears when the answer starts to appear, and <strong>Cancel</strong> stays available the whole time.</p>
+<p>If your computer is set to reduce motion (Windows: Settings → Accessibility → Visual effects → Animation effects off; Mac: System Settings → Accessibility → Display → Reduce motion), the hourglass stands still. Screen readers announce the status text when it changes.</p>
+<h2 id="approve-everything-automatically">Approve everything automatically<a class="headerlink" href="#approve-everything-automatically" title="Permanent link">&para;</a></h2>
+<p>Next to <strong>Send</strong> is a checkbox, <strong>Approve everything automatically</strong>. It is off by default. When you tick it, a banner appears above the chat: "Auto-approve is on, Labmill approves every step for you", with a <strong>Turn off</strong> button. From then on Labmill does not show approval screens. Each step appears in the chat as "Auto-approved: ...". Reading key or token files, questions from Labmill and logins still ask. The same switch is on the Settings page, which also explains how it differs from "Run commands on the cluster without asking".</p>
+<h2 id="download-results-automatically">Download results automatically<a class="headerlink" href="#download-results-automatically" title="Permanent link">&para;</a></h2>
+<p>Next to <strong>Approve everything automatically</strong> is a second checkbox, <strong>Download results automatically</strong>. It is off by default, and Labmill remembers your choice. When it is on and a job you started finishes (completed, failed or ran out of time, but not when you cancel it), Labmill brings the job's results to your results folder by itself, in the folder named after the job, and checks every file against the cluster. You do not have to ask and you do not get an approval screen, because a download only brings files to your computer; nothing leaves it.</p>
+<p>The chat tells you what came down and where, with an <strong>Open folder</strong> button, and the job shows as downloaded in the job list. It also works while the window is closed and Labmill runs in the tray. Only what the job produced comes down: files you uploaded, hidden or private-looking files (such as <code>.netrc</code>, <code>.env</code> or token files), environments and caches, and symbolic links are left out, and the chat says how many. Results above 2 GB or 2000 files, or more than your disk can hold (Labmill keeps 10 % free), are not downloaded automatically: the chat says why and you can ask Labmill to fetch them. If you are not signed in to the cluster, Labmill tells you once and downloads at its next check after you sign in; it never opens a sign-in window by itself. If the download fails, the chat says so in plain words and you can ask Labmill to fetch the results. A failed job stays marked as failed. A job is downloaded automatically only once, and only if it finishes while the checkbox is on. The same switch is on the Settings page.</p>
+<h2 id="your-data-and-code-folders">Your data and code folders<a class="headerlink" href="#your-data-and-code-folders" title="Permanent link">&para;</a></h2>
+<p>At the upper left of the box where you type is a <strong>+</strong> button. Click it (or press Enter or Space on it) to open a small menu:</p>
+<ul>
+<li><strong>Add data folder…</strong> comes first. Many people only have data and want it analyzed: you don't need any code. Labmill can write the analysis code for you, and shows it to you before anything runs.</li>
+<li><strong>Add code folder…</strong> is for when you already have scripts or a program.</li>
+<li>Below a line, up to five folders you used recently, marked <strong>Data:</strong> or <strong>Code:</strong>, so you can switch back quickly.</li>
+<li><strong>Remove data folder</strong> and <strong>Remove code folder</strong> appear once those folders are set.</li>
+</ul>
+<p>The two "Add" items open the usual folder window (Explorer on Windows, Finder on a Mac). Use the arrow keys to move in the menu and <strong>Esc</strong> to close it.</p>
+<p>The chosen folders show as small labels just above your text, data first: <code>Data: ~/…/mri-2026</code> and <code>Code: ~/…/mri/code</code>. Point at one to see the full path; its <strong>×</strong> removes it.</p>
+<p>You can also drag a folder from Explorer or Finder and drop it onto the chat box. Labmill then asks <strong>Add as data folder</strong> or <strong>Add as code folder</strong> (press Enter for data, or Esc to cancel). Drops anywhere else are ignored.</p>
+<p>Only the folder's location is used; nothing is copied or uploaded when you choose or drop a folder. Labmill remembers your choice and shows it again the next time you start it. The terminal version of Labmill uses the same folders (see <a href="../first-job/">your first job</a>).</p>
+<p>Your next message tells Labmill about the chosen folders, and Labmill looks there first when it searches for your data, previews a file, makes the file list for an upload or chooses the software for your code. You still approve every upload as usual.</p>
+<p>Some folders can't be chosen: a whole drive, a system folder (such as <code>C:\Windows</code>, <code>Program Files</code> or <code>/usr</code>), a folder that contains your home folder, hidden folders, and folders whose names suggest passwords or keys. Labmill says why just above the chat box.</p>
+<h2 id="opening-your-results">Opening your results<a class="headerlink" href="#opening-your-results" title="Permanent link">&para;</a></h2>
+<p>After Labmill has downloaded the results of a job, an <strong>Open folder</strong> button appears in the chat, and the job gets an <strong>Open folder</strong> button in the job list. It opens the results folder in Explorer, Finder or your Linux file manager.</p>
+<h2 id="a-terminal-on-the-cluster">A terminal on the cluster<a class="headerlink" href="#a-terminal-on-the-cluster" title="Permanent link">&para;</a></h2>
+<p>The <strong>Terminal</strong> button at the top right opens a terminal on a cluster's login node, inside Labmill, with no new password or approval while Labmill is signed in. Pick the cluster and press <strong>New terminal</strong> (with only one cluster, the button opens it at once). Each terminal is a tab; open as many as you like and close a tab with its <strong>×</strong>, which ends that session. <strong>Back to chat</strong> only hides the terminals: they keep running until you close their tabs. In <strong>Settings &gt; Clusters</strong> every cluster also has a <strong>Terminal</strong> button.</p>
+<p>In the jobs panel, <strong>Terminal here</strong> opens a terminal in the job's folder on the cluster. <strong>Open in system terminal</strong> starts your computer's own terminal program (Windows Terminal or the command prompt, Terminal.app, or your Linux terminal) on the cluster instead; it needs the Labmill command-line program (<code>labmill</code>) next to the desktop app or on your PATH, and is hidden when Labmill can't find it.</p>
+<p>If Labmill isn't signed in to the cluster, the usual sign-in dialog appears, once. While the assistant is busy with a reply, a terminal can't ask you to sign in: it works only if Labmill is already signed in, and otherwise says to try again when the assistant has finished. Only one terminal connects at a time. Copy and paste work as in any terminal (Ctrl+Shift+C and Ctrl+Shift+V, or Cmd+C and Cmd+V on a Mac).</p>
+<p>The terminal is yours: what you type and see there is not sent to the assistant, shown in the chat or saved by Labmill, and the assistant never uses it. Labmill only records in its log that a terminal was opened and closed on the cluster.</p>
+<h2 id="making-the-jobs-panel-wider-or-narrower">Making the jobs panel wider or narrower<a class="headerlink" href="#making-the-jobs-panel-wider-or-narrower" title="Permanent link">&para;</a></h2>
+<p>Between the chat and the jobs panel on the right there is a thin divider. Drag it with the mouse to make the panel wider or narrower, or click it and use the Left and Right arrow keys (Home and End jump to the narrowest and widest). Double-click it to go back to the normal width, 40% of the window. Neither side can become too small to read. Labmill remembers the width together with the window position and opens the window the same way next time. In a very narrow window the jobs panel sits below the chat and there is no divider.</p>
+<h2 id="closing-the-window">Closing the window<a class="headerlink" href="#closing-the-window" title="Permanent link">&para;</a></h2>
+<p>Labmill remembers the size and position of its window, and whether it was maximized, and opens it the same way next time. If that spot no longer fits your screens (a monitor was unplugged, for example), the window opens centered at its normal size.</p>
+<p>The Labmill desktop app works like OneDrive or Teams: <strong>closing its window doesn't quit it.</strong> Labmill keeps running in the system tray, so your cluster login stays open and you don't have to type your password and approve the two-factor sign-in again when you come back. Jobs keep being watched while the window is hidden.</p>
+<p>Click the window's close button (or press Alt+F4 on Windows, Cmd+W on a Mac). The window disappears, and Labmill keeps running:</p>
+<ul>
+<li><strong>Windows:</strong> the Labmill icon is in the notification area at the right end of the taskbar. If you don't see it, click the small arrow (^) there; you can drag the icon onto the taskbar to keep it visible.</li>
+<li><strong>Linux:</strong> the icon is in your panel's tray, if your desktop has one (KDE and most panels do; GNOME needs the AppIndicator extension). Without a tray, closing the window quits Labmill as before, because there would be no way to bring it back.</li>
+<li><strong>Mac:</strong> there is no tray icon. Labmill behaves like any Mac app: it stays in the Dock when you close the window, a click on the Dock icon shows the window again, and Cmd+Q quits it.</li>
+</ul>
+<p>On Windows and Linux, the first time you close the window, Labmill tells you once: "Labmill is still running in the tray to keep your cluster login. Right-click the tray icon and choose Quit to exit."</p>
+<h2 id="bringing-the-window-back">Bringing the window back<a class="headerlink" href="#bringing-the-window-back" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Click the Labmill tray icon (Windows), or right-click it and choose <strong>Open labmill</strong>.</li>
+<li>Or simply start Labmill again: instead of opening a second copy, the running Labmill shows its window.</li>
+</ul>
+<h2 id="the-tray-menu">The tray menu<a class="headerlink" href="#the-tray-menu" title="Permanent link">&para;</a></h2>
+<p>Right-click the tray icon:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Open labmill</strong></td>
+<td>Shows the window.</td>
+</tr>
+<tr>
+<td><strong>Settings…</strong></td>
+<td>Shows the window on the <a href="../settings/">Settings</a> page.</td>
+</tr>
+<tr>
+<td>Status line</td>
+<td>For example "2 jobs running · logged in to bigcluster". It is for reading only.</td>
+</tr>
+<tr>
+<td><strong>Start in the tray when I log in</strong></td>
+<td>When ticked, Labmill starts hidden in the tray each time you log in to your computer. Off by default.</td>
+</tr>
+<tr>
+<td><strong>Quit labmill</strong></td>
+<td>Really quits Labmill.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quitting">Quitting<a class="headerlink" href="#quitting" title="Permanent link">&para;</a></h2>
+<p>Right-click the tray icon and choose <strong>Quit labmill</strong> (on a Mac: the Labmill menu → Quit, or Cmd+Q). A reply that is still being written is stopped, and any question Labmill was waiting for is answered with "no". Your cluster login stays open for about 10 more minutes, in case you start Labmill again, and then closes by itself.</p>
+<h2 id="starting-with-your-computer">Starting with your computer<a class="headerlink" href="#starting-with-your-computer" title="Permanent link">&para;</a></h2>
+<p><strong>Start in the tray when I log in</strong> (tray menu) is off unless you turn it on. When you turn it on, Labmill adds itself to your own startup list, for your account only and without administrator rights:</p>
+<ul>
+<li><strong>Windows:</strong> an entry named "labmill" in Settings → Apps → Startup (it lives under <code>HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run</code>).</li>
+<li><strong>Mac:</strong> a login item file in <code>~/Library/LaunchAgents</code>.</li>
+<li><strong>Linux:</strong> a <code>labmill.desktop</code> file in <code>~/.config/autostart</code>.</li>
+</ul>
+<p>Turning the option off removes the Windows entry and switches the Mac and Linux files off.</p>
+<p>With the option on, Labmill starts hidden in the tray when you log in; click the tray icon when you want the window. If the tray isn't available at that moment, Labmill shows its window instead. While the window is hidden, an approval, a login question or a choice from Labmill brings the window to the front, because nobody would see it otherwise; a job notice does not (see the tray's status line).</p>
+<p>There is no start-in-tray option on a Mac, because a Mac has no tray icon.</p>
+<h2 id="the-to-do-list">The to-do list<a class="headerlink" href="#the-to-do-list" title="Permanent link">&para;</a></h2>
+<p>For a request with several steps (for example scan your code, choose the software, upload your data, submit, monitor, fetch the results), Labmill shows a short to-do list above the message box and keeps it up to date as it works. ☐ is a step still to do, ◐ is the step in progress (with what Labmill is doing right now), and ☑ is done. You can collapse or expand the list with its title button (keyboard: Tab to it, then Space or Enter). When every step is done, the list stays through your next message and then disappears; it also disappears when a request is canceled or fails. One-step questions don't get a list.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../troubleshooting/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Troubleshooting">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Troubleshooting
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../keys/" class="md-footer__link md-footer__link--next" aria-label="Next: Keyboard reference">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Keyboard reference
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

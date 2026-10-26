@@ -1,0 +1,1781 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/dev/sites/">
+      
+      
+      
+        <link rel="prev" href="../security/">
+      
+      
+        <link rel="next" href="../knowledge-placement/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Sites: adding an institution - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Sites: adding an institution
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-site-folder-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What a site folder contains
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules-for-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules for facts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#siteyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Site.yaml
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clusteryaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cluster.yaml
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Naming
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-labmill-uses-a-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How Labmill uses a site
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-site-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Adding a site, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-site-folder-contains" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What a site folder contains
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rules-for-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules for facts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#siteyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Site.yaml
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clusteryaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cluster.yaml
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Naming
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-labmill-uses-a-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        How Labmill uses a site
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-a-site-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Adding a site, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="sites-adding-an-institution">Sites: adding an institution<a class="headerlink" href="#sites-adding-an-institution" title="Permanent link">&para;</a></h1>
+<p>Labmill keeps everything that differs between institutions in <strong>site profiles</strong>
+under <code>sites/&lt;domain&gt;/</code>. Only <code>sites/generic/</code> is part of this repository; profiles
+for real institutions are kept and shipped apart from the client. The skills
+in <code>skills/</code> (<code>slurm-user</code>, <code>research-computing</code>) are generic and say "see your site skill" wherever a value differs per site.
+One set of skills serves Claude Code and Labmill; neither forks them.</p>
+<h2 id="what-a-site-folder-contains">What a site folder contains<a class="headerlink" href="#what-a-site-folder-contains" title="Permanent link">&para;</a></h2>
+<p>Facts that hold for the whole institution sit at the top of <code>sites/&lt;domain&gt;/</code>.
+Everything specific to one cluster sits in a <strong>cluster folder</strong> named after
+it, so Claude reads only the cluster it needs:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sites/example.edu/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Site.yaml             institution-wide values for Labmill (hosts, 2FA)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  SKILL.md              the site skill, name: site-example-edu; indexes the cluster folders
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  References/*.md       institution-wide facts: accounts, two-factor sign-in, the
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                        shared login and transfer hosts, campus proxy, general
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                        storage rules, documentation links
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  QUESTIONS.md          open questions and unverified items (not embedded)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  SOURCE.md             optional: where upstream skill text came from (domain root only, not embedded)
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  Evals/*.json          optional site-specific skill evals (not embedded)
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  Diagrams/*.svg        optional architecture diagrams, plus a Diagrams/README.md
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                        describing them (not embedded, not a skill reference)
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  bigiron/              a cluster folder (here: a Slurm cluster)
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Cluster.yaml        the clusters.yaml template entry plus cluster hints
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    References/*.md     partitions, GPUs, limits, modules, cluster paths
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    QUESTIONS.md        optional, open questions about this cluster
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Evals/*.json        optional
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Diagrams/*.svg      optional (and Diagrams/README.md)
+</span></code></pre></div>
+<p>A cluster folder's name is
+lowercase letters, digits and <code>-</code> (at most 63 characters) and can't be
+<code>references</code>, <code>evals</code>, <code>diagrams</code> or <code>tools</code>. Labmill ignores folders whose name starts
+with <code>_</code> (<code>sites/generic/_cluster-template/</code> is a template to copy).</p>
+<ul>
+<li><strong>The folder name</strong> is the institution's internet domain, lowercase
+  (<code>example.edu</code>, <code>example.org</code>).</li>
+<li><strong><code>SKILL.md</code></strong> has the usual frontmatter. <code>name</code> is <code>site-</code> plus the domain
+  with dots replaced by dashes (<code>site-example-edu</code>). The <code>description</code> starts
+  with "<Institution> (<short name>) specifics for HPC/Slurm (<cluster names>):
+  …" and lists what the references cover, so Claude loads it
+  whenever a site fact is needed. The body is short: an index of the cluster
+  folders ("for Slurm on bigiron read <code>bigiron/References/…</code>"), a "Values at
+  a glance" table and a list of the references with their paths
+  (<code>References/Access.md</code>, <code>bigiron/References/Slurm.md</code>).</li>
+<li><strong><code>References/*.md</code></strong> hold the institution-wide facts (login and transfer
+  hosts, off-campus access, accounts and two-factor sign-in, storage
+  services, proxy quirks, documentation links), and
+  <strong><code>&lt;cluster&gt;/References/*.md</code></strong> the facts of one cluster (partitions and GPU
+  types, modules, driver/CUDA version, cluster paths). Keep the
+  shell commands Claude Code users need. Links between reference files are
+  relative (<code>../bigiron/References/Slurm.md</code> from <code>References/Access.md</code>);
+  write the link text as the path from the skill folder
+  (<code>[bigiron/References/Slurm.md](../bigiron/References/Slurm.md)</code>), which
+  is also what Labmill's <code>read_reference</code> accepts.</li>
+<li><strong><code>Site.yaml</code></strong> and <strong><code>Cluster.yaml</code></strong> are described below. Claude Code
+  ignores them.</li>
+<li><strong><code>Diagrams/</code></strong> holds architecture drawings as SVG (plus a <code>README.md</code>
+  describing them). They are neither embedded in Labmill nor served as skill
+  references.</li>
+</ul>
+<p><code>sites/generic/</code> is the profile for "My institution isn't listed". Its skill,
+<code>site-generic</code>, tells Claude how to find site facts without a profile (ask the
+user, read their documentation, query the cluster). It stays flat (no cluster
+folders); its <code>_cluster-template/</code> folder is only a template to copy, and it
+gives <code>sites/embed.go</code>'s cluster-folder patterns a file to match in a build
+with no other profiles.</p>
+<h2 id="rules-for-facts">Rules for facts<a class="headerlink" href="#rules-for-facts" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Every fact has a source: an official documentation URL, the upstream skill
+  it came from, or a confirmed answer from the site. Put sources at the top of
+  each reference file or next to the fact.</li>
+<li>Anything not confirmed by an official page is marked <strong>(unverified)</strong>.</li>
+<li>Never guess a host name, project, partition or path. Leave it out (and the
+  <code>Site.yaml</code> value empty) and add the question to the site's own
+  <code>sites/&lt;domain&gt;/QUESTIONS.md</code>.
+  <strong>Never log site questions or site facts in public files</strong> (<code>docs/</code>,
+  commit messages).</li>
+<li><strong>No site term goes into public code or public files</strong>: not into <code>skills/</code>,
+  <code>sites/generic/</code>, Go code or tests (tests use an <code>example.edu</code> fixture
+  profile parsed with <code>site.Parse</code>/<code>site.Load</code>). <code>internal/site</code>'s
+  <code>TestGenericSkillsHaveNoSiteFacts</code> builds its forbidden terms from every
+  embedded profile (domain, name, hostnames and their parent domains, aliases,
+  cluster names and cluster folder names, URL hosts, plus the
+  <code>forbidden_terms</code> of <code>Site.yaml</code> and of every <code>Cluster.yaml</code>) and scans
+  <code>skills/</code> and <code>sites/generic/</code>, so the test itself names no site. Add the
+  terms it can't derive (project ids, bucket and asset names, short host
+  names, version strings) to <code>forbidden_terms</code>: institution-wide terms in
+  <code>Site.yaml</code>, a cluster's own terms in its <code>Cluster.yaml</code>.</li>
+</ul>
+<h2 id="siteyaml">Site.yaml<a class="headerlink" href="#siteyaml" title="Permanent link">&para;</a></h2>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">domain</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example.edu</span><span class="w">            </span><span class="c1"># must equal the folder name ("generic" for the generic profile)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">                 </span><span class="c1"># optional; true makes this the preselected choice in the first-run form (at most one profile; never generic)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Example University</span><span class="w">       </span><span class="c1"># shown in the first-run choice</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nt">skill</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">site-example-edu</span><span class="w">        </span><span class="c1"># must be "site-" + domain with dots as dashes</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">docs_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://hpc.example.edu/docs</span><span class="w">      </span><span class="c1"># optional, https</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nt">broker_url</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">                 </span><span class="c1"># optional Claude broker for this site; empty = call Anthropic directly with ANTHROPIC_API_KEY</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nt">broker</span><span class="p">:</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">issuers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">                  </span><span class="c1"># optional: token issuers a broker maps to this profile; no issuer may be listed by two sites</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nt">two_factor</span><span class="p">:</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">help</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span><span class="w">                     </span><span class="c1"># shown when two-factor sign-in doesn't complete</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="no">Example uses Duo. Enroll at https://it.example.edu/duo, then try again.</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://it.example.edu/duo</span><span class="w">           </span><span class="c1"># optional, https</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Duo</span><span class="w">                    </span><span class="c1"># optional product name for prompts ("approve a Duo sign-in request"); omit for generic wording; plain text, &lt;= 40 chars</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nt">s3_credentials_on_cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># optional; false turns off s3_credentials_to_cluster (copying one AWS profile to the login node); omitted = allowed</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nt">hosts</span><span class="p">:</span><span class="w">                         </span><span class="c1"># SSH host templates for ~/.ssh/config.d/labmill</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-gw</span><span class="w">               </span><span class="c1"># lowercase letters, digits, dashes</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gw.example.edu</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jump</span><span class="w">                 </span><span class="c1"># login | transfer | jump</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-login</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="nt">hostname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">login.example.edu</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">login</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">    </span><span class="nt">proxy_jump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-gw</span><span class="w">          </span><span class="c1"># optional: another alias in this list</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">22</span><span class="w">                   </span><span class="c1"># optional</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span><span class="nt">auth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">password</span><span class="w">             </span><span class="c1"># optional: password (default; keyboard-interactive + 2FA) | key (SSH keys only)</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="nt">key_upload</span><span class="p">:</span><span class="w">                    </span><span class="c1"># optional: where a new public key is registered, for hosts with auth: key</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://reg.example.edu/keys</span><span class="w">          </span><span class="c1"># https</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">  </span><span class="nt">instruction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Open Profile, SSH keys, Add key, and paste the public key.</span><span class="w">   </span><span class="c1"># one line, &lt;= 300 chars</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="nt">forbidden_terms</span><span class="p">:</span><span class="w">               </span><span class="c1"># optional: extra terms that must never appear in the</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"1234567"</span><span class="w">                  </span><span class="c1">#   public skills (project ids, bucket names, short</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-scratch</span><span class="w">                 </span><span class="c1">#   host names, driver versions); at least 3 characters</span>
+</span></code></pre></div>
+<p>Notes on some keys:</p>
+<ul>
+<li><strong><code>default</code></strong>: <code>site.Default()</code> returns the one profile with <code>default: true</code>, or generic when none sets it. A <code>clusters.yaml</code> without <code>site:</code> means that profile, and first-run setup preselects it. Two profiles marked default, or <code>default</code> on generic, is an error.</li>
+<li><strong><code>broker_url</code></strong>: when set (or when <code>LABMILL_BROKER_URL</code> is set), model calls go to that broker with the token from <code>LABMILL_BROKER_TOKEN</code>. When empty, the client calls the Anthropic Messages API with the user's own <code>ANTHROPIC_API_KEY</code>.</li>
+<li><strong><code>two_factor.name</code></strong>: the product name used in prompts ("approve a Duo sign-in request"). Omit it and the login dialog uses generic wording; Labmill's code names no product.</li>
+<li><strong><code>hosts[].auth</code> and <code>key_upload</code></strong>: a host with <code>auth: key</code> accepts SSH keys only. The first login there runs Labmill's key setup (see <a href="../architecture/#key-only-ssh-hosts">SSH</a>): it looks for a usable key (a configured <code>IdentityFile</code>, the default <code>~/.ssh/id_ed25519</code>, <code>id_ecdsa</code>, <code>id_rsa</code>, or an agent key) and otherwise creates an ed25519 key, shows the public key with <code>key_upload.instruction</code> and <code>key_upload.url</code>, waits for the user's confirmation and writes <code>IdentityFile</code> into <code>~/.ssh/config.d/labmill</code>. <code>key_upload</code> is site-wide and optional; without it the dialog says to upload the key as the site's documentation describes. The values belong in the site skill's access reference too.</li>
+<li><strong>Reserved folder names</strong>: <code>References</code>, <code>Evals</code>, <code>Diagrams</code> and <code>Tools</code> are never cluster folders.</li>
+</ul>
+<p>Unknown keys are an error, so typos surface. <code>site.Parse</code> checks the domain,
+the skill name, that URLs are https, that host aliases are unique and valid,
+that roles are known and that <code>proxy_jump</code> names a host in the file.</p>
+<p>For older profiles <code>Site.yaml</code> still accepts <code>clusters:</code> (the same entries as
+<code>Cluster.yaml</code>, listed before the folder templates). New profiles put them in
+the cluster folders.</p>
+<h2 id="clusteryaml">Cluster.yaml<a class="headerlink" href="#clusteryaml" title="Permanent link">&para;</a></h2>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># sites/example.edu/bigiron/Cluster.yaml</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bigiron</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">ssh_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-login</span><span class="w">             </span><span class="c1"># an alias from Site.yaml hosts</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nt">files_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ex-files</span><span class="w">           </span><span class="c1"># optional transfer-host alias</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">transfer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sftp</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nt">order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">                       </span><span class="c1"># optional: sort key among the site's clusters (below)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nt">preemptible</span><span class="p">:</span><span class="w">                   </span><span class="c1"># optional, Slurm only: the preemptible resource, if any</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">preempt</span><span class="w">           </span><span class="c1">#   partition and/or qos (at least one); names [A-Za-z0-9._-]</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">qos</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">                      </span><span class="c1">#   e.g. lowprio</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">requeue</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">                </span><span class="c1">#   jobs may be submitted with --requeue</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">fallback_partition</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">       </span><span class="c1">#   non-preemptible partition after the failed attempts; "" = the default</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="nt">local_scratch</span><span class="p">:</span><span class="w">                 </span><span class="c1"># optional, Slurm only: node-local disk on the compute nodes</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/tmp</span><span class="w">                   </span><span class="c1">#   absolute folder or $VAR[/folder]; path or env_var is required</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nt">env_var</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TMPDIR</span><span class="w">              </span><span class="c1">#   the variable the job finds its folder in; wins over path</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nt">size_gb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">400</span><span class="w">                 </span><span class="c1">#   0/omitted = unknown</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="nt">global_scratch</span><span class="p">:</span><span class="w">                </span><span class="c1"># optional, Slurm only: shared scratch on the compute nodes</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/scratch/&lt;group&gt;</span><span class="w">       </span><span class="c1">#   absolute, clean; &lt;placeholder&gt; = the user's own part</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="nt">purge_days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90</span><span class="w">               </span><span class="c1">#   0/omitted = unknown</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="nt">software_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/software/mygroup</span><span class="w"> </span><span class="c1"># optional, Slurm only: absolute clean folder for reusable environments (venv, conda, images); omitted = $HOME/.labmill/envs; not a purged scratch</span>
+</span></code></pre></div>
+<p><code>site.ParseCluster</code> rejects unknown keys and checks the template like a
+<code>clusters.yaml</code> entry; <code>site.Load</code> then checks that cluster names are unique
+across the site and that <code>ssh_host</code> and <code>files_host</code> name hosts in
+<code>Site.yaml</code>. <code>preemptible</code>, <code>local_scratch</code>, <code>global_scratch</code> and
+<code>software_dir</code> (<code>rules.SlurmHints</code>, checked by <code>SlurmHints.Validate</code>;
+<code>software_dir</code> is where <code>draft_job</code>'s <code>environment</code> builds venvs, conda
+environments and SIF images) are only allowed on a Slurm cluster; unknown
+facts are left out, never guessed. <code>Site.SlurmHintsFor(name)</code> returns them;
+<code>cluster_info</code> states them in plain words and <code>draft_job</code> applies them
+(<code>scratch</code>, <code>preemptible</code>; see architecture.md). A <code>Cluster.yaml</code> with only
+comments (or none at all) declares no template: the folder then holds only
+references, for example while the login host is unconfirmed. Each file holds
+exactly one YAML document: a second one (after <code>---</code>) is an error rather than
+silently ignored (the same for <code>Site.yaml</code>).</p>
+<p>The cluster templates go to <code>clusters.yaml</code> in this order: <code>Site.yaml</code>'s own
+<code>clusters:</code> (older profiles), then the cluster folders. <code>Cluster.yaml</code>'s
+optional <code>order:</code> (an integer, default 0, negative allowed) sorts lower first,
+and equal values go by folder name. Use it to keep a site's main cluster first
+(the order of the prompt's configured clusters, <code>list_clusters</code> and the status
+line) when a smaller cluster's folder name sorts earlier.</p>
+<p>Every value except <code>domain</code>, <code>name</code> and <code>skill</code> may be empty:</p>
+<ul>
+<li><strong>No login host:</strong> first-run setup asks the user for the login host and
+  builds the hosts and clusters from it, as for the generic profile.</li>
+<li><strong>No broker:</strong> Labmill calls Anthropic directly with <code>ANTHROPIC_API_KEY</code>;
+  without that key each chat turn explains that the assistant isn't connected.</li>
+<li><strong>No two-factor help:</strong> the login dialog shows its generic text.</li>
+</ul>
+<h2 id="naming">Naming<a class="headerlink" href="#naming" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Names are lowercase:</strong> the institution folders (<code>example.edu</code>) and the
+  cluster folders (<code>bigcluster</code>, and the placeholder <code>_cluster-template</code>).</li>
+<li><strong>Everything else starts with an uppercase letter</strong> and keeps the rest as
+  written: folders (<code>References</code>, <code>Evals</code>, <code>Diagrams</code>) and files (<code>Site.yaml</code>,
+  <code>Cluster.yaml</code>, <code>Slurm.md</code>, <code>Hosts-and-access.md</code>, <code>Architecture.svg</code>).</li>
+<li><strong>Exceptions:</strong> <code>SKILL.md</code>, <code>README.md</code>, <code>QUESTIONS.md</code> and <code>SOURCE.md</code> are
+  already uppercase, and <code>embed.go</code> is Go source and stays lowercase.</li>
+</ul>
+<p><code>TestSitesNaming</code> in <code>internal/site</code> checks the profiles on disk, so a new
+profile follows the rule.
+Windows and macOS file systems ignore case, so never rely on two names that
+differ only in case.</p>
+<h2 id="how-labmill-uses-a-site">How Labmill uses a site<a class="headerlink" href="#how-labmill-uses-a-site" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>sites/embed.go</code> embeds every folder's <code>Site.yaml</code>, <code>SKILL.md</code> and
+  <code>References/*.md</code>, and every cluster folder's <code>Cluster.yaml</code> and
+  <code>References/*.md</code> (package <code>sites</code>). <code>QUESTIONS.md</code>, <code>Evals/</code> and
+  <code>Diagrams/</code> stay out of the binary.</li>
+<li><code>internal/site</code> parses them: <code>site.Get(domain)</code>, <code>site.List()</code> (the default
+  first), <code>site.Choices()</code> (plus generic), <code>site.Default()</code> (the profile with <code>default: true</code>, or generic
+  when none sets it), <code>site.ForConfig(cfg)</code> and
+  <code>site.Current()</code>. <code>LABMILL_BROKER_URL</code> overrides the broker URL.</li>
+<li>First-run setup (<code>launch.Build</code> with the front end's form) offers
+  <code>site.Choices()</code>, then <code>launch.WriteSetup</code> writes the host templates to
+  <code>~/.ssh/config.d/labmill</code> (reusing the user's own aliases, rewriting
+  <code>ProxyJump</code> to the final alias) and saves <code>site: &lt;domain&gt;</code> with the clusters
+  to <code>clusters.yaml</code>. A config without <code>site</code> means the default site; an
+  unknown site falls back to generic with a startup warning.</li>
+<li><strong>Other institutions.</strong> A session's home institution is the
+  top-level <code>site:</code> of <code>clusters.yaml</code>. The other embedded profiles are known:
+  <code>site.Others(home)</code> lists them, <code>site.SkillsFSSession</code> adds all their site
+  skills to the home ones (a broken skill of another institution is a startup
+  warning, only the home one is fatal), and the prompt names each with its
+  clusters and skill. Work goes to the home institution unless the user
+  explicitly names another; then <code>add_cluster</code> copies the cluster's
+  <code>Cluster.yaml</code> template into <code>clusters.yaml</code> with a per-cluster
+  <code>site: &lt;domain&gt;</code> (empty means the top-level site) and writes the SSH hosts
+  it needs. A cluster with its own <code>site:</code> takes its hints, host_path, 2FA
+  help and key-upload text from that institution's profile. Model calls stay
+  the home institution's.</li>
+<li><code>Site.SkillsFS(skills.FS)</code> adds the site skill (<code>SKILL.md</code>,
+  <code>References/*.md</code>, <code>&lt;cluster&gt;/References/*.md</code>) to the generic skills under
+  its own name, so <code>load_skill</code> can load it. The skill runtime lists a
+  cluster folder's references as <code>&lt;cluster&gt;/&lt;file&gt;.md</code> (e.g.
+  <code>bigiron/Slurm.md</code>), and <code>read_reference</code> also accepts the path inside the
+  skill (<code>bigiron/References/Slurm.md</code>, or <code>../bigiron/References/Slurm.md</code>
+  as written in a link from another reference). The system prompt names the
+  site and tells Claude to load the site skill for site facts and never
+  guess.</li>
+</ul>
+<h2 id="adding-a-site-step-by-step">Adding a site, step by step<a class="headerlink" href="#adding-a-site-step-by-step" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Create <code>sites/&lt;domain&gt;/</code> with <code>Site.yaml</code>, <code>SKILL.md</code>, at least one
+   <code>References/*.md</code> and a <code>QUESTIONS.md</code> for what you couldn't confirm,
+   following the rules above. Add one folder per cluster (copy
+   <code>sites/generic/_cluster-template/</code>) with its <code>Cluster.yaml</code> and
+   references, and index the folders in <code>SKILL.md</code>.</li>
+<li>Run <code>go test ./internal/site/ ./internal/skill/</code>: <code>TestEmbeddedSites</code> loads
+   every profile and its skill next to the generic skills, and
+   <code>TestGenericSkillsHaveNoSiteFacts</code> checks that none of the new site's terms
+   are in the public skills.</li>
+<li>Try it in Claude Code: copy the generic skills and the whole site folder,
+   cluster folders included (as <code>site-&lt;domain-with-dashes&gt;</code>), into
+   <code>~/.claude/skills/</code> (see <code>sites/README.md</code>) and ask a site question.</li>
+<li>Keep the new profile out of this repository: <code>.gitignore</code> ignores every
+   <code>sites/&lt;domain&gt;/</code> folder except <code>sites/generic/</code>.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../security/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Security">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Security
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../knowledge-placement/" class="md-footer__link md-footer__link--next" aria-label="Next: Where knowledge lives">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Where knowledge lives
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1426 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/dev/ssh/">
+      
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../tui/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>SSH login and OpenSSH config (design decisions) - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SSH login and OpenSSH config (design decisions)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Interactive shell
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Interactive shell
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="ssh-login-and-openssh-config-design-decisions">SSH login and OpenSSH config (design decisions)<a class="headerlink" href="#ssh-login-and-openssh-config-design-decisions" title="Permanent link">&para;</a></h1>
+<p>The full design of the one-time SSH login, Labmill's own connection sharing and the OpenSSH config file. CLAUDE.md keeps a short summary. The implementation is in <a href="../architecture/">Architecture</a> ("SSH helper and <code>ssh-exec</code>", "SSH config files").</p>
+<p><strong>Audience:</strong> researchers who already run code successfully on their own Mac or Windows computer, often on a single local GPU, and now need to scale out. They don't know the cluster environment, often don't know containers well, and want a chat interface to run their jobs. Nothing may assume they know the terminal, SSH or <code>~/.ssh/config</code>.</p>
+<p><strong>Go-native SSH (<code>golang.org/x/crypto/ssh</code>) on every platform. Don't shell out to <code>ssh</code>.</strong> Labmill doesn't reuse the user's terminal SSH sessions. It runs its own login and its own multiplexing.</p>
+<ul>
+<li><strong>First login is a GUI/TUI dialog that looks like a normal SSH login.</strong></li>
+<li>Labmill asks for the <strong>username</strong>, then the <strong>password</strong> (keyboard-interactive auth).</li>
+<li>When the server shows the 2FA menu (Duo-style, e.g. <code>Passcode or option (1-3):</code>), <strong>Labmill picks the "Duo Push" option itself</strong> (usually <code>1</code>; the number is read from the menu, since phone-only users may have a call or SMS there) and tells the user to approve it on their phone. Some servers push without any menu, so after the password any wait is treated as a 2FA wait, with the push timeout armed.
+  2b. <strong>The push notice always clears.</strong> <code>Prompter.Notify("")</code> means "clear the status line". <code>sshx.login</code> sends it on every way out once it showed a push notice (success, failure, timeout, cancel), and <code>sshx.Connect</code> does the same for notices relayed from the helper, so a front end never keeps "Approve the sign-in request ..." after the wait ended. A helper that already holds the login relays no notice at all. The GUI's <code>labmill:notify</code> event with empty text and the TUI's <code>NotifyMsg</code> clear the line.</li>
+<li><strong>If no push arrives</strong> (timeout, or the server says the user isn't enrolled), show <strong>instructions for setting up 2FA</strong>. Make the enrollment link and text configurable per site rather than hardcoded.
+  3b. <strong>Lockout safety.</strong> Some institutions lock an account (e-mail too) after a few failed password logins. Labmill never resubmits a password by itself, and a password that was sent and rejected without any 2FA step (<code>ErrPasswordRejected</code>, which wraps <code>ErrAuthDenied</code> and has its own helper relay code <code>password</code>) now ends with the site's <code>two_factor.help</code> (when there is one) and <code>sshx.PasswordCareNote</code>: "Check your password before trying again: many institutions lock the account after repeated failed sign-ins." When no password was ever sent (for example a key-only host not flagged as such), the failure stays a plain <code>ErrAuthDenied</code> with neutral text ("the server accepted none of the offered sign-in methods") and no advice about the password. 2FA failures (<code>ErrTwoFactor</code>) keep their own message. The system prompt tells Claude to stop after such a result, explain it and wait for the user. In code, <code>connCache.client</code> records a host whose login ended in <code>ErrPasswordRejected</code>, together with the other hosts of the same institution (the cluster's <code>ssh_host</code> and <code>files_host</code>, <code>siblingHosts</code>, computed from the live config so a cluster added later counts; they share the account; a sibling is refused with "a sign-in at this institution failed a moment ago; check your password, then ask me to try again"), and, until the next turn (<code>Session.Send</code> runs <code>connCache.newTurn</code>), refuses a new login to it with "sign-in to <host> failed a moment ago; check your password, then ask me to try again" without dialing. 2FA and network failures do not arm the guard.</li>
+<li>Let the user type a passcode instead if they prefer.</li>
+<li><strong>Key-only sites (no password login)</strong> get a guided key setup instead of the password dialog. The guide first reuses a key the host already accepts: <code>QueryKeys</code> asks the host about public keys only (the RFC 4252 public-key query, which stops before any signature), for local key files not offered at sign-in (the agent's keys were already offered by <code>Dial</code>) and, over a connection that is already open, the home cluster's keys (<code>ListRemoteKeys</code>). An accepted key that exists only on the home node is copied to a new 0600 file after an approval dialog that defaults to No and is never auto-approved. If nothing is accepted, it creates a new key and uploads it per the site's instructions. See <a href="../architecture/">Architecture</a> ("Guided setup").
+  5b. <strong>Key query batching and host limiting (<code>keyquery.go</code>, <code>keyreuse.go</code>).</strong> Every rejected key in a query counts toward the server's <code>MaxAuthTries</code>, and OpenSSH 9.8+ penalizes a source after failed logins by closing new connections before the handshake. So <code>QueryKeys</code> offers several keys on one connection (<code>ssh.PublicKeys</code> with the query signers), at most <code>maxKeysPerConn</code> (5) per connection, and fewer after a "too many authentication failures" disconnect. It pauses <code>queryPause</code> (7 s, longer than the 5 s penalty; tests shorten it) between connections and returns the results gathered so far instead of nothing when a later connection fails. A host that closes before the handshake gives <code>ErrHostLimiting</code> (wrapped with the host name). When no key has been accepted yet, <code>KeyGuide.useExistingKey</code> then notifies, waits <code>limitWait</code> (a minute), and asks once more only the keys not yet asked. If the host still limits, it returns an error ending "is still refusing connections; wait a few minutes and try again" and does <strong>not</strong> go on to create a new key (the user would register one they may not need). A key accepted before the failure still counts.</li>
+<li><strong>Several institutions in one session.</strong> <code>LoginOptions.Hosts</code> maps a lowercase host name to its own <code>HostLogin</code> (2FA help and name), so each host shows its institution's 2FA text; the plain fields apply to every other host. The jump chain (<code>dialChain</code>) and the host key question (<code>hostKeyCheck</code>) are shared by <code>Dial</code> and <code>QueryKeys</code>, so a key query never accepts an unknown host silently either.</li>
+<li><strong>Labmill's own ControlMaster.</strong> One authenticated connection carries everything: commands run as separate sessions on it, and SFTP runs on it. Each process gets that from x/crypto/ssh for free. To share the connection <strong>across processes</strong> (TUI, GUI and Agent) and keep it alive briefly after Labmill exits, the first Labmill process starts a small <strong>helper that holds the connection</strong>. The helper listens on a per-user local socket (a Unix socket, or AF_UNIX on Windows 10+), and <strong>exits after about 10 minutes idle</strong>, like OpenSSH <code>ControlPersist</code>. Later Labmill processes connect to the socket instead of logging in again. Before the helper hands a held login to a new client (also to <code>ConnectCached</code>), it checks that the login still answers a keepalive request within the keepalive timeout (15 s), unless a keepalive answered within the last keepalive interval (30 s; measured on the wall clock, so time spent suspended counts). A login that doesn't answer (the laptop slept, the network changed) is dropped and its local clients closed, and the client gets a fresh login with its prompts (<code>ConnectCached</code> gets <code>ErrNotConnected</code>). A busy but working link is never dropped this way while its keepalives answer. A local client's own keepalive request is answered only once the cluster login answered one, so a caller can tell a stale login (drop the cached connection, connect again) from a merely slow command (keep it). Commands on a held connection honor their context also while the session opens (<code>backend.SSHRunner</code>), so a stale link times out instead of hanging.</li>
+<li><strong>SSH settings are kept in OpenSSH format, so the user can switch to a plain terminal later.</strong> Users may later want direct terminal access, so every SSH setting Labmill creates goes in an <strong>OpenSSH-compatible config file</strong>, and <code>ssh &lt;alias&gt;</code> / <code>sftp &lt;alias&gt;</code> simply works afterwards. This file is the single source of truth: Labmill reads its own connections from it, and <code>clusters.yaml</code> only refers to the alias.</li>
+<li>Labmill owns <strong><code>~/.ssh/config.d/labmill</code></strong> (on Windows, <code>%USERPROFILE%\.ssh\config.d\labmill</code>). It adds one <code>Include config.d/labmill</code> line at the <strong>top</strong> of <code>~/.ssh/config</code>. The top matters because an <code>Include</code> placed after a <code>Host</code>/<code>Match</code> block only applies inside that block. If <code>~/.ssh/config</code> is missing, create it, with <code>~/.ssh</code> at 0700 and the files at 0600. Back up the existing file before the one-line edit, and never rewrite the user's own entries.</li>
+<li><strong>Directives written per host:</strong> <code>Host &lt;alias&gt;</code>, <code>HostName</code>, <code>User</code>, <code>Port</code> if it isn't 22, <code>ProxyJump</code> when there's a jump host, and <code>ServerAliveInterval</code>. On macOS/Linux also write <code>ControlMaster auto</code>, <code>ControlPath ~/.ssh/controlmasters/%r@%h:%p</code> (create that directory) and <code>ControlPersist 10m</code>, so later terminal use gets the same one-login behavior. Leave those three out on Windows, where Win32-OpenSSH errors on them.</li>
+<li><strong>Aliases:</strong> OpenSSH uses the first value it finds for each setting, and the Include sits at the top. If the user already has a <code>Host</code> entry for that hostname, <strong>reuse their alias</strong> instead of adding one. Otherwise pick an alias that doesn't clash with any of their entries.</li>
+<li><strong>The Go side</strong> parses this file plus the user's <code>~/.ssh/config</code> with a Go ssh_config parser (check that it follows <code>Include</code>). It honors <code>HostName</code>, <code>User</code>, <code>Port</code>, <code>ProxyJump</code> and <code>IdentityFile</code>, and ignores directives it can't act on (<code>Match … Exec</code>, <code>ControlMaster</code>; Labmill's helper does that job).</li>
+<li><strong>Bastion vs. login host.</strong> At many sites the bastion <em>is</em> the Slurm login host, so it's a single hop. Where the login/submit host sits behind a separate bastion, Labmill does a <strong>ProxyJump</strong>.</li>
+<li>x/crypto/ssh has no <code>ProxyJump</code> setting, but it supports the mechanism directly: dial the next hop over the existing connection (<code>client.Dial("tcp", "login:22")</code>), then run <code>ssh.NewClientConn</code> on that <code>net.Conn</code>. Chain this for several hops.</li>
+<li>Each hop can need its own login, so the dialog may run once per hop.</li>
+<li>The jump host is recorded as <code>ProxyJump</code> in the cluster's OpenSSH entry (see above), so terminal <code>ssh</code> takes the same route.</li>
+</ul>
+<h2 id="interactive-shell">Interactive shell<a class="headerlink" href="#interactive-shell" title="Permanent link">&para;</a></h2>
+<p><code>labmill shell &lt;cluster&gt; [--dir &lt;folder&gt;]</code> and the TUI's <code>/shell &lt;cluster&gt; [--dir &lt;folder&gt;]</code> open a shell on the login node over a new session of the helper's existing connection (<code>sshx.RunShell</code>: <code>RequestPty</code> with the local <code>TERM</code> (default <code>xterm-256color</code>) and size, then <code>Shell</code>, or with <code>--dir</code> the command <code>cd -- &lt;quoted dir&gt; &amp;&amp; exec $SHELL -l</code>; <code>window-change</code> on resize: SIGWINCH on Unix, polling every 300 ms on Windows). <code>sshx.ShellExec</code> puts the local terminal in raw mode (<code>golang.org/x/term</code>; on Windows it also turns on VT input and output processing), restores it on every exit path including SIGTERM/SIGHUP, and reads stdin through a poll reader so no key typed after the shell ends is swallowed. It implements Bubble Tea's <code>ExecCommand</code>, so the TUI suspends with <code>tea.Exec</code> and resumes when the shell exits. The open session is a local connection to the helper, so its idle timer does not fire while a shell is open. Login prompts for a missing sign-in use the usual path (TUI: the login modal through the Bridge and the key setup; CLI: a terminal prompter that asks once and never retries a password). Privacy: the shell's bytes are never logged, shown in the chat or sent to Claude; <code>labmill.log</code> gets "shell opened/closed on <alias>" only.</p>
+<p>Desktop terminal. The Wails app shows the same session in xterm.js tabs (<code>internal/gui/terminal.go</code>, <code>frontend/terminal.js</code>). <code>PageAPI.OpenTerminal(cluster, dir, cols, rows)</code> and <code>OpenJobTerminal(jobID, cols, rows)</code> (the folder comes from the job store, never from the page; the cluster and folder may not contain <code>\n</code>, <code>\r</code> or NUL) return an ID at once; <code>launch.Runtime.RunTerminal</code> then connects through the helper (the same <code>forgetDenied</code>/<code>markDenied</code> handling as <code>OpenShell</code>, so a missing sign-in shows the normal login dialog once), runs <code>sshx.RunShell</code> with the xterm.js size and closes its connection when the shell ends. Events to the page: <code>labmill:term-out {id, data}</code> (base64 of raw bytes, chunks of at most 16 KB, in order), <code>labmill:term-state {id, state:"open"}</code>, <code>labmill:term-exit {id, code, message}</code>. From the page: <code>TerminalInput(id, seq, base64)</code> (never blocks: typing before the connection is up is queued, 1 MB at most; bigger input fails with "paste too large"), <code>TerminalResize(id, seq, cols, rows)</code>, <code>TerminalAck(id, n)</code>, <code>CloseTerminal(id)</code> (no exit event). Ordering: Wails runs every bound call in its own goroutine, so the page sends one input call at a time (what is typed meanwhile is joined into the next call) and one resize at a time (newest size wins), and Go delivers input by sequence number (a reorder buffer of up to 64 calls; a rejected call still uses its number) and ignores a resize older than one already seen. Flow control: output stalls once 256 KB are unacknowledged; the page acknowledges what <code>term.write</code> has finished (batched every 10 ms), so a slow page pauses the stdout copy, the SSH window fills and the remote program waits; closing a terminal wakes a stalled writer. Sign-in: while a chat turn runs (<code>gui.App.Busy</code>) a terminal opens no dialog and clears no refusal; it uses a login the helper already holds (<code>sshx.ConnectCached</code>) or shows "Sign-in is possible once the assistant has finished; try again then" in its tab. Otherwise terminal connects to one host are serialized (<code>terminalClient</code>): the first clears an old refusal like <code>/shell</code>, a request that waited behind it does not and, if the password was rejected meanwhile, fails with the refusal instead of prompting; the page disables New terminal while a tab is connecting. At most 8 terminals; <code>Terminals.CloseAll</code> runs at shutdown. The connection to the helper stays open while a terminal exists, so the helper's idle timer does not fire. "Open in system terminal" (<code>internal/gui/systerm.go</code>) starts <code>x-terminal-emulator</code>/<code>gnome-terminal</code>/<code>konsole</code>/<code>xfce4-terminal</code>/<code>xterm</code> (Linux, the command wrapped in <code>sh -c</code> with the program and cluster as positional parameters), <code>wt.exe</code> or, without it, the CLI itself with <code>CREATE_NEW_CONSOLE</code> (Windows, <code>systerm_windows.go</code>; no <code>cmd</code>) or Terminal.app through <code>osascript</code> running <code>exec /bin/sh -c '&lt;script&gt;' sh &lt;cli&gt; &lt;cluster&gt;</code> (macOS; also for fish users) with <code>labmill shell &lt;cluster&gt;</code>; the cluster name must match <code>[A-Za-z0-9][A-Za-z0-9._@-]*</code>. The <code>labmill</code> binary is looked for next to the GUI binary (<code>labmill</code> or <code>labmill-&lt;GOOS&gt;-&lt;GOARCH&gt;</code>, <code>.exe</code> required on Windows; also beside a macOS <code>.app</code>), then on the PATH; the option is hidden when it isn't found. Privacy: the terminal's bytes only travel between Go and the page (no logging, no chat, no Claude); <code>labmill.log</code> gets "terminal opened/closed on <alias>" only. Vendored (MIT, license files beside them in <code>frontend/vendor/xterm/</code>): <code>@xterm/xterm</code> 6.0.0 (<code>xterm.js</code>, <code>xterm.css</code>) and <code>@xterm/addon-fit</code> 0.11.0 (<code>addon-fit.js</code>), copied unmodified from the npm packages; to upgrade, fetch the new <code>lib/*.js</code>, <code>css/xterm.css</code> and LICENSE files the same way and update these versions. xterm.js writes <code>&lt;style&gt;</code> elements for its layout and colors, so the page's Content-Security-Policy has <code>style-src-elem 'self' 'unsafe-inline'</code> (style attributes and scripts stay locked to <code>'self'</code>; nothing in the page builds markup from untrusted text).</p>
+<p>Details of the terminal handling. On Windows the console input is read as console input records (<code>ReadConsoleInputW</code>, key-down records with a character only, so a key-up or mouse record can never block a read and swallow the first key typed after the shell ends; Ctrl+Z is data). <code>ShellExec.Run</code> closes the input, waits for the read in flight (<code>guardedReader</code>) and only then restores the terminal. SIGTERM or SIGHUP while a shell is open ends it, restores the terminal and returns <code>*sshx.ErrShellSignaled</code>: the TUI quits, and <code>labmill shell</code> exits with 128 plus the signal number. A channel that closes without an exit status (dropped connection) is <code>sshx.ErrShellClosed</code>: <code>labmill shell</code> prints "the connection to <alias> closed" and exits 255. An explicit <code>/shell</code> clears only the "password rejected" refusal of its own host and the institution's other hosts (<code>connCache.forgetDenied</code>), never other institutions' refusals or the canceled-sign-in flag, and is still one login attempt.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../architecture/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Architecture">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Architecture
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../tui/" class="md-footer__link md-footer__link--next" aria-label="Next: TUI stack: Charm">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                TUI stack: Charm
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>

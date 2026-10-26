@@ -1,0 +1,1802 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A chat front end that runs your research jobs on Slurm clusters.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.labmill.org/user/settings/">
+      
+      
+      
+        <link rel="prev" href="../data-transfer/">
+      
+      
+        <link rel="next" href="../failed-jobs/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.72">
+    
+    
+      
+        <title>Settings - Labmill client</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Labmill client" class="md-header__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Labmill client
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Settings
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Labmill client" class="md-nav__button md-logo" aria-label="Labmill client" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
+
+    </a>
+    Labmill client
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  User guide
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  User guide
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Install
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Starting Labmill and signing in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Your first job
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../clusters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Clusters and sign-in
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-transfer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Data transfer and checks
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Settings
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#safety-switches-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Safety switches at a glance
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Institution
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Institution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-cluster-at-another-institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A cluster at another institution
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clusters" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Clusters
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Clusters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#more-clusters-at-your-institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        More clusters at your institution
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH connections
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        App
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#about-and-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        About and diagnostics
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-commands-on-the-cluster-without-asking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Run commands on the cluster without asking
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#approve-everything-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approve everything automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-results-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Download results automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-changes-take-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When changes take effect
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#in-the-terminal" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        In the terminal
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../failed-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Failed jobs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Connect the client to your Labmill account
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Privacy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  FAQ
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../desktop-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  The desktop app and the tray
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keyboard reference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the saved SSH settings in a terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../claude-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Using the same know-how in Claude Code
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Know-how updates
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Contact
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dev/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Developers
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Developers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Architecture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ssh/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH login and OpenSSH config (design decisions)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/tui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TUI stack: Charm
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/gui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Desktop app (GUI)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/voice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Voice: "Hey Labmill"
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Testing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Security
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/sites/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Sites: adding an institution
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/knowledge-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Where knowledge lives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev/ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub Actions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#safety-switches-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Safety switches at a glance
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Institution
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Institution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-cluster-at-another-institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A cluster at another institution
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clusters" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Clusters
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Clusters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#more-clusters-at-your-institution" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        More clusters at your institution
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        SSH connections
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        App
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#about-and-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        About and diagnostics
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-commands-on-the-cluster-without-asking" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Run commands on the cluster without asking
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#approve-everything-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approve everything automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-results-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Download results automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-changes-take-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When changes take effect
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#in-the-terminal" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        In the terminal
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+
+<h1 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">&para;</a></h1>
+<p>The desktop app has a Settings page where you can see and change everything Labmill keeps, without editing files. Open it with the <strong>gear button</strong> at the top right of the window, or choose <strong>Settings…</strong> in the tray menu (on a Mac: <strong>File → Settings…</strong>, Cmd+,). <strong>← Back to chat</strong> (or Esc) takes you back to the chat.</p>
+<p>The sections are listed on the left. With the keyboard, use the arrow keys (and Home or End) to move through the list; each section opens as you reach it, and Tab moves into it.</p>
+<p>Settings never shows or stores a password, a sign-in code or a key. The one exception is the optional <strong>Labmill account</strong> section: it keeps the program token you paste there, in a file only you can read, and never shows it again. See <a href="../account/">Connect the client to your Labmill account</a>.</p>
+<h2 id="safety-switches-at-a-glance">Safety switches at a glance<a class="headerlink" href="#safety-switches-at-a-glance" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Switch</th>
+<th>Default</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run commands on the cluster without asking</td>
+<td>off</td>
+<td>Labmill runs commands on the cluster without showing them first.</td>
+</tr>
+<tr>
+<td>Approve everything automatically</td>
+<td>off</td>
+<td>Labmill approves every step. Secret-file reads, questions and logins still ask.</td>
+</tr>
+<tr>
+<td>Download results automatically</td>
+<td>off</td>
+<td>Labmill brings results of finished jobs to your computer.</td>
+</tr>
+<tr>
+<td>Notify me when a job ends</td>
+<td>on</td>
+<td>The desktop app shows a notification.</td>
+</tr>
+<tr>
+<td>Email me when a Slurm job ends</td>
+<td>off</td>
+<td>Labmill adds an email request to the job script.</td>
+</tr>
+</tbody>
+</table>
+<p>Details for each switch are below. See also <a href="../privacy/">Privacy</a>.</p>
+<h2 id="institution">Institution<a class="headerlink" href="#institution" title="Permanent link">&para;</a></h2>
+<p>Shows the institution Labmill is set up for, and its documentation address (as text: copy it into your browser). Choose another institution from the list and click <strong>Save</strong>. Your clusters and connections stay as they are; the institution decides which help and skills Labmill uses.</p>
+<h3 id="a-cluster-at-another-institution">A cluster at another institution<a class="headerlink" href="#a-cluster-at-another-institution" title="Permanent link">&para;</a></h3>
+<p>Labmill works with your own institution by default. If you name a cluster at another institution that Labmill has information for (for example "run this on the cluster at example.edu"), it asks you to approve adding that cluster. The approval is always shown, even with <strong>Approve everything automatically</strong> on. After you approve, the cluster is added to your list and can be used right away. The connection settings go into the same SSH settings file as your other clusters. You sign in to it with your own account there.</p>
+<h2 id="clusters">Clusters<a class="headerlink" href="#clusters" title="Permanent link">&para;</a></h2>
+<p>The clusters in <code>clusters.yaml</code>. <strong>Edit</strong> changes one, <strong>Add cluster</strong> adds one, <strong>Remove</strong> removes one (Labmill asks first).</p>
+<ul>
+<li><strong>Slurm clusters</strong> have a name, an SSH host (one of your SSH connections), an optional files host for transfers, an optional time zone (rarely needed) and the transfer method.</li>
+<li><strong>S3 staging</strong> (optional): bucket, prefix, region, AWS profile, endpoint and encryption. Keys never go here: Labmill uses the AWS profile you name. Leave all S3 fields empty for no S3 settings.</li>
+</ul>
+<h3 id="more-clusters-at-your-institution">More clusters at your institution<a class="headerlink" href="#more-clusters-at-your-institution" title="Permanent link">&para;</a></h3>
+<p>If your institution has gained a cluster since you first set up Labmill, the Clusters page lists it under <strong>More clusters at your institution</strong> (the section is hidden when nothing is missing). <strong>Add</strong> first shows what will be written: the SSH connection for the cluster's login host, the files that change, and your account name there (taken from your existing setup; change it if the cluster uses another account). If you already have an SSH entry for the same host, Labmill reuses it as it is and says so, with the account that entry names; Labmill signs in with that account, so if the account you type is a different one, Labmill refuses with a message instead of ignoring it (use that account, or change the existing entry first). <strong>Add cluster</strong> then adds it at the end of your list. A cluster you already have under another name is not offered again. Nothing is sent to or run on any cluster, and your existing clusters and connections stay as they are. You can also ask Labmill in the chat ("set up the cluster …"); it shows the same details for your approval, even with <strong>Approve everything automatically</strong> on. Labmill always tries the account name you already use at that institution (or at another cluster of it) first, and only asks for a different name if that sign-in is rejected; you can then tell it the other name in the chat. The terminal version lists these clusters in <code>/settings</code> and adds one when you ask in the chat.</p>
+<p>Labmill checks your changes with the same rules it uses when it starts. If a value isn't valid, the message appears under that field and nothing is saved.</p>
+<p>Before the first change, Labmill saves a copy of <code>clusters.yaml</code> next to it (<code>clusters.yaml.labmill-backup-&lt;date&gt;-&lt;time&gt;</code>). It never overwrites an older copy. Your comments in the file are kept.</p>
+<h2 id="ssh-connections">SSH connections<a class="headerlink" href="#ssh-connections" title="Permanent link">&para;</a></h2>
+<p>The connections Labmill uses: name, host name, user name, port and jump host.</p>
+<ul>
+<li>Labmill's own connections (in <code>~/.ssh/config.d/labmill</code>) can be edited, added and removed here. The name of an existing connection can't change, because clusters refer to it. A connection that a cluster uses can't be removed.</li>
+<li>Your own entries in <code>~/.ssh/config</code> are shown read-only. Labmill never changes them, and won't add a connection with the same name.</li>
+<li>Each connection shows whether Labmill is logged in to it right now. Logins end by themselves 10 minutes after Labmill quits.</li>
+</ul>
+<h2 id="folders">Folders<a class="headerlink" href="#folders" title="Permanent link">&para;</a></h2>
+<p>Your data folder (first) and code folder, the same ones as in the chat box's <strong>+</strong> menu: <strong>Choose…</strong>, <strong>Remove</strong>, or <strong>Use</strong> a recent folder. Only the folder names are kept; nothing is read or sent until you ask in the chat and approve.</p>
+<h2 id="app">App<a class="headerlink" href="#app" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Start Labmill in the tray when I log in</strong>: the same switch as in the tray menu. Off by default.</li>
+<li><strong>Show the one-time tips again</strong>: for example the note that Labmill keeps running in the tray when you close its window.</li>
+<li><strong>Notify me when a job ends</strong>: the desktop app shows a notification when one of your jobs ends. On by default.</li>
+<li><strong>Email me when a Slurm job ends</strong>: Labmill adds a request for an email when the job ends or fails to the Slurm script. The email goes to the default address of your institution. Off by default.</li>
+</ul>
+<h2 id="about-and-diagnostics">About and diagnostics<a class="headerlink" href="#about-and-diagnostics" title="Permanent link">&para;</a></h2>
+<p>Read-only: the version, the assistant's address (a broker address, or none when Labmill calls Anthropic directly), and where Labmill keeps its files (clusters, SSH settings, desktop app settings, job database, log).</p>
+<ul>
+<li><strong>Open logs folder</strong> opens the folder with Labmill's log and job database.</li>
+<li><strong>Copy diagnostics</strong> copies a short report for your site's support. The page shows exactly what is copied. It holds no passwords, keys, sign-in codes or user names.</li>
+</ul>
+<h2 id="run-commands-on-the-cluster-without-asking">Run commands on the cluster without asking<a class="headerlink" href="#run-commands-on-the-cluster-without-asking" title="Permanent link">&para;</a></h2>
+<p>In the <strong>App</strong> section, <strong>Run commands on the cluster without asking</strong> is off by default. While it is off, Labmill runs plain reads on its own (for example listing your jobs or files) and shows you every other command, exactly as it will run, and waits for your OK. When you turn it on, Labmill runs those commands on your cluster account without showing them first. Reading a file that holds sign-in secrets, such as a private key or a token file, still asks first, because the content would go to Claude. Your cluster account's own permissions still decide what a command can do. The setting applies to the next command, and it is kept for the desktop app and the terminal alike.</p>
+<h2 id="approve-everything-automatically">Approve everything automatically<a class="headerlink" href="#approve-everything-automatically" title="Permanent link">&para;</a></h2>
+<p>In the <strong>App</strong> section, under <strong>Approvals</strong>, <strong>Approve everything automatically</strong> is off by default. The same checkbox is in the main chat window, next to <strong>Send</strong>. When it is on, Labmill approves every step for you, without showing it first and without letting you edit it: uploads, downloads, job submissions, cancellations and commands on the cluster. A banner above the chat says <strong>Auto-approve is on</strong> and has a <strong>Turn off</strong> button, and every step appears in the chat as <strong>Auto-approved: ...</strong>, so you can still see what was done.</p>
+<p>Three things always ask, even when it is on:</p>
+<ul>
+<li>Reading a file that holds sign-in secrets, such as a private key or a token file, because the content would go to Claude.</li>
+<li>Questions from Labmill with a few answers to choose from.</li>
+<li>Logins: your password and the two-factor push or code.</li>
+</ul>
+<p><strong>How it differs from "Run commands on the cluster without asking".</strong> That setting only covers commands on the cluster. Uploads, downloads and job submissions still show their approval screen. <strong>Approve everything automatically</strong> includes everything that setting does, and the other approval screens too. You can keep the narrower one on and the wider one off. Turn the wider one on only when you trust what you are asking for, because nobody checks each step. The setting applies to the next step.</p>
+<h2 id="download-results-automatically">Download results automatically<a class="headerlink" href="#download-results-automatically" title="Permanent link">&para;</a></h2>
+<p>In the <strong>App</strong> section, under <strong>Approvals</strong>, <strong>Download results automatically</strong> is off by default. The same checkbox is in the main chat window, next to <strong>Approve everything automatically</strong>. When it is on and a job you started completes, fails or runs out of time (not when you cancel it), Labmill downloads its results to your results folder, in the folder named after the job, and checks the files against the cluster. It asks nothing, because the files only come to your computer. The chat says what was downloaded and where, with an <strong>Open folder</strong> button.</p>
+<p>It brings only what the job produced: files you uploaded, hidden or private-looking files (such as <code>.netrc</code>, <code>.env</code> or token files), environments and caches, and symbolic links are left out, and the chat says how many. It leaves results above 2 GB or 2000 files, or larger than your free disk space minus 10 %, for you to ask for, and says why. When you are not signed in, it tells you once and downloads at its next check after you sign in. When the download fails, it tells you and you can ask Labmill to fetch the results. A failed job stays marked as failed. Each job is downloaded automatically at most once, and only if it finishes while the setting is on. The setting applies to the next job that finishes, and it is kept for the desktop app and the terminal alike.</p>
+<h2 id="when-changes-take-effect">When changes take effect<a class="headerlink" href="#when-changes-take-effect" title="Permanent link">&para;</a></h2>
+<p>Labmill reads <code>clusters.yaml</code> and the SSH settings when it starts. After you save a change, the page says so: <strong>quit labmill</strong> (tray menu → Quit Labmill) and open it again to use the new settings. Folders and the App settings, including <strong>Run commands on the cluster without asking</strong> and <strong>Approve everything automatically</strong>, take effect at once.</p>
+<h2 id="in-the-terminal">In the terminal<a class="headerlink" href="#in-the-terminal" title="Permanent link">&para;</a></h2>
+<p>In the terminal interface, type <code>/settings</code> to see the same settings (without secrets) and where the files are. <code>/settings</code> also shows whether commands on the cluster run without asking. To change it from the terminal, add the line <code>"runWithoutAsking": true</code> (or <code>false</code>) to the desktop app settings file that <code>/settings</code> lists under Files (<code>gui.json</code>, in the same folder as <code>clusters.yaml</code>; create it as <code>{ "runWithoutAsking": true }</code> if it is missing). A running desktop app may overwrite a hand edit with its own copy, so edit the file while the app is closed, or use the Settings page. Type <code>/autoapprove on</code> or <code>/autoapprove off</code> to change <strong>Approve everything automatically</strong> (<code>/autoapprove</code> alone shows it). Type <code>/autodownload on</code> or <code>/autodownload off</code> to change <strong>Download results automatically</strong> (<code>/autodownload</code> alone shows it; <code>/settings</code> shows both). The terminal's status line reads <strong>AUTO-APPROVE ON</strong> while it is on. The choice is saved in the same file as the desktop app's, so both use it. Editing is done in the desktop app, or in the files themselves.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../data-transfer/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Data transfer and checks">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Data transfer and checks
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../failed-jobs/" class="md-footer__link md-footer__link--next" aria-label="Next: Failed jobs">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Failed jobs
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.10ee5ab6.min.js"></script>
+      
+    
+  </body>
+</html>
