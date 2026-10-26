@@ -125,6 +125,7 @@ jobs:
       - name: Build
         env:
           CGO_ENABLED: "1"
+          CGO_LDFLAGS: -framework UniformTypeIdentifiers # the Wails CLI adds it; a plain go build must too
         run: |
           mkdir -p dist
           go build -tags desktop,production -ldflags "-X main.version=$VERSION" -o dist/labmill-gui-darwin-arm64 ./cmd/labmill-gui
