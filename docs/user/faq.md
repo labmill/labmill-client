@@ -6,11 +6,14 @@ Slurm clusters only.
 **Do I need an account with Labmill?**
 No. You use your own cluster account and your own Anthropic API key. A Labmill account at app.labmill.org is optional.
 
+**Do I need my own Anthropic API key?**
+Not if you are an invited tester. Without a key, a client connected to your Labmill account (`labmill login`) uses the Labmill test relay: app.labmill.org sends your requests to Claude with Labmill's key, within a daily limit, and does not store them. This is for testing only. Your own key stays the private choice: Labmill then talks to Anthropic directly and nothing goes through Labmill. When both are there, Labmill uses your own key. See [Starting Labmill and signing in](first-run.md).
+
 **Is the client linked to my Labmill account?**
 Only if you connect it. Make a program token at app.labmill.org and run `labmill login`, or paste it in **Settings > Labmill account**. Then Labmill sends a record of each job that ends: state, times, resources, partition and software modules. It never sends job scripts, data files, program code, names or log lines. See [Connect the client to your Labmill account](account.md).
 
 **Does Labmill cost money?**
-The client is free. It will be open source under the MIT license when it is published. Anthropic bills the API use on your own key. A Labmill account on labmill.org is optional: it costs 6 USD a month, or 35 USD a month for a fully private account (redacted job facts do not help other researchers), plus tax where it applies. See [labmill.org/pricing](https://labmill.org/pricing/).
+The client is free. It will be open source under the MIT license when it is published. Anthropic bills the API use on your own key (the test relay costs testers nothing). A Labmill account on labmill.org is optional: it costs 6 USD a month, or 35 USD a month for a fully private account (redacted job facts do not help other researchers), plus tax where it applies. See [labmill.org/pricing](https://labmill.org/pricing/).
 
 **Does it send my data to Claude?**
 No. Claude sees file names, sizes, short previews and small samples. Files go to the cluster only after you approve. See [Privacy](privacy.md).

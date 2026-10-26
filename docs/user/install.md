@@ -35,7 +35,7 @@ Labmill is one file. There is no installer yet. Put the file in a folder you kee
 You need:
 
 - an account on a Slurm cluster, with its two-factor sign-in if your institution uses one;
-- your own Anthropic API key in the `ANTHROPIC_API_KEY` environment variable (see [Starting Labmill and signing in](first-run.md)).
+- your own Anthropic API key in the `ANTHROPIC_API_KEY` environment variable, or, for invited testers, a connected Labmill account (see [Starting Labmill and signing in](first-run.md)).
 
 ## macOS
 

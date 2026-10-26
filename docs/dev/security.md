@@ -51,6 +51,7 @@ This page lists the protections that exist in the code today, with where to find
 ## Model access
 
 - By default the client calls the Anthropic Messages API with the user's own `ANTHROPIC_API_KEY`. The key is read from the environment, kept in memory only and never written to disk. The SDK is built with `WithoutEnvironmentDefaults`, so `ANTHROPIC_BASE_URL` and other `ANTHROPIC_*` variables can't send the key somewhere else. (`internal/launch/model.go`)
+- Without a key and without a broker, a client linked to a Labmill account (`account.json`) uses the Labmill test relay (owner decision 2026-10-26, testing only): the broker client against `<link URL>/api/model` (the URL saved at `labmill login`, so `LABMILL_ACCOUNT_URL` applies) with the program token as bearer token. The key, when set, always wins and never goes to Labmill. The server forwards with Labmill's key and stores no request text. (`internal/launch/model.go` `chooseModel`)
 - When a broker is configured (`broker_url` in `Site.yaml` or `LABMILL_BROKER_URL`), the client sends model calls there with the bearer token from `LABMILL_BROKER_TOKEN`. The broker client requires an `https` base URL (plain `http` only for loopback), ignores `ANTHROPIC_*` environment variables, and treats a stream that ends without `message_stop` as an error. (`internal/broker`)
 
 ## Labmill account link

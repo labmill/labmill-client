@@ -9,7 +9,7 @@ Labmill lets you describe a compute job in plain language and then does the rest
 
 - A computer (a laptop is fine).
 - An account on a Slurm cluster at your institution, with its two-factor sign-in set up if your institution uses one (for example a push to your phone). Labmill doesn't create accounts. It uses the one you already have.
-- Your own Anthropic API key in the `ANTHROPIC_API_KEY` environment variable (see [Starting Labmill and signing in](first-run.md)).
+- Your own Anthropic API key in the `ANTHROPIC_API_KEY` environment variable, or, for invited testers, a connected Labmill account (see [Starting Labmill and signing in](first-run.md)).
 - Your cluster user name and password.
 
 ## What Labmill does without asking, and what it never does without asking
