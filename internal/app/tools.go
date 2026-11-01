@@ -19,6 +19,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/backend/slurm"
@@ -738,6 +739,10 @@ func (t *toolset) draftJob() agent.Tool {
 				"enum":        []string{scratchLocal, scratchGlobal, scratchJobFolder},
 				"description": "Where the job keeps its working data. local = the compute node's own disk (single-node jobs only; Labmill adds the stage-in, run, stage-out and removes the local folder after a good copy), when cluster_info names a node-local scratch; global = a folder on the cluster's shared scratch (upload_data to a remote_dir below it first), when cluster_info names one; job_folder (default) = the job's own folder. Prefer local for a single-node job, else global, else job_folder",
 			},
+			"private": map[string]any{
+				"type":        "boolean",
+				"description": "true when the user asks to keep this job private: its report to the user's Labmill account then holds only the scheduler facts (no script, no output lines, no problem reports). Leave out otherwise",
+			},
 			"preemptible": map[string]any{
 				"type":        "boolean",
 				"description": "Leave out to use the cluster's preemptible partition when cluster_info names one and the job fits (it is tried first, resubmitted automatically up to two more times, then once on the normal partition); false for a job that must not be interrupted or is longer than that partition allows; true only to insist",
@@ -798,6 +803,7 @@ func (t *toolset) draftJob() agent.Tool {
 				Files       []jobFile            `json:"files"`
 				Scratch     string               `json:"scratch"`
 				Preemptible *bool                `json:"preemptible"`
+				Private     bool                 `json:"private"`
 				Environment *backend.Environment `json:"environment"`
 				Spec        struct {
 					Name        string            `json:"name"`
@@ -937,6 +943,11 @@ func (t *toolset) draftJob() agent.Tool {
 			}
 			if err := t.env.Store.AddEvent(ctx, j.ID, eventSpec, string(specJSON)); err != nil {
 				return "", fmt.Errorf("I couldn't save the job settings: %w", err)
+			}
+			if in.Private {
+				if err := t.env.Store.AddEvent(ctx, j.ID, account.EventPrivate, ""); err != nil {
+					return "", fmt.Errorf("I couldn't mark the job private: %w", err)
+				}
 			}
 			planJSON, err := json.Marshal(plan)
 			if err == nil {

@@ -54,6 +54,29 @@ func (s *Store) HasUpload(ctx context.Context, jobID int64, remoteID string) (bo
 	return true, nil
 }
 
+// UploadOf returns the report of job jobID with remoteID; ok is false when there is none.
+func (s *Store) UploadOf(ctx context.Context, jobID int64, remoteID string) (u Upload, ok bool, err error) {
+	u, err = scanUpload(s.db.QueryRowContext(ctx, `SELECT `+uploadCols+` FROM uploads WHERE job_id = ? AND remote_id = ?`, jobID, remoteID))
+	if err == sql.ErrNoRows {
+		return Upload{}, false, nil
+	}
+	if err != nil {
+		return Upload{}, false, fmt.Errorf("store: reading uploads: %w", err)
+	}
+	return u, true, nil
+}
+
+// ReplaceUpload sets a new payload for the report of job jobID with remoteID
+// (the job changed state) and queues it again, due at next, with no attempts.
+func (s *Store) ReplaceUpload(ctx context.Context, jobID int64, remoteID, payload string, next time.Time) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE uploads SET payload = ?, next_at = ?, sent_at = 0, attempts = 0, last_error = ''
+		WHERE job_id = ? AND remote_id = ?`, payload, ts(next), jobID, remoteID)
+	if err != nil {
+		return fmt.Errorf("store: queuing report for job %d again: %w", jobID, err)
+	}
+	return nil
+}
+
 // AddUpload queues u (due at once). A second report for the same job and
 // remote ID is ignored; added says whether u was queued.
 func (s *Store) AddUpload(ctx context.Context, u Upload) (added bool, err error) {

@@ -32,6 +32,11 @@ type fakeAPI struct {
 	// resolve answers GET /api/systems/resolve; nil: 404 (an older server).
 	resolve  func(q url.Values) (int, any)
 	resolved []url.Values
+	// contributes is GET /api/me's answer; nil leaves it out (an older server).
+	contributes *bool
+	posts       []string // every POST /api/jobs body, repeats too
+	events      []string // raw bodies of POST /api/client-events
+	eventFails  int      // answer 500 to this many event posts first
 }
 
 func (f *fakeAPI) handler(t *testing.T) http.Handler {
@@ -45,7 +50,16 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 		}
 		switch r.Method + " " + r.URL.Path {
 		case "GET /api/me":
-			json.NewEncoder(w).Encode(Me{PersonID: "11111111-2222-3333-4444-555555555555", Role: "user", DisplayName: "Test User"})
+			json.NewEncoder(w).Encode(Me{PersonID: "11111111-2222-3333-4444-555555555555", Role: "user", DisplayName: "Test User", Contributes: f.contributes})
+		case "POST /api/client-events":
+			b, _ := io.ReadAll(r.Body)
+			if f.eventFails > 0 {
+				f.eventFails--
+				http.Error(w, "down", http.StatusInternalServerError)
+				return
+			}
+			f.events = append(f.events, string(b))
+			w.WriteHeader(http.StatusNoContent)
 		case "GET /api/systems":
 			json.NewEncoder(w).Encode([]System{
 				{ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", Name: "bigcluster", Institution: "Example University"},
@@ -75,6 +89,7 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 				http.Error(w, "could not store the job", http.StatusInternalServerError)
 				return
 			}
+			f.posts = append(f.posts, string(b))
 			var j map[string]any
 			if err := json.Unmarshal(b, &j); err != nil {
 				t.Errorf("bad body: %v", err)
@@ -399,8 +414,11 @@ func TestBuildReportStates(t *testing.T) {
 			t.Errorf("%s %q: %+v", c.st, c.msg, in)
 		}
 	}
-	if _, ok := BuildReport(store.Job{State: store.StateRunning, RemoteID: "1"}, nil, "r"); ok {
-		t.Error("a running job made a report")
+	if in, ok := BuildReport(store.Job{State: store.StateRunning, RemoteID: "1"}, nil, "r"); !ok || in.State != "RUNNING" || in.EndedAt != nil {
+		t.Errorf("a running job: %+v %v", in, ok)
+	}
+	if _, ok := BuildReport(store.Job{State: store.StateDraft, RemoteID: "1"}, nil, "r"); ok {
+		t.Error("a draft made a report")
 	}
 	if _, ok := BuildReport(store.Job{State: store.StateCanceled}, nil, "r"); ok {
 		t.Error("a never-submitted job made a report")

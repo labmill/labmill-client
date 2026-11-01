@@ -24,7 +24,11 @@ Without your own `ANTHROPIC_API_KEY`, a client connected to your Labmill account
 
 ## What goes to your Labmill account
 
-Nothing, unless you connect the client to your account at app.labmill.org. Then, for each job that ends after you connect, Labmill sends the cluster, the Slurm state, the times, the resources asked for, the partition and the software module names. It does not send job scripts, data files, program code, file, folder or job names, environment variables or log lines. See [Connect the client to your Labmill account](account.md).
+Nothing, unless you connect the client to your account at app.labmill.org. Then:
+
+**Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.**
+
+In detail: the scheduler facts of each job (cluster, state, times, resources asked for, got and used, partition, software module names), the sbatch script, the last 500 lines of the job output and of its error output (for a failed job also the first 100 lines), and a short report of each problem in a session (connection, sign-in, assistant, tool, sbatch and transfer errors, crashes, stopped turns). Labmill redacts all text on your computer before it sends it (passwords, tokens, keys, emails, IP addresses, paths, host names, user and job names) and the server redacts it again. A private job sends only the scheduler facts. A fully private account (contribution off) sends only the scheduler facts and no problem reports. It never sends data files or program code other than the job script. See [Connect the client to your Labmill account](account.md).
 
 ## What goes to the cluster
 
@@ -36,7 +40,7 @@ Labmill refuses these on your own computer, even with approval: `.ssh`, `.gnupg`
 
 ## What Labmill does not do
 
-- It needs no Labmill account. Connecting one is optional, and until you do, nothing goes to Labmill.
+- It needs no Labmill account. Connecting one is optional, and until you do, nothing goes to Labmill. Labmill has no telemetry: problem reports go only to your own connected account.
 - It has no shell on your computer. Claude uses fixed tools only.
 - It installs nothing on the cluster and leaves nothing running there.
 

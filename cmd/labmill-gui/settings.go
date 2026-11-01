@@ -314,7 +314,7 @@ func (s *SettingsAPI) AccountConnect(token string) settings.Result {
 		defer cancel()
 		me, err = account.Login(ctx, s.accountPath(), base, token, nil, time.Now())
 		if err == nil {
-			return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Connected to the Labmill account of " + accountName(me) + ". Jobs that end from now on are sent to it."}
+			return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Connected to the Labmill account of " + accountName(me) + ". Jobs from now on are sent to it. " + account.Notice}
 		}
 	}
 	return settings.Result{Errors: []settings.FieldError{{Field: "token", Message: err.Error()}}}

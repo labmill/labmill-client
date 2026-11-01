@@ -636,7 +636,7 @@
         box.appendChild(row);
         return;
       }
-      box.appendChild(el('p', '', 'Not connected. Labmill sends nothing to a Labmill account. To connect, make a program token at ' + a.url + ' (Settings > Program tokens) and paste it here.'));
+      box.appendChild(el('p', '', 'Not connected. Labmill sends nothing to a Labmill account. To connect, make a program token at ' + a.url + ' (Settings > Program tokens) and paste it here. When connected, Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.'));
       var form = el('form');
       form.id = 'settings-account-form';
       form.addEventListener('submit', function (e) { e.preventDefault(); });

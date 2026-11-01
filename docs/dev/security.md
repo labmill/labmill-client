@@ -59,7 +59,7 @@ This page lists the protections that exist in the code today, with where to find
 - Off until the user pastes a program token (`labmill login` reads it from stdin, hidden on a terminal, never from argv; the GUI uses a password field). `account.Login` checks the form (`lmt_`, printable, under 100 characters) and calls `GET /api/me` before it saves anything; a refused token is not saved.
 - The token is kept in `account.json` next to `clusters.yaml`, written atomically with mode 0600 (`config.WriteFile`). This is the one secret the client keeps on disk; the client has no OS key store. It is never logged, put in `labmill.log`, shown on the Settings page or printed by `whoami`. `labmill logout` deletes the file.
 - The account URL is `https://app.labmill.org`, or `LABMILL_ACCOUNT_URL` (https, plain http only for loopback, as the broker). Redirects are not followed, so the bearer header can't go to another host.
-- What is sent and what never is: see [Architecture](architecture.md#job-records-for-the-labmill-account). Only jobs that end after the link was made are sent.
+- What is sent and what never is: see [Architecture](architecture.md#job-records-for-the-labmill-account). Only jobs that change after the link was made are sent. Scripts, output lines and problem messages are redacted on the computer first (`account.Redactor`); a private job and a fully private account send only scheduler facts.
 
 ## Downloaded know-how and results
 

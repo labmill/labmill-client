@@ -1,6 +1,7 @@
 // Package account links the client to the user's Labmill account
-// (app.labmill.org) with a program token, and sends the records of finished
-// jobs to it (upload.go). Nothing is sent while no token is saved.
+// (app.labmill.org) with a program token, and sends the records of jobs
+// (upload.go) and the problems a session saw (problems.go) to it. Nothing is
+// sent while no token is saved. What is sent: docs/privacy.md (Notice).
 //
 // The token is a secret. It is kept in account.json next to clusters.yaml,
 // mode 0600, written atomically (the client keeps no other secret on disk and
@@ -25,6 +26,10 @@ import (
 	"labmill-client/internal/config"
 )
 
+// Notice is shown once, when the user connects an account (labmill login,
+// Settings > Labmill account): what the client sends.
+const Notice = "Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts."
+
 // DefaultURL is the Labmill web app; LABMILL_ACCOUNT_URL overrides it (tests, staging).
 const DefaultURL = "https://app.labmill.org"
 
@@ -43,6 +48,10 @@ type Me struct {
 	PersonID    string `json:"person_id"`
 	Role        string `json:"role"`
 	DisplayName string `json:"display_name"`
+	// Contributes is false for a fully private account (contribution off):
+	// then the client sends only the scheduler's facts. nil (an older
+	// server) counts as false.
+	Contributes *bool `json:"contributes,omitempty"`
 }
 
 // ErrNotLinked means no token is saved.
@@ -245,6 +254,11 @@ func (c *Client) Resolve(ctx context.Context, ref SystemRef) (System, error) {
 // SendJob calls POST /api/jobs with one report.
 func (c *Client) SendJob(ctx context.Context, j JobIn) error {
 	return c.do(ctx, http.MethodPost, "/api/jobs", j, nil)
+}
+
+// SendEvents calls POST /api/client-events with up to 50 problem reports.
+func (c *Client) SendEvents(ctx context.Context, evs []ClientEvent) error {
+	return c.do(ctx, http.MethodPost, "/api/client-events", map[string]any{"events": evs}, nil)
 }
 
 // Login checks tok with the API and saves the link at path. It returns who the token belongs to.
