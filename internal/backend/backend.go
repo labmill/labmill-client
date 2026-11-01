@@ -254,7 +254,8 @@ type Status struct {
 	EndTime   time.Time // zero if unknown
 	// Use of an ended single job from accounting; 0 when not reported.
 	ElapsedSec, CPUSec, MaxRSSBytes int64
-	GPUs                            int // allocated GPUs
+	GPUs                            int    // allocated GPUs
+	AllocTRES                       string // what the job got, as the scheduler prints it (Slurm AllocTRES); "" when not reported
 }
 
 // Facts are the scheduler facts of st to save with the job, for a status
@@ -264,7 +265,7 @@ func (st Status) Facts() (f store.Facts, ok bool) {
 		return store.Facts{}, false
 	}
 	return store.Facts{RemoteID: st.RemoteID, ExitCode: st.ExitCode, Signal: st.Signal, Start: st.StartTime.UTC(), End: st.EndTime.UTC(),
-		ElapsedSec: st.ElapsedSec, CPUSec: st.CPUSec, MaxRSSBytes: st.MaxRSSBytes, GPUs: st.GPUs}, true
+		ElapsedSec: st.ElapsedSec, CPUSec: st.CPUSec, MaxRSSBytes: st.MaxRSSBytes, GPUs: st.GPUs, AllocTRES: st.AllocTRES}, true
 }
 
 // StartEstimate is the scheduler's expected start of a job that is not
@@ -464,6 +465,15 @@ type Accounting struct {
 	// 0 when unknown or per CPU. MaxRSSBytes is the largest MaxRSS of any
 	// single task of any step, not a total; 0 when none is recorded.
 	ReqMemBytes, MaxRSSBytes int64
+}
+
+// OutputReader is implemented by backends that can read a job's output
+// files (Slurm: the StdOut and StdErr files). It only reads. For each file
+// it returns the whole text when it has at most head+tail lines, else the
+// first head lines, one line "[... N lines left out ...]" and the last tail
+// lines. stderr is nil when the job writes both to one file.
+type OutputReader interface {
+	Output(ctx context.Context, remoteID string, head, tail int) (stdout, stderr []string, err error)
 }
 
 // Accountant is implemented by backends that can read the accounting

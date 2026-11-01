@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/app"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/config"
@@ -99,6 +100,13 @@ type jobMonitor struct {
 	alive     func()
 	away      bool        // the first check is running; only the monitor goroutine uses it
 	awayEnded []awayEntry // jobs the first check saw end
+
+	// collect, when set, runs when a job ends (seen by a check, or by
+	// job_status through jobEnded): it reads the job's output for its report
+	// to the Labmill account. problem, when set, gets a job whose checks
+	// failed monitorMaxFailures times in a row.
+	collect func(ctx context.Context, j store.Job, be backend.Backend)
+	problem func(j store.Job, err error)
 
 	interval, timeout time.Duration // 0 means monitorInterval / monitorCallTimeout
 
@@ -264,6 +272,11 @@ func (m *jobMonitor) check(ctx context.Context) {
 			}
 		}
 		m.apply(ctx, j, st)
+		if m.collect != nil && account.Final(st.State) {
+			done := j // CollectOutput reads once per run, so a repeat is cheap
+			done.State = st.State
+			m.collect(ctx, done, r.be)
+		}
 	}
 }
 
@@ -287,6 +300,9 @@ func (m *jobMonitor) failed(ctx context.Context, j store.Job, cause error) {
 	f.next = m.clock().Add(monitorBackoff)
 	if f.n > monitorMaxFailures {
 		return
+	}
+	if m.problem != nil && cause != nil {
+		m.problem(j, cause)
 	}
 	msg := unknownMessage
 	_ = m.store.UpdateJob(ctx, j.ID, func(cur *store.Job) error {
@@ -394,6 +410,7 @@ func (m *jobMonitor) startAutoFetch(ctx context.Context, id int64) {
 // jobEnded is called when job_status saw job id complete or fail before this
 // monitor did: the same automatic download, if the setting is on.
 func (m *jobMonitor) jobEnded(id int64) {
+	m.collectLater(id)
 	if m.ended != nil && m.store != nil {
 		if j, err := m.store.Job(context.Background(), id); err == nil {
 			if text, ok := endedText(j.Name, j.State, j.Message); ok {
@@ -409,6 +426,39 @@ func (m *jobMonitor) jobEnded(id int64) {
 		ctx = context.Background()
 	}
 	m.startAutoFetch(ctx, id)
+}
+
+// collectLater reads the output of ended job id in the background (collect),
+// with a backend that never logs in. Close waits for it.
+func (m *jobMonitor) collectLater(id int64) {
+	if m.collect == nil || m.store == nil || m.cfg == nil {
+		return
+	}
+	ctx := m.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	m.fetching.Add(1)
+	go func() {
+		defer m.fetching.Done()
+		j, err := m.store.Job(ctx, id)
+		if err != nil || !account.Final(j.State) {
+			return
+		}
+		c, ok := m.cfg.Cluster(j.Cluster)
+		if !ok {
+			return
+		}
+		t := m.timeout
+		if t <= 0 {
+			t = monitorCallTimeout
+		}
+		be, ok := m.backendWithin(ctx, c, t)
+		if !ok {
+			return
+		}
+		m.collect(ctx, j, be)
+	}()
 }
 
 // retryAutoFetch starts the postponed automatic downloads (setting on).

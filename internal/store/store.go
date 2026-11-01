@@ -101,6 +101,7 @@ type Facts struct {
 	CPUSec      int64     `json:"cpu_sec,omitempty"`
 	MaxRSSBytes int64     `json:"max_rss_bytes,omitempty"`
 	GPUs        int       `json:"gpus,omitempty"`
+	AllocTRES   string    `json:"alloc_tres,omitempty"` // Slurm AllocTRES, e.g. "cpu=8,mem=32G,node=1"
 }
 
 // ManifestEntry is one staged file.
@@ -155,7 +156,7 @@ func DefaultPath() (string, error) {
 }
 
 // schemaVersion is the user_version this build writes.
-const schemaVersion = 5
+const schemaVersion = 6
 
 // migrations[i] upgrades a database from version i to i+1.
 var migrations = []string{
@@ -219,6 +220,17 @@ var migrations = []string{
 	);`,
 	// 5: the scheduler's facts of the ended run (Facts, as JSON; '' = none).
 	`ALTER TABLE jobs ADD COLUMN facts TEXT NOT NULL DEFAULT '';`,
+	// 6: the queue of problem reports for the user's Labmill account (clientevents.go).
+	`CREATE TABLE client_events (
+		id       INTEGER PRIMARY KEY AUTOINCREMENT,
+		job_id   INTEGER NOT NULL DEFAULT 0, -- 0: no job
+		cluster  TEXT NOT NULL DEFAULT '',
+		payload  TEXT NOT NULL,              -- the redacted event (JSON) without hpc_system_id and client_job_ref
+		attempts INTEGER NOT NULL DEFAULT 0,
+		next_at  INTEGER NOT NULL,
+		sent_at  INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE INDEX client_events_due ON client_events(sent_at, next_at);`,
 }
 
 // WAL mode needs shared memory and file locking, so the database must live on

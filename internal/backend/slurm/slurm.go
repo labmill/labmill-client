@@ -420,7 +420,7 @@ func (s *Slurm) Status(ctx context.Context, remoteID string) (backend.Status, er
 	}
 	r := rows[0]
 	st := backend.Status{RemoteID: remoteID, State: r.State, Node: r.Node, StartTime: r.Start, EndTime: r.End, ExitCode: r.Exit, Signal: r.Sig,
-		ElapsedSec: r.Elapsed, GPUs: r.GPUs}
+		ElapsedSec: r.Elapsed, GPUs: r.GPUs, AllocTRES: r.TRES}
 	if !r.End.IsZero() {
 		st.CPUSec, st.MaxRSSBytes = s.stepUse(ctx, remoteID)
 	}
@@ -563,6 +563,7 @@ type taskRow struct {
 	// sacct only: ElapsedRaw seconds and the GPUs in AllocTRES (0: none reported)
 	Elapsed int64
 	GPUs    int
+	TRES    string // sacct only: AllocTRES as printed, e.g. "billing=8,cpu=8,gres/gpu=1,mem=32G,node=1"
 }
 
 // parseSqueueRow parses "%T|%r|%N|%i" (the last field is optional).
@@ -608,6 +609,7 @@ func (s *Slurm) parseSacctRow(line string) (taskRow, bool) {
 	r.Sig, _ = strconv.Atoi(sig)
 	r.Exit, _ = strconv.Atoi(code)
 	r.Elapsed, _ = strconv.ParseInt(strings.TrimSpace(f[6]), 10, 64)
+	r.TRES = strings.TrimSpace(f[7])
 	for _, t := range strings.Split(f[7], ",") {
 		if v, ok := strings.CutPrefix(strings.TrimSpace(t), "gres/gpu="); ok {
 			r.GPUs, _ = strconv.Atoi(v)
@@ -1049,6 +1051,79 @@ func (s *Slurm) Logs(ctx context.Context, remoteID string, tailLines int) (strin
 	return res.Stdout, nil
 }
 
+// Output implements backend.OutputReader. The files come from
+// `scontrol show job <id>` (StdOut=, StdErr=) or, when the job is gone, the
+// stdout file as Logs finds it. For each file it runs `wc -l`, `tail -n` and,
+// only when the file is longer than head+tail, `head -n`. A missing stderr
+// file is not an error.
+func (s *Slurm) Output(ctx context.Context, remoteID string, head, tail int) (stdout, stderr []string, err error) {
+	if err := checkRemoteID(remoteID); err != nil {
+		return nil, nil, err
+	}
+	out, errPath := "", ""
+	if res, err := s.Runner.Run(ctx, []string{"scontrol", "show", "job", remoteID}, nil); err == nil && res.ExitCode == 0 {
+		for _, tok := range strings.Fields(res.Stdout) {
+			if p, ok := strings.CutPrefix(tok, "StdOut="); ok && out == "" {
+				out = p
+			} else if p, ok := strings.CutPrefix(tok, "StdErr="); ok && errPath == "" {
+				errPath = p
+			}
+		}
+	}
+	if out == "" {
+		if out, err = s.outputPath(ctx, remoteID); err != nil {
+			return nil, nil, err
+		}
+	}
+	if stdout, err = s.headTail(ctx, out, head, tail); err != nil {
+		return nil, nil, err
+	}
+	if errPath != "" && errPath != out {
+		stderr, _ = s.headTail(ctx, errPath, head, tail)
+	}
+	return stdout, stderr, nil
+}
+
+// headTail reads the first head and last tail lines of the file at path (see Output).
+func (s *Slurm) headTail(ctx context.Context, path string, head, tail int) ([]string, error) {
+	run := func(argv ...string) (string, error) {
+		res, err := s.Runner.Run(ctx, argv, nil)
+		if err != nil {
+			return "", fmt.Errorf("%s: %w", argv[0], err)
+		}
+		if res.ExitCode != 0 {
+			return "", cmdError(argv[0]+" "+path, res)
+		}
+		return res.Stdout, nil
+	}
+	wc, err := run("wc", "-l", "--", path)
+	if err != nil {
+		return nil, err
+	}
+	n, _ := strconv.Atoi(strings.Fields(wc + " 0")[0])
+	last, err := run("tail", "-n", strconv.Itoa(head+tail), "--", path)
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.Split(strings.TrimSuffix(last, "\n"), "\n")
+	if last == "" {
+		lines = nil
+	}
+	if n <= head+tail || len(lines) <= tail {
+		return lines, nil
+	}
+	first := []string{}
+	if head > 0 {
+		h, err := run("head", "-n", strconv.Itoa(head), "--", path)
+		if err != nil {
+			return nil, err
+		}
+		first = strings.Split(strings.TrimSuffix(h, "\n"), "\n")
+	}
+	gap := fmt.Sprintf("[... %d lines left out ...]", n-len(first)-tail)
+	return append(append(first, gap), lines[len(lines)-tail:]...), nil
+}
+
 // outputPath finds the job's stdout file.
 func (s *Slurm) outputPath(ctx context.Context, remoteID string) (string, error) {
 	res, err := s.Runner.Run(ctx, []string{"scontrol", "show", "job", remoteID}, nil)
@@ -1210,7 +1285,10 @@ func gresGPUTypes(gres string) []string {
 	return out
 }
 
-var _ backend.Backend = (*Slurm)(nil)
+var (
+	_ backend.Backend      = (*Slurm)(nil)
+	_ backend.OutputReader = (*Slurm)(nil)
+)
 
 // Jobs implements backend.Lister. Active jobs come from
 // `env TZ=UTC squeue --me -h -o "%i|%T|%P|%N|%r|%V|%S|%j"`; when since is

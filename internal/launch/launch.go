@@ -582,7 +582,9 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	}
 	endStep()
 	prefsPath := filepath.Join(filepath.Dir(cfgPath), "gui.json")
+	probs := newProblems(db, cfg)
 	onEvent := func(e agent.Event) {
+		probs.observe(e)
 		if e.Kind == agent.EventAutoApproved {
 			// Recorded like an approval: the tool and a short redacted target.
 			appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "auto-approved", []string{e.Tool + ": " + app.RedactLine(e.Text, 100)})
@@ -652,6 +654,27 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}
 	}
 	env.MailOnEnd = func() bool { return settings.EmailOnJobEnd(prefsPath) }
+	// Job reporting (internal/account): the output of an ended job is read
+	// once, redacted, for its report, and checks that keep failing are
+	// reported as connection problems. Both only while an account is linked.
+	words := func(j store.Job) []string { return reportWords(cfg, j) }
+	mon.collect = func(ctx context.Context, j store.Job, be backend.Backend) {
+		if p, err := account.Path(); err != nil {
+			return
+		} else if _, ok, _ := account.Load(p); !ok {
+			return
+		}
+		cctx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+		if err := account.CollectOutput(cctx, db, be, j, account.NewRedactor(append(words(j), j.Name)...)); err != nil {
+			appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{"job output not read: " + app.RedactLine(err.Error(), 200)})
+		}
+	}
+	if probs != nil {
+		mon.problem = func(j store.Job, err error) {
+			probs.p.Record(account.KindConnection, "", j.Cluster, j.ID, err.Error())
+		}
+	}
 	lastSeenPath := filepath.Join(filepath.Dir(cfgPath), "lastseen")
 	mon.awaySince = settings.LastSeen(lastSeenPath)
 	mon.alive = func() { _ = settings.SetLastSeen(lastSeenPath, time.Now()) }
@@ -692,7 +715,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	endStep = startup.Span("build: job monitor start")
 	mon.start(nil)
 	endStep()
-	stopUpload := startUploader(db, func(name string) string {
+	stopUpload := startUploader(db, words, func(name string) string {
 		c, _ := cfg.Cluster(name)
 		return clusterSite(st, c, others).Name
 	}, func(name string) account.SystemRef {
@@ -711,7 +734,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	report(StartReady)
 	rt := &Runtime{
 		Site: st, Env: env, Agent: ag, Store: db,
-		Session: &Session{agent: ag, ui: ui, onTurn: conns.newTurn, firstTurn: firstTurn},
+		Session: &Session{agent: ag, ui: ui, onTurn: conns.newTurn, firstTurn: firstTurn, problems: probs},
 		Status:  status,
 		LogPath: filepath.Join(filepath.Dir(dbPath), "labmill.log"),
 		conns:   conns,

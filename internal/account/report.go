@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,9 +13,10 @@ import (
 )
 
 // JobIn is one job report in the schema of the API's POST /api/jobs
-// on app.labmill.org. It holds no job name, folder,
-// script, command, environment value, log line or file name: only the
-// scheduler's facts. Fields the client does not know are left out.
+// on app.labmill.org. BuildReport fills only the scheduler's facts: no job
+// name, folder, command, environment value or file name. AddDetails adds the
+// redacted script and output lines (not for a private job or a fully
+// private account). Fields the client does not know are left out.
 type JobIn struct {
 	ClientJobRef    string          `json:"client_job_ref"`
 	HPCSystemID     string          `json:"hpc_system_id"`
@@ -30,6 +32,12 @@ type JobIn struct {
 	Partition       string          `json:"partition,omitempty"`
 	QueueWaitSec    *int64          `json:"queue_wait_sec,omitempty"`
 	Software        []Software      `json:"software,omitempty"`
+	Alloc           json.RawMessage `json:"alloc,omitempty"`  // what the job got (sacct AllocTRES)
+	Usage           json.RawMessage `json:"usage,omitempty"`  // what it used, from the same facts
+	Shared          *bool           `json:"shared,omitempty"` // false: a private job
+	Script          string          `json:"script,omitempty"`
+	StdoutLines     []string        `json:"stdout_lines,omitempty"`
+	StderrLines     []string        `json:"stderr_lines,omitempty"`
 }
 
 // Software is one module the job loaded.
@@ -59,6 +67,10 @@ var (
 // failed job (Reason, e.g. TIMEOUT, OUT_OF_MEMORY) when it has that form.
 func apiState(j store.Job) (state, category string) {
 	switch j.State {
+	case store.StateSubmitted, store.StatePending:
+		return "PENDING", ""
+	case store.StateRunning:
+		return "RUNNING", ""
 	case store.StateCompleted, store.StateFetched:
 		return "COMPLETED", ""
 	case store.StateCanceled:
@@ -77,12 +89,22 @@ func apiState(j store.Job) (state, category string) {
 	return st, ""
 }
 
+// Reported reports whether a job in state s gets a report: it was handed to
+// the scheduler (waiting, running or ended).
+func Reported(s store.JobState) bool {
+	switch s {
+	case store.StateSubmitted, store.StatePending, store.StateRunning:
+		return true
+	}
+	return Final(s)
+}
+
 // BuildReport makes the report of job j from its events (the "spec" event
 // of its draft and the "state" events) and the scheduler's facts of its last
 // run (exit code, start and end, use), without hpc_system_id. ok is false
-// when j has not ended or was never submitted.
+// when j was never submitted or is not in a reported state.
 func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
-	if !Final(j.State) || j.RemoteID == "" {
+	if !Reported(j.State) || j.RemoteID == "" {
 		return JobIn{}, false
 	}
 	in := JobIn{ClientJobRef: ref, Backend: "slurm"}
@@ -117,6 +139,7 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	if f := j.Facts; f.RemoteID == j.RemoteID {
 		in.ExitCode = fmt.Sprintf("%d:%d", f.ExitCode, f.Signal)
 		in.Used = usedJSON(f)
+		in.Alloc, in.Usage = allocUsage(f)
 		// The scheduler's times win over the times this computer saw.
 		if !f.Start.IsZero() {
 			started = f.Start
@@ -136,6 +159,10 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	if !submitted.IsZero() && !started.IsZero() && !started.Before(submitted) {
 		w := int64(started.Sub(submitted).Seconds())
 		in.QueueWaitSec = &w
+	}
+	if Private(evs) {
+		no := false
+		in.Shared = &no
 	}
 	if haveSpec {
 		in.Req = reqJSON(spec)
@@ -227,3 +254,129 @@ func modules(s backend.JobSpec) []Software {
 	}
 	return out
 }
+
+// EventPrivate is the event kind that marks a job private (draft_job
+// "private"): its report holds only the scheduler's facts, and no output or
+// problem report of it is collected or sent.
+const EventPrivate = "private"
+
+// EventOutput is the event kind that holds the redacted output lines of one
+// run (JSON Output), collected when the job ended (CollectOutput).
+const EventOutput = "output"
+
+// Output is the text of an EventOutput event.
+type Output struct {
+	RemoteID string   `json:"remote_id"`
+	Stdout   []string `json:"stdout,omitempty"`
+	Stderr   []string `json:"stderr,omitempty"`
+}
+
+// Private reports whether the job of evs is marked private.
+func Private(evs []store.Event) bool {
+	for _, e := range evs {
+		if e.Kind == EventPrivate {
+			return true
+		}
+	}
+	return false
+}
+
+// AddDetails adds the redacted script and, when collected, the output lines
+// of j's current run to in. Callers leave it out for a private job and for
+// a fully private account.
+func AddDetails(in *JobIn, j store.Job, evs []store.Event, red Redactor) {
+	if strings.TrimSpace(j.Script) != "" {
+		in.Script = red.Script(j.Script)
+	}
+	for i := len(evs) - 1; i >= 0; i-- {
+		var o Output
+		if evs[i].Kind == EventOutput && json.Unmarshal([]byte(evs[i].Text), &o) == nil && o.RemoteID == j.RemoteID {
+			// Already redacted when collected; again here, in case the words grew since.
+			in.StdoutLines, in.StderrLines = red.Lines(o.Stdout), red.Lines(o.Stderr)
+			break
+		}
+	}
+}
+
+// tresTextRE is what the API accepts in a text of alloc or usage.
+var tresTextRE = regexp.MustCompile(`^[A-Za-z0-9_=,./:+-]{1,200}$`)
+
+// allocUsage is what the job got and used, in the API's form
+// (alloc: cpus, mem_mb, gpus, gpu_type, nodes, tres; usage: cpu_eff,
+// max_rss_mb, elapsed_s, source).
+func allocUsage(f store.Facts) (alloc, usage json.RawMessage) {
+	a := map[string]any{}
+	if tresTextRE.MatchString(f.AllocTRES) {
+		a["tres"] = f.AllocTRES
+	}
+	for _, kv := range strings.Split(f.AllocTRES, ",") {
+		k, v, ok := strings.Cut(strings.TrimSpace(kv), "=")
+		if !ok {
+			continue
+		}
+		n, err := strconv.ParseFloat(v, 64)
+		switch {
+		case k == "cpu" && err == nil:
+			a["cpus"] = n
+		case k == "node" && err == nil:
+			a["nodes"] = n
+		case k == "gres/gpu" && err == nil:
+			a["gpus"] = n
+		case k == "mem":
+			if mb := memMB(v); mb > 0 {
+				a["mem_mb"] = mb
+			}
+		case strings.HasPrefix(k, "gres/gpu:") && partitionRE.MatchString(k[len("gres/gpu:"):]):
+			a["gpu_type"] = k[len("gres/gpu:"):]
+		}
+	}
+	if f.GPUs > 0 && a["gpus"] == nil {
+		a["gpus"] = f.GPUs
+	}
+	u := map[string]any{"source": "sacct"}
+	if f.ElapsedSec > 0 {
+		u["elapsed_s"] = f.ElapsedSec
+	}
+	if f.MaxRSSBytes > 0 {
+		u["max_rss_mb"] = float64(f.MaxRSSBytes) / (1 << 20)
+	}
+	if cpus, _ := a["cpus"].(float64); cpus > 0 && f.ElapsedSec > 0 && f.CPUSec > 0 {
+		u["cpu_eff"] = float64(f.CPUSec) / (float64(f.ElapsedSec) * cpus)
+	}
+	if len(a) > 0 {
+		alloc, _ = json.Marshal(a)
+	}
+	if len(u) > 1 {
+		usage, _ = json.Marshal(u)
+	}
+	return alloc, usage
+}
+
+// memMB parses a Slurm memory value such as "32G", "4000M" or "1.5T" (no
+// unit: megabytes). 0 when it does not parse.
+func memMB(v string) float64 {
+	mult := 1.0
+	if v == "" {
+		return 0
+	}
+	switch v[len(v)-1] {
+	case 'K', 'k':
+		mult, v = 1.0/1024, v[:len(v)-1]
+	case 'M', 'm':
+		v = v[:len(v)-1]
+	case 'G', 'g':
+		mult, v = 1024, v[:len(v)-1]
+	case 'T', 't':
+		mult, v = 1024*1024, v[:len(v)-1]
+	}
+	n, err := strconv.ParseFloat(v, 64)
+	if err != nil || n < 0 {
+		return 0
+	}
+	return n * mult
+}
+
+var (
+	toolNameRE = regexp.MustCompile(`^[a-z0-9_]{1,64}$`)
+	versionRE  = regexp.MustCompile(`^[A-Za-z0-9._+-]{1,64}$`)
+)

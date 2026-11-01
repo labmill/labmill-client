@@ -1,27 +1,31 @@
 # Connect the client to your Labmill account
 
-You can connect Labmill to your account at [app.labmill.org](https://app.labmill.org). Then your finished jobs show in the web app: their state, times and resources, and the cause category of a failed job. This is optional. Labmill works the same without it, and while it is not connected it sends nothing to Labmill.
+You can connect Labmill to your account at [app.labmill.org](https://app.labmill.org). Then your jobs show in the web app: their state, times and resources, the job script, the end of the job output, and the problems Labmill saw. You and the research software engineers (RSEs) of your institution can then see what went wrong and help. This is optional. Labmill works the same without it, and while it is not connected it sends nothing to Labmill.
 
-## What is sent, and what is not
+## What is sent
 
-When a job ends (completed, failed, timed out, out of memory or cancelled), Labmill sends one record of it to your account:
+**Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.**
 
-- the cluster (as the HPC system that the web app knows);
-- the Slurm state and, for a time-out or out-of-memory failure, that category;
-- when the job was submitted, started and ended, and how long it waited in the queue;
-- the resources the job asked for: CPUs, memory, GPUs and GPU type, time limit, nodes;
-- the partition;
-- the names and versions of the software modules it loaded (for example `samtools/1.21`).
+For each job, when the scheduler accepts it, when it starts and when it ends, Labmill sends one record. A later record of the same job replaces the earlier one. The record holds:
 
-Labmill does **not** send:
+- the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category of a time-out or out-of-memory failure, the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from `sacct`: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example `samtools/1.21`);
+- the sbatch script, redacted;
+- when the job has ended: the last 500 lines of its output and of its error output, redacted; for a failed job also the first 100 lines.
 
-- job scripts or commands;
-- data files, program code or file names;
-- job names, folder names or paths;
-- environment variables, passwords, keys or tokens;
-- log lines or the failure causes it remembers on your computer.
+Labmill also sends a short report of each problem in a session: connection and sign-in failures, errors of the assistant (the model, the broker or the relay), failed tool calls (with the tool name), sbatch refusals (the scheduler's message), transfer failures, crashes (with Labmill's own code locations only) and turns that you stopped. Each report is at most 2 KB.
 
-Only jobs that end after you connect are sent. Jobs from before stay on your computer only.
+## Redaction
+
+Labmill redacts on your computer before it sends, and app.labmill.org redacts again. Redaction removes passwords, tokens and keys, email addresses, IP addresses, paths, host names, long numbers, your user names and account names, the cluster host names, and the names of the job and of its folders. In the script it also removes the values of `#SBATCH` options that hold names (job name, account, output and error files, folder). Redaction can miss: an output line can still name a gene, a compound or a project. Do not use Labmill for export-controlled or other restricted data.
+
+Labmill never sends data files, program code other than the job script, or environment variable values.
+
+## Private jobs and a fully private account
+
+- **A private job:** tell the assistant "keep this job private" when you ask for the job. Its record then holds only the scheduler facts. Labmill does not read its output and sends no problem report about it.
+- **A fully private account:** when the contribution setting of your account is off (app.labmill.org, **Settings**), every record holds only the scheduler facts, and Labmill sends no problem reports. The server also keeps no script, output lines or problem reports for such an account.
+
+Only jobs that change after you connect are sent. Jobs that ended before stay on your computer only.
 
 ## Connect
 
@@ -42,7 +46,7 @@ The token is kept on this computer only, in `account.json` next to `clusters.yam
 
 ## When the computer is offline
 
-Labmill keeps the records in its job database on your computer and sends them when it can reach your account again. It tries again after 1 minute, then after longer pauses, up to 6 hours. The same job is never stored twice in your account, also when two Labmill windows are open.
+Labmill keeps the records and the problem reports in its job database on your computer and sends them when it can reach your account again. It tries again after 1 minute, then after longer pauses, up to 6 hours. Sending never stops your work. The same job is never stored twice in your account, also when two Labmill windows are open. At most 2,000 problem reports wait; newer ones are not kept.
 
 If your account does not know a cluster yet, its records wait and Labmill tries again later. If the account refuses the token (for example, you revoked it), the records wait until you connect with a new token.
 
