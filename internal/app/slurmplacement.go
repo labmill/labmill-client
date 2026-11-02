@@ -10,6 +10,7 @@ import (
 
 	"labmill-client/internal/backend"
 	"labmill-client/internal/config"
+	"labmill-client/internal/queueplan"
 	"labmill-client/internal/rules"
 	"labmill-client/internal/store"
 )
@@ -28,6 +29,7 @@ const eventPlan = "plan"
 const (
 	scratchLocal     = "local"      // node-local scratch of the compute node (single-node jobs)
 	scratchGlobal    = "global"     // the cluster's shared scratch
+	scratchAuto      = "auto"       // the profile's node-local scratch, else a probe of the login node, else the job folder
 	scratchJobFolder = "job_folder" // the job's own folder, where its data was uploaded (default)
 )
 
@@ -120,6 +122,10 @@ func (p placementPlan) summary() string {
 type slurmAsk struct {
 	Scratch     string
 	Preemptible *bool
+	// Queue is "" or "auto": with a checkpointing job (Checkpoint) and no
+	// preemptible resource in the profile, look at the queues of the login node.
+	Queue      string
+	Checkpoint bool
 }
 
 // planSlurm applies the M61 rules to spec of a Slurm job (spec.WorkDir is
@@ -142,6 +148,27 @@ func (t *toolset) planSlurm(ctx context.Context, c config.Cluster, be backend.Ba
 				plan.ScratchWhy = "Why: the job folder was chosen."
 			}
 		}
+	case scratchAuto:
+		// The profile wins; without a node-local scratch there, probe the login node (read only).
+		l := h.LocalScratch
+		why := "Why: the site profile names this node-local scratch."
+		if l == nil && spec.Nodes <= 1 {
+			var reason string
+			l, reason = t.autoLocalScratch(ctx, c, int(t.manifestBytes(ctx, j.ID)/(1000*1000*1000))*2+1, spec.MemoryGB, 0)
+			why = "Why: found by looking at the login node (not tested on a compute node)."
+			if l == nil {
+				plan.ScratchWhy = "Why: no node-local scratch was used, " + reason + "."
+				break
+			}
+		}
+		if l == nil {
+			plan.ScratchWhy = "Why: no node-local scratch was used, the job needs more than one node."
+			break
+		}
+		spec.LocalScratch = l
+		plan.Scratch = scratchLocal
+		plan.ScratchPath = localScratchLabel(*l)
+		plan.ScratchWhy = why
 	case scratchLocal:
 		l := h.LocalScratch
 		switch {
@@ -180,13 +207,16 @@ func (t *toolset) planSlurm(ctx context.Context, c config.Cluster, be backend.Ba
 			plan.ScratchWhy += fmt.Sprintf(" Files there are purged after %d days, so download the results soon.", g.PurgeDays)
 		}
 	default:
-		return plan, fmt.Errorf("scratch must be %q, %q or %q (got %q).", scratchLocal, scratchGlobal, scratchJobFolder, sanitize(ask.Scratch))
+		return plan, fmt.Errorf("scratch must be %q, %q, %q or %q (got %q).", scratchAuto, scratchLocal, scratchGlobal, scratchJobFolder, sanitize(ask.Scratch))
 	}
 
 	// Preemptible first, when the profile has one and the job fits. The
 	// partition the model named becomes the fallback after the failed
 	// preemptible attempts.
 	p := h.Preemptible
+	if p == nil && ask.Queue == queueAuto && ask.Checkpoint && !(ask.Preemptible != nil && !*ask.Preemptible) {
+		p = t.autoPreemptible(ctx, c, spec.Time)
+	}
 	var info backend.ClusterInfo
 	if p != nil {
 		info, _ = be.Info(ctx) // best effort: limits and the default partition
@@ -375,4 +405,38 @@ func slurmPlacementNote(h rules.SlurmHints) string {
 	}
 	b.WriteString("- Order: node-local scratch for a single-node job, else the shared scratch, else the job's own folder. Ask for the smallest node that fits (cores, memory, GPU type).\n")
 	return b.String()
+}
+
+const queueAuto = "auto"
+
+// autoPreemptible looks at the queues of the login node (read only) and turns
+// the first preemptive entry that needs no approval into a Preemptible, or
+// returns nil (the normal queue is then used).
+func (t *toolset) autoPreemptible(ctx context.Context, c config.Cluster, limit time.Duration) *rules.Preemptible {
+	if t.env.LoginRunner == nil {
+		return nil
+	}
+	r, err := t.env.LoginRunner(ctx, c)
+	if err != nil {
+		return nil
+	}
+	res, err := r.Run(ctx, []string{"sh", "-c", qosScript}, nil)
+	if err != nil {
+		return nil
+	}
+	pr := qosProbe(res.Stdout)
+	job := queueplan.Job{Restartable: true, TimeLimit: limit, Estimate: limit}
+	for _, o := range queueplan.ChooseQueue(pr, job, queueplan.Prefs{}) {
+		if !o.Preemptive || o.NeedsAsk {
+			continue
+		}
+		if _, err := queueplan.SbatchLines(o); err != nil {
+			continue
+		}
+		if o.IsQOS {
+			return &rules.Preemptible{QOS: o.Name, Requeue: o.Requeue}
+		}
+		return &rules.Preemptible{Partition: o.Name, Requeue: o.Requeue}
+	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package account
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -107,7 +108,7 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	if !Reported(j.State) || j.RemoteID == "" {
 		return JobIn{}, false
 	}
-	in := JobIn{ClientJobRef: ref, Backend: "slurm"}
+	in := JobIn{ClientJobRef: ref, Backend: cmp.Or(j.Backend, "slurm")}
 	in.State, in.FailureCategory = apiState(j)
 	var spec backend.JobSpec
 	var haveSpec bool

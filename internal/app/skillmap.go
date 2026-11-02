@@ -27,6 +27,14 @@ var toolSkills = map[string][]skillSection{
 		{"slurm-user", "references/slurm.md", "partitions-accounts-and-qos"},
 		{"slurm-user", "references/slurm.md", "requesting-gpus"},
 	},
+	"probe_qos": {
+		{"slurm-user", "references/placement-and-preemption.md", "preemption"},
+		{"slurm-user", "references/placement-and-preemption.md", "which-resource-to-ask-for"},
+	},
+	"probe_storage": {
+		{"slurm-user", "references/placement-and-preemption.md", "where-a-jobs-working-data-goes-in-this-order"},
+		{"slurm-user", "references/placement-and-preemption.md", "find-out-what-the-cluster-has"},
+	},
 	"find_local_data": {
 		{"slurm-user", "references/from-your-laptop.md", "two-folders-data-and-code"},
 		{"slurm-user", "references/from-your-laptop.md", "what-claude-may-read"},

@@ -30,8 +30,12 @@ import (
 // ClusterType selects the backend for a cluster.
 type ClusterType string
 
-// TypeSlurm is the only backend.
-const TypeSlurm ClusterType = "slurm"
+// The backends: Slurm, PBS (OpenPBS, PBS Pro) and LSF.
+const (
+	TypeSlurm ClusterType = "slurm"
+	TypePBS   ClusterType = "pbs"
+	TypeLSF   ClusterType = "lsf"
+)
 
 // Transfer selects how local data reaches the cluster.
 type Transfer string
@@ -48,7 +52,7 @@ const (
 type Cluster struct {
 	// Name is the user-facing, unique cluster name.
 	Name string `yaml:"name"`
-	// Type is the backend: TypeSlurm.
+	// Type is the backend: TypeSlurm, TypePBS or TypeLSF.
 	Type ClusterType `yaml:"type"`
 	// SSHHost is an alias in ~/.ssh/config.d/labmill (or the user's own
 	// ~/.ssh/config). Required.
@@ -435,12 +439,12 @@ func (c *Config) FieldErrors() []FieldError {
 			seen[cl.Name] = true
 		}
 		switch cl.Type {
-		case TypeSlurm:
+		case TypeSlurm, TypePBS, TypeLSF:
 			if cl.SSHHost == "" {
-				bad("ssh_host", "slurm cluster needs ssh_host")
+				bad("ssh_host", "%s cluster needs ssh_host", cl.Type)
 			}
 		default:
-			bad("type", "unknown type %q (want %q)", string(cl.Type), TypeSlurm)
+			bad("type", "unknown type %q (want %q, %q or %q)", string(cl.Type), TypeSlurm, TypePBS, TypeLSF)
 		}
 		if cl.SSHHost != "" {
 			if err := sshconfig.ValidAlias(cl.SSHHost); err != nil {

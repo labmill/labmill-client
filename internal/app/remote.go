@@ -159,7 +159,7 @@ func (t *toolset) remoteCommand() agent.Tool {
 		Description: "Run one command on a cluster's login node (never on this computer) and get its output and exit code. " +
 			"Give the command as argv, a list of words; each word is passed literally: there is no shell, so no pipes, redirections, ';', '&&', variables or wildcards, and '~' only works at the start of a file path of the file commands below. " +
 			"Labmill puts no limits on what you may run there: the cluster's own permissions decide what the user's account can do. " +
-			"Read-only commands run at once, on any path the account can read: squeue and sinfo (not --iterate), sacct, sshare, sprio, sstat, seff, scontrol show job|node|partition|reservation|config, sacctmgr show|list, module [-r|-t…] avail|spider|list|show|whatis|keyword (module and ml always run through a login shell, since they are shell functions), command -v|-V <name>, and ls, cat, head, tail (not -f), wc, du, df, findmnt (not --poll), lsblk, mount (no arguments), stat and file. " +
+			"Read-only commands run at once, on any path the account can read: squeue and sinfo (not --iterate), sacct, sshare, sprio, sstat, seff, qstat, bjobs, bqueues, bhosts, bhist (PBS and LSF), scontrol show job|node|partition|reservation|config, sacctmgr show|list, module [-r|-t…] avail|spider|list|show|whatis|keyword (module and ml always run through a login shell, since they are shell functions), command -v|-V <name>, and ls, cat, head, tail (not -f), wc, du, df, findmnt (not --poll), lsblk, mount (no arguments), stat and file. " +
 			"Every other command is shown to the user for approval first, with the exact line that runs, so say what it does and why before calling it, unless the user turned on 'Run commands on the cluster without asking' or 'Approve everything automatically': then it runs at once, so be as careful as if no one will check it (a command that names a sign-in secret file still asks; output of an unreviewed command is redacted). " +
 			"A read that prints a file whose name marks it as holding sign-in secrets (cat, head, tail; by name only, so symlinks, hard links, /proc/*/environ and tokens inside ordinary files aren't detected; SSH private keys, ~/.config/tool/authentication.json, .netrc, cloud credentials, tokens, *.pem, *.key, shell histories) also asks first, and the approval warns that its content goes to Claude; ~/.ssh/config and .bashrc are read at once, and lines that assign a password, token or key are redacted in what comes back from cat, head and tail. " +
 			"For multi-line shell code (loops, here-documents, several steps) give `script` instead of putting it in a word: it goes to the interpreter's stdin (default `bash -s`, which is not a login shell, so `module` is undefined: use [\"bash\", \"-l\", \"-s\"] when the script needs modules; argv may name another interpreter, e.g. [\"sh\", \"-s\"]), so quoting and newlines are safe; at most 64 KB. A script is always shown to the user in full for approval (unless they turned on 'Run commands on the cluster without asking'). " +
@@ -680,6 +680,7 @@ const notListed = "it is not on Labmill's list of read-only commands"
 //   - squeue, sinfo: any flags but --iterate/-i (they repeat forever);
 //   - sacct: any flags but -f/--file (another accounting file);
 //   - sshare, sprio, sstat, seff: any flags;
+//   - qstat (PBS), bjobs, bqueues, bhosts, bhist (LSF): any flags;
 //   - scontrol [-o|--oneliner|-d|--details|-a|--all]... show
 //     job|jobs|node|nodes|partition|partitions|reservation|reservations|config
 //     [one name or id];
@@ -737,6 +738,8 @@ func classifyRemote(argv []string) (remoteClass, string, []string) {
 		}
 		return remoteReadOnly, "", argv
 	case "sshare", "sprio", "sstat", "seff":
+		return remoteReadOnly, "", argv
+	case "qstat", "bjobs", "bqueues", "bhosts", "bhist": // PBS and LSF queries; none has a flag that changes anything
 		return remoteReadOnly, "", argv
 	case "scontrol":
 		if scontrolShow(args) {

@@ -60,6 +60,8 @@ func TestParseErrors(t *testing.T) {
 		{"missing name", "clusters:\n  - type: slurm\n    ssh_host: h\n", []string{"name"}},
 		{"duplicate", "clusters:\n  - {name: a, type: slurm, ssh_host: h}\n  - {name: a, type: slurm, ssh_host: h}\n", []string{"duplicate", `"a"`}},
 		{"bad type", "clusters:\n  - {name: a, type: kubernetes}\n", []string{"kubernetes"}},
+		{"lsf no host", "clusters:\n  - {name: a, type: lsf}\n", []string{"lsf cluster needs ssh_host"}},
+		{"pbs no host", "clusters:\n  - {name: a, type: pbs}\n", []string{"pbs cluster needs ssh_host"}},
 		{"slurm no host", "clusters:\n  - {name: a, type: slurm}\n", []string{"ssh_host"}},
 		{"bad transfer", "clusters:\n  - {name: a, type: slurm, ssh_host: h, transfer: rsync}\n", []string{"rsync"}},
 		{"bad timezone", "clusters:\n  - {name: a, type: slurm, ssh_host: h, timezone: Mars/Olympus}\n", []string{"timezone", "Mars/Olympus"}},
@@ -315,5 +317,12 @@ func TestREADMEExampleParses(t *testing.T) {
 	}
 	if _, err := Parse(m[1]); err != nil {
 		t.Errorf("README example: %v", err)
+	}
+}
+
+func TestParsePBS(t *testing.T) {
+	cfg, err := Parse([]byte("clusters:\n  - {name: a, type: pbs, ssh_host: h}\n  - {name: b, type: lsf, ssh_host: h}\n"))
+	if err != nil || cfg.Clusters[0].Type != TypePBS || cfg.Clusters[1].Type != TypeLSF {
+		t.Fatalf("%v %+v", err, cfg)
 	}
 }
