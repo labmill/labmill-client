@@ -24,7 +24,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.73">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -556,10 +556,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-sent-and-what-is-not" class="md-nav__link">
+  <a href="#what-is-sent" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What is sent, and what is not
+        What is sent
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Redaction
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#private-jobs-and-a-fully-private-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Private jobs and a fully private account
       </span>
     </span>
   </a>
@@ -1302,10 +1324,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-sent-and-what-is-not" class="md-nav__link">
+  <a href="#what-is-sent" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What is sent, and what is not
+        What is sent
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Redaction
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#private-jobs-and-a-fully-private-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Private jobs and a fully private account
       </span>
     </span>
   </a>
@@ -1374,26 +1418,25 @@
 
 
 <h1 id="connect-the-client-to-your-labmill-account">Connect the client to your Labmill account<a class="headerlink" href="#connect-the-client-to-your-labmill-account" title="Permanent link">&para;</a></h1>
-<p>You can connect Labmill to your account at <a href="https://app.labmill.org">app.labmill.org</a>. Then your finished jobs show in the web app: their state, times and resources, and the cause category of a failed job. This is optional. Labmill works the same without it, and while it is not connected it sends nothing to Labmill.</p>
-<h2 id="what-is-sent-and-what-is-not">What is sent, and what is not<a class="headerlink" href="#what-is-sent-and-what-is-not" title="Permanent link">&para;</a></h2>
-<p>When a job ends (completed, failed, timed out, out of memory or cancelled), Labmill sends one record of it to your account:</p>
+<p>You can connect Labmill to your account at <a href="https://app.labmill.org">app.labmill.org</a>. Then your jobs show in the web app: their state, times and resources, the job script, the end of the job output, and the problems Labmill saw. You and the research software engineers (RSEs) of your institution can then see what went wrong and help. This is optional. Labmill works the same without it, and while it is not connected it sends nothing to Labmill.</p>
+<h2 id="what-is-sent">What is sent<a class="headerlink" href="#what-is-sent" title="Permanent link">&para;</a></h2>
+<p><strong>Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.</strong></p>
+<p>For each job, when the scheduler accepts it, when it starts and when it ends, Labmill sends one record. A later record of the same job replaces the earlier one. The record holds:</p>
 <ul>
-<li>the cluster (as the HPC system that the web app knows);</li>
-<li>the Slurm state and, for a time-out or out-of-memory failure, that category;</li>
-<li>when the job was submitted, started and ended, and how long it waited in the queue;</li>
-<li>the resources the job asked for: CPUs, memory, GPUs and GPU type, time limit, nodes;</li>
-<li>the partition;</li>
-<li>the names and versions of the software modules it loaded (for example <code>samtools/1.21</code>).</li>
+<li>the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category of a time-out or out-of-memory failure, the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from <code>sacct</code>: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example <code>samtools/1.21</code>);</li>
+<li>the sbatch script, redacted;</li>
+<li>when the job has ended: the last 500 lines of its output and of its error output, redacted; for a failed job also the first 100 lines.</li>
 </ul>
-<p>Labmill does <strong>not</strong> send:</p>
+<p>Labmill also sends a short report of each problem in a session: connection and sign-in failures, errors of the assistant (the model, the broker or the relay), failed tool calls (with the tool name), sbatch refusals (the scheduler's message), transfer failures, crashes (with Labmill's own code locations only) and turns that you stopped. Each report is at most 2 KB.</p>
+<h2 id="redaction">Redaction<a class="headerlink" href="#redaction" title="Permanent link">&para;</a></h2>
+<p>Labmill redacts on your computer before it sends, and app.labmill.org redacts again. Redaction removes passwords, tokens and keys, email addresses, IP addresses, paths, host names, long numbers, your user names and account names, the cluster host names, and the names of the job and of its folders. In the script it also removes the values of <code>#SBATCH</code> options that hold names (job name, account, output and error files, folder). Redaction can miss: an output line can still name a gene, a compound or a project. Do not use Labmill for export-controlled or other restricted data.</p>
+<p>Labmill never sends data files, program code other than the job script, or environment variable values.</p>
+<h2 id="private-jobs-and-a-fully-private-account">Private jobs and a fully private account<a class="headerlink" href="#private-jobs-and-a-fully-private-account" title="Permanent link">&para;</a></h2>
 <ul>
-<li>job scripts or commands;</li>
-<li>data files, program code or file names;</li>
-<li>job names, folder names or paths;</li>
-<li>environment variables, passwords, keys or tokens;</li>
-<li>log lines or the failure causes it remembers on your computer.</li>
+<li><strong>A private job:</strong> tell the assistant "keep this job private" when you ask for the job. Its record then holds only the scheduler facts. Labmill does not read its output and sends no problem report about it.</li>
+<li><strong>A fully private account:</strong> when the contribution setting of your account is off (app.labmill.org, <strong>Settings</strong>), every record holds only the scheduler facts, and Labmill sends no problem reports. The server also keeps no script, output lines or problem reports for such an account.</li>
 </ul>
-<p>Only jobs that end after you connect are sent. Jobs from before stay on your computer only.</p>
+<p>Only jobs that change after you connect are sent. Jobs that ended before stay on your computer only.</p>
 <h2 id="connect">Connect<a class="headerlink" href="#connect" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Sign in at <a href="https://app.labmill.org">app.labmill.org</a> and open <strong>Settings &gt; Program tokens</strong>.</li>
@@ -1412,7 +1455,7 @@
 <li><strong>Terminal:</strong> <code>labmill whoami</code> shows the account, since when it is connected, and how many job records were sent or are waiting.</li>
 </ul>
 <h2 id="when-the-computer-is-offline">When the computer is offline<a class="headerlink" href="#when-the-computer-is-offline" title="Permanent link">&para;</a></h2>
-<p>Labmill keeps the records in its job database on your computer and sends them when it can reach your account again. It tries again after 1 minute, then after longer pauses, up to 6 hours. The same job is never stored twice in your account, also when two Labmill windows are open.</p>
+<p>Labmill keeps the records and the problem reports in its job database on your computer and sends them when it can reach your account again. It tries again after 1 minute, then after longer pauses, up to 6 hours. Sending never stops your work. The same job is never stored twice in your account, also when two Labmill windows are open. At most 2,000 problem reports wait; newer ones are not kept.</p>
 <p>If your account does not know a cluster yet, its records wait and Labmill tries again later. If the account refuses the token (for example, you revoked it), the records wait until you connect with a new token.</p>
 <h2 id="disconnect">Disconnect<a class="headerlink" href="#disconnect" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1521,10 +1564,10 @@
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.77dd0ce9.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>
