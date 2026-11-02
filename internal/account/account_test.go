@@ -490,3 +490,12 @@ func TestResolveQueryLeavesOutEmptyFields(t *testing.T) {
 		t.Errorf("query %v", q)
 	}
 }
+
+func TestBuildReportBackend(t *testing.T) {
+	for in, want := range map[string]string{"": "slurm", "pbs": "pbs"} {
+		got, ok := BuildReport(store.Job{State: store.StateCompleted, RemoteID: "1", Backend: in}, nil, "r")
+		if !ok || got.Backend != want {
+			t.Errorf("backend %q: got %q", in, got.Backend)
+		}
+	}
+}

@@ -24,6 +24,8 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 
+	"labmill-client/internal/backend/lsf"
+	"labmill-client/internal/backend/pbs"
 	"labmill-client/internal/backend/slurm"
 	"labmill-client/internal/skill"
 	"labmill-client/internal/sshconfig"
@@ -824,8 +826,8 @@ func (m unavailableModel) BetaMessages() (*anthropic.BetaMessageService, []optio
 func statusLine(cfg *config.Config) string {
 	var parts []string
 	for _, c := range cfg.Clusters {
-		if c.Type == config.TypeSlurm {
-			parts = append(parts, c.Name+" (Slurm)")
+		if c.Type == config.TypeSlurm || c.Type == config.TypePBS || c.Type == config.TypeLSF {
+			parts = append(parts, c.Name+" ("+typeLabel(c.Type)+")")
 		} else {
 			parts = append(parts, c.Name)
 		}
@@ -1172,13 +1174,23 @@ func (cc *connCache) releaseBackground() {
 	}
 }
 
+func typeLabel(t config.ClusterType) string {
+	switch t {
+	case config.TypePBS:
+		return "PBS"
+	case config.TypeLSF:
+		return "LSF"
+	}
+	return "Slurm"
+}
+
 // backendNoLogin is backendFor for background work: it returns the backend
 // only when that needs no login and no question (false otherwise, so the
 // caller skips and tries later). Slurm needs an open SSH login
 // (existingClient).
 func (cc *connCache) backendNoLogin(ctx context.Context, c config.Cluster) (backend.Backend, bool) {
 	switch c.Type {
-	case config.TypeSlurm:
+	case config.TypeSlurm, config.TypePBS, config.TypeLSF:
 		loc, err := c.Location()
 		if err != nil {
 			return nil, false
@@ -1187,7 +1199,7 @@ func (cc *connCache) backendNoLogin(ctx context.Context, c config.Cluster) (back
 		if !ok {
 			return nil, false
 		}
-		return &slurm.Slurm{Runner: &backend.SSHRunner{Client: cl}, Location: loc}, true
+		return newBackend(c.Type, &backend.SSHRunner{Client: cl}, loc), true
 	}
 	return nil, false
 }
@@ -1210,7 +1222,7 @@ func (cc *connCache) closeAll() {
 //   - slurm: backend.SSHRunner over sshx.Connect(ctx, c.SSHHost, ui, ...).
 func (cc *connCache) backendFor(ctx context.Context, c config.Cluster) (backend.Backend, error) {
 	switch c.Type {
-	case config.TypeSlurm:
+	case config.TypeSlurm, config.TypePBS, config.TypeLSF:
 		cl, err := cc.client(ctx, c.SSHHost)
 		if err != nil {
 			return nil, err
@@ -1219,9 +1231,20 @@ func (cc *connCache) backendFor(ctx context.Context, c config.Cluster) (backend.
 		if err != nil {
 			return nil, fmt.Errorf("cluster %s: %w", c.Name, err)
 		}
-		return &slurm.Slurm{Runner: &backend.SSHRunner{Client: cl}, Location: loc}, nil
+		return newBackend(c.Type, &backend.SSHRunner{Client: cl}, loc), nil
 	}
 	return nil, fmt.Errorf("cluster %s has an unsupported type %q", c.Name, c.Type)
+}
+
+// newBackend is the backend of an SSH cluster of type t (Slurm, PBS or LSF).
+func newBackend(t config.ClusterType, r backend.Runner, loc *time.Location) backend.Backend {
+	switch t {
+	case config.TypePBS:
+		return &pbs.PBS{Runner: r, Location: loc}
+	case config.TypeLSF:
+		return &lsf.LSF{Runner: r, Location: loc}
+	}
+	return &slurm.Slurm{Runner: r, Location: loc}
 }
 
 // newBrokerClient is the broker client with the LABMILL_BROKER_TOKEN token.

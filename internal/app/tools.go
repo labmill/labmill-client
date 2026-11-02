@@ -736,8 +736,8 @@ func (t *toolset) draftJob() agent.Tool {
 			"cluster": strProp("cluster name"),
 			"scratch": map[string]any{
 				"type":        "string",
-				"enum":        []string{scratchLocal, scratchGlobal, scratchJobFolder},
-				"description": "Where the job keeps its working data. local = the compute node's own disk (single-node jobs only; Labmill adds the stage-in, run, stage-out and removes the local folder after a good copy), when cluster_info names a node-local scratch; global = a folder on the cluster's shared scratch (upload_data to a remote_dir below it first), when cluster_info names one; job_folder (default) = the job's own folder. Prefer local for a single-node job, else global, else job_folder",
+				"enum":        []string{scratchAuto, scratchLocal, scratchGlobal, scratchJobFolder},
+				"description": "Where the job keeps its working data. local = the compute node's own disk (single-node jobs only; Labmill adds the stage-in, run, stage-out and removes the local folder after a good copy), when cluster_info names a node-local scratch; global = a folder on the cluster's shared scratch (upload_data to a remote_dir below it first), when cluster_info names one; job_folder (default) = the job's own folder. auto = the profile's node-local scratch, else a read-only look at the login node, else job_folder. Prefer local for a single-node job, else global, else job_folder",
 			},
 			"private": map[string]any{
 				"type":        "boolean",
@@ -746,6 +746,15 @@ func (t *toolset) draftJob() agent.Tool {
 			"preemptible": map[string]any{
 				"type":        "boolean",
 				"description": "Leave out to use the cluster's preemptible partition when cluster_info names one and the job fits (it is tried first, resubmitted automatically up to two more times, then once on the normal partition); false for a job that must not be interrupted or is longer than that partition allows; true only to insist",
+			},
+			"queue": map[string]any{
+				"type":        "string",
+				"enum":        []string{queueAuto},
+				"description": "auto = when the profile names no preemptible resource and checkpoint is true, look at the queues of the login node (read only) and use a preemptible partition or QOS that needs no approval; else the normal queue",
+			},
+			"checkpoint": map[string]any{
+				"type":        "boolean",
+				"description": "true only when the command saves a checkpoint and resumes from it after a restart (needed for queue auto)",
 			},
 			"environment": map[string]any{
 				"type":        "object",
@@ -803,6 +812,8 @@ func (t *toolset) draftJob() agent.Tool {
 				Files       []jobFile            `json:"files"`
 				Scratch     string               `json:"scratch"`
 				Preemptible *bool                `json:"preemptible"`
+				Queue       string               `json:"queue"`
+				Checkpoint  bool                 `json:"checkpoint"`
 				Private     bool                 `json:"private"`
 				Environment *backend.Environment `json:"environment"`
 				Spec        struct {
@@ -899,7 +910,7 @@ func (t *toolset) draftJob() agent.Tool {
 			if err != nil {
 				return "", err
 			}
-			plan, err := t.planSlurm(ctx, c, be, j, &spec, slurmAsk{Scratch: in.Scratch, Preemptible: in.Preemptible})
+			plan, err := t.planSlurm(ctx, c, be, j, &spec, slurmAsk{Scratch: in.Scratch, Preemptible: in.Preemptible, Queue: in.Queue, Checkpoint: in.Checkpoint})
 			if err != nil {
 				return "", err
 			}

@@ -142,7 +142,7 @@ func TestToolSetAndApprovalGates(t *testing.T) {
 		"list_clusters": false, "cluster_info": false, "cluster_jobs": false, "find_local_data": false, "preview_file": false, "stage_data": false,
 		"draft_job": false, "job_status": false, "list_jobs": false, "job_logs": false, "diagnose_job": false, "ask_user": false,
 		"update_todos": false,
-		"upload_data":  true, "submit_job": true, "cancel_job": true, "fetch_results": true, "cleanup_job": true,
+		"upload_data":  true, "submit_job": true, "cancel_job": true, "probe_storage": false, "probe_qos": false, "fetch_results": true, "cleanup_job": true,
 		"add_cluster": true, "set_cluster_account": true,
 		"s3_credentials_to_cluster": true,
 		"remote_command":            true, // gated, except read-only commands (Propose returns agent.ErrNoApproval)

@@ -105,6 +105,10 @@ avail`) or the site's own documentation rather than guessing.
   the `srun` CPU-binding trap for single-task jobs, the `/tmp` output trap,
   checking a job without waiting (squeue then sacct, arrays), your queue, and
   a table of failure patterns. Read to write, submit or debug a job.
+- **[references/pbs-lsf.md](references/pbs-lsf.md)**: the cluster runs PBS
+  (OpenPBS, PBS Pro) or LSF, not Slurm: the Slurm commands and job script lines
+  with their PBS and LSF equivalents, and what to check differently. Read when
+  `qsub`, `qstat`, `bsub` or `bjobs` exist and `sbatch` does not.
 - **[references/failures.md](references/failures.md)**: why did my job fail?
   The `sacct` facts to collect (state, exit code, time and memory used against
   asked, `MaxRSS` from the step lines), what the numbers mean, the log lines
