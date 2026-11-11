@@ -6,7 +6,7 @@
 
 **Labmill client** is a conversational front end to your Slurm clusters. You tell it in plain language what you want to compute. It finds the data on your computer, stages it, sends it to the cluster, writes and submits the job script, watches the job and brings the results back.
 
-Labmill client is a fresh copy of the yeetl client and supports **Slurm only**. Documentation and downloads: <https://client.labmill.org/>.
+Labmill client started as a copy of an earlier client and supports **Slurm only**. Documentation and downloads: <https://client.labmill.org/>.
 
 Labmill is for researchers who already run their code on their own Mac, Windows or Linux computer, often on a single GPU, and now need more. You don't need to know the cluster or the terminal. You say what you want to run in a chat.
 
@@ -106,7 +106,7 @@ site: example.edu
 
 ## Skills and Claude Code
 
-Labmill's know-how is written as Claude Code skills: the generic `slurm-user` and `research-computing` skills in `skills/` and the generic site skill in `sites/generic/`. The skills come from yeetl (see `skills/SOURCE.md`). You can use the same skills in Claude Code on their own; see `sites/README.md`.
+Labmill's know-how is written as Claude Code skills: the generic `slurm-user` and `research-computing` skills in `skills/` and the generic site skill in `sites/generic/`. The skills come from an earlier client (see `skills/SOURCE.md`). You can use the same skills in Claude Code on their own; see `sites/README.md`.
 
 ## Documentation
 

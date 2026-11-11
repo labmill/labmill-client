@@ -15,7 +15,7 @@ Everything is implemented except the "Hey Labmill" voice feature and the headles
 | `internal/livetest` | Test-only support for the opt-in live checks (`LABMILL_LIVE=1`). |
 | `internal/config` | `~/.config/labmill/clusters.yaml`: loading, validation, saving. |
 | `internal/sshconfig` | OpenSSH-format `~/.ssh/config.d/labmill`: writer, `Include` line, reader, alias reuse. |
-| `skills` | Embedded generic skills (`SKILL.md` + `references/`): `slurm-user` and `research-computing`. `slurm-user` started as a sync of an upstream skill set; both come from yeetl, and Labmill is now the master copy (`skills/SOURCE.md`). Every site fact lives in `sites/`. Also `tools/*` helper files, readable but never run. |
+| `skills` | Embedded generic skills (`SKILL.md` + `references/`): `slurm-user` and `research-computing`. `slurm-user` started as a sync of an upstream skill set; both come from an earlier client, and Labmill is now the master copy (`skills/SOURCE.md`). Every site fact lives in `sites/`. Also `tools/*` helper files, readable but never run. |
 | `sites` | Embedded site profiles. Only `generic/` is in this repository: a site skill (`SKILL.md` + `References/`), a machine-readable `Site.yaml` and a cluster template. See [Sites](sites.md). |
 | `internal/skill` | Skill runtime: loading, override directory, `load_skill`/`read_reference` tools. |
 | `internal/broker` | Client for an optional Claude broker (streaming Messages API with a bearer token). |
