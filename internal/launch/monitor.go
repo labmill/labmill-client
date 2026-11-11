@@ -105,8 +105,9 @@ type jobMonitor struct {
 	// job_status through jobEnded): it reads the job's output for its report
 	// to the Labmill account. problem, when set, gets a job whose checks
 	// failed monitorMaxFailures times in a row.
-	collect func(ctx context.Context, j store.Job, be backend.Backend)
+	collect func(ctx context.Context, j store.Job, be backend.Backend) error
 	problem func(j store.Job, err error)
+	outFail map[int64]int // failed output reads of ended jobs
 
 	interval, timeout time.Duration // 0 means monitorInterval / monitorCallTimeout
 
@@ -226,10 +227,6 @@ func (m *jobMonitor) check(ctx context.Context) {
 			delete(m.failing, id) // job finished or removed: stop tracking it
 		}
 	}
-	type beResult struct {
-		be backend.Backend
-		ok bool
-	}
 	backends := map[string]beResult{} // per cluster, looked up at most once per check
 	for _, j := range jobs {
 		if ctx.Err() != nil {
@@ -275,7 +272,74 @@ func (m *jobMonitor) check(ctx context.Context) {
 		if m.collect != nil && account.Final(st.State) {
 			done := j // CollectOutput reads once per run, so a repeat is cheap
 			done.State = st.State
-			m.collect(ctx, done, r.be)
+			m.collectOutput(ctx, done, r.be)
+		}
+	}
+	m.retryOutputs(ctx, backends)
+}
+
+type beResult struct {
+	be backend.Backend
+	ok bool
+}
+
+// outputMaxFailures is the number of failed output reads of one job after
+// which a problem is recorded; outputRetryDays is how long an ended job is
+// retried.
+const (
+	outputMaxFailures = 3
+	outputRetryDays   = 14
+)
+
+// collectOutput runs collect for ended job j and counts failed reads.
+func (m *jobMonitor) collectOutput(ctx context.Context, j store.Job, be backend.Backend) {
+	err := m.collect(ctx, j, be)
+	if err == nil {
+		delete(m.outFail, j.ID)
+		return
+	}
+	if m.outFail == nil {
+		m.outFail = map[int64]int{}
+	}
+	m.outFail[j.ID]++
+	if m.outFail[j.ID] == outputMaxFailures && m.problem != nil {
+		m.problem(j, err)
+	}
+}
+
+// retryOutputs reads again the output of jobs that ended in the last
+// outputRetryDays days and have none yet (CollectOutput does nothing for a
+// job that has its output event, a private job or a backend without output).
+func (m *jobMonitor) retryOutputs(ctx context.Context, backends map[string]beResult) {
+	if m.collect == nil {
+		return
+	}
+	jobs, err := m.store.Jobs(ctx, store.JobFilter{UpdatedSince: m.clock().AddDate(0, 0, -outputRetryDays)})
+	if err != nil {
+		return
+	}
+	timeout := m.timeout
+	if timeout <= 0 {
+		timeout = monitorCallTimeout
+	}
+	for _, j := range jobs {
+		if ctx.Err() != nil {
+			return
+		}
+		if !account.Final(j.State) || j.RemoteID == "" || m.outFail[j.ID] >= outputMaxFailures {
+			continue
+		}
+		c, ok := m.cfg.Cluster(j.Cluster)
+		if !ok {
+			continue
+		}
+		r, seen := backends[c.Name]
+		if !seen {
+			r.be, r.ok = m.backendWithin(ctx, c, timeout)
+			backends[c.Name] = r
+		}
+		if r.ok {
+			m.collectOutput(ctx, j, r.be)
 		}
 	}
 }
@@ -457,7 +521,7 @@ func (m *jobMonitor) collectLater(id int64) {
 		if !ok {
 			return
 		}
-		m.collect(ctx, j, be)
+		m.collectOutput(ctx, j, be)
 	}()
 }
 

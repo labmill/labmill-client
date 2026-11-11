@@ -660,17 +660,19 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	// once, redacted, for its report, and checks that keep failing are
 	// reported as connection problems. Both only while an account is linked.
 	words := func(j store.Job) []string { return reportWords(cfg, j) }
-	mon.collect = func(ctx context.Context, j store.Job, be backend.Backend) {
+	mon.collect = func(ctx context.Context, j store.Job, be backend.Backend) error {
 		if p, err := account.Path(); err != nil {
-			return
+			return nil
 		} else if _, ok, _ := account.Load(p); !ok {
-			return
+			return nil
 		}
 		cctx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 		if err := account.CollectOutput(cctx, db, be, j, account.NewRedactor(append(words(j), j.Name)...)); err != nil {
 			appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{"job output not read: " + app.RedactLine(err.Error(), 200)})
+			return err
 		}
+		return nil
 	}
 	if probs != nil {
 		mon.problem = func(j store.Job, err error) {
