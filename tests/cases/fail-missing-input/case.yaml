@@ -1,0 +1,12 @@
+id: fail-missing-input
+title: A script that reads an input file that does not exist
+tags: [failure, data]
+prompt: |
+  Submit the script count.sh as a batch job and tell me how it went.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 90
+expect:
+  outcome: failed
+  failure_class: data_missing
+  agent_should: explain
+  agent_keywords: [nosuchfile, missing]

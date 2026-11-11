@@ -1,0 +1,12 @@
+id: fail-wrong-partition
+title: A job for a partition that does not exist
+tags: [failure, submit]
+prompt: |
+  Submit the script hello.sh as a batch job on the partition nosuchpart.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 60
+expect:
+  outcome: failed
+  failure_class: submit_rejected
+  agent_should: ask_user
+  agent_keywords: [partition]
