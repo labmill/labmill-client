@@ -151,6 +151,9 @@ func (s *Slurm) Render(spec backend.JobSpec) (string, error) {
 	if spec.Partition != "" {
 		fmt.Fprintf(&b, "#SBATCH --partition=%s\n", spec.Partition)
 	}
+	if spec.Account != "" {
+		fmt.Fprintf(&b, "#SBATCH --account=%s\n", spec.Account)
+	}
 	if spec.QOS != "" {
 		fmt.Fprintf(&b, "#SBATCH --qos=%s\n", spec.QOS)
 	}

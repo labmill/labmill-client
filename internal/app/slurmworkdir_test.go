@@ -35,8 +35,8 @@ func TestSlurmWorkDirNodeLocalAndMkdir(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The draft asked the scheduler for a start estimate (M61): a read-only
-	// sbatch --test-only that submits nothing.
-	if len(rr.calls) != 1 || strings.Join(rr.calls[0], " ") != "sbatch --test-only" {
+	// sbatch --test-only that submits nothing, after the account lookup.
+	if n := len(rr.calls); n == 0 || strings.Join(rr.calls[n-1], " ") != "sbatch --test-only" {
 		t.Errorf("draft calls = %v", rr.calls)
 	}
 	rr.calls = nil

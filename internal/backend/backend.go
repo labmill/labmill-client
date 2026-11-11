@@ -112,6 +112,9 @@ type JobSpec struct {
 	// QOS is the Slurm QOS (#SBATCH --qos); "" means none. Set by Labmill from
 	// the site profile's preemptible resource (M61). Slurm only.
 	QOS string `json:",omitempty"`
+	// Account is the Slurm account (#SBATCH --account); "" means the scheduler
+	// default. Set when the user has exactly one account. Slurm only.
+	Account string `json:",omitempty"`
 	// MailOnEnd adds #SBATCH --mail-type=END,FAIL (no --mail-user: Slurm
 	// mails the site's default address). Set from the "Email me when a
 	// Slurm job ends" setting (M64.3). Slurm only.
@@ -141,6 +144,9 @@ func (s JobSpec) Validate() error {
 	}
 	if !tokenRe.MatchString(s.Partition) {
 		return invalid("partition %q must match [A-Za-z0-9._-]*", s.Partition)
+	}
+	if !tokenRe.MatchString(s.Account) {
+		return invalid("account %q must match [A-Za-z0-9._-]*", s.Account)
 	}
 	if !tokenRe.MatchString(s.GPUType) {
 		return invalid("GPU type %q must match [A-Za-z0-9._-]*", s.GPUType)
@@ -509,3 +515,10 @@ type HistoryFinder interface {
 // again. A definite refusal (sbatch exits non-zero with a message, the work
 // folder can't be created) does not wrap it.
 var ErrSubmitUncertain = errors.New("the submit may or may not have reached the scheduler")
+
+// AccountLister is implemented by a backend that can read the user's
+// accounts (Slurm). Accounts returns them sorted and the default one, or
+// nothing when they cannot be read.
+type AccountLister interface {
+	Accounts(ctx context.Context) (accounts []string, def string)
+}
