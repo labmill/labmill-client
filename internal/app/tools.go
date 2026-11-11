@@ -822,7 +822,7 @@ func (t *toolset) draftJob() agent.Tool {
 					"memory_gb":    intProp("memory in GB; 0 for the default"),
 					"time_minutes": intProp("time limit in minutes; 0 for the partition default"),
 					"command":      strProp("what to run, e.g. python train.py --epochs 10"),
-					"work_dir":     strProp("absolute folder on the cluster to run in (defaults to the uploaded data folder); it must be on shared storage, not /tmp, /var/tmp or /dev/shm"),
+					"work_dir":     strProp("absolute folder on the cluster to run in (defaults to the uploaded data folder, or without data to labmill/<name> in the login home); it must be on shared storage, not /tmp, /var/tmp or /dev/shm"),
 					"env":          map[string]any{"type": "object", "additionalProperties": map[string]any{"type": "string"}, "description": "extra environment variables"},
 				},
 				"required": []string{"command"},
@@ -865,9 +865,6 @@ func (t *toolset) draftJob() agent.Tool {
 				if !jobNameRe.MatchString(in.Spec.Name) {
 					return "", fmt.Errorf("Give the new job a name (spec.name) such as gpu-check: start with a letter or digit, then up to 63 letters, digits, dots, dashes or underscores, without spaces (got %q).", sanitize(in.Spec.Name))
 				}
-				if strings.TrimSpace(in.Spec.WorkDir) == "" {
-					return "", errors.New("A job without uploaded data needs a work_dir: an absolute folder on a shared filesystem, such as under your home or a storage folder, never /tmp, /var/tmp or /dev/shm (node-local, the output would be lost).")
-				}
 				j.Name = in.Spec.Name
 				// The same name again: refuse if that job holds data, else
 				// redraft the existing no-data job instead of duplicating it.
@@ -907,6 +904,23 @@ func (t *toolset) draftJob() agent.Tool {
 				return "", fmt.Errorf("The data for job %d is on %s, not %s. Pick %s or upload the data again.", j.ID, j.Cluster, c.Name, j.Cluster)
 			}
 			s := in.Spec
+			if noData && strings.TrimSpace(s.WorkDir) == "" {
+				// Default folder: <login home>/labmill/<job name>. Not for the shared scratch: Labmill does not invent a folder there.
+				var home string
+				var herr error
+				switch {
+				case in.Scratch == scratchGlobal:
+					herr = errors.New("scratch global needs your own folder below it")
+				case t.env.RemoteHome == nil:
+					herr = errors.New("the home folder isn't available")
+				default:
+					home, herr = t.env.RemoteHome(ctx, c)
+				}
+				if herr != nil {
+					return "", fmt.Errorf("A job without uploaded data needs a work_dir (%v): an absolute folder on a shared filesystem, such as under your home or a storage folder, never /tmp, /var/tmp or /dev/shm (node-local, the output would be lost).", herr)
+				}
+				s.WorkDir = path.Join(home, "labmill", j.Name)
+			}
 			if s.Nodes < 0 {
 				return "", errors.New("The number of nodes can't be negative.")
 			}

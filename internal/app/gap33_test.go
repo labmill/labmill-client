@@ -75,3 +75,13 @@ func TestDraftPartitionDefaults(t *testing.T) {
 		t.Errorf("cluster_info:\n%s", info)
 	}
 }
+
+func TestDraftDefaultWorkDir(t *testing.T) {
+	h := gapHarness(t, &gapRunner{})
+	in := draftSpec(nil, nil)
+	delete(in["spec"].(map[string]any), "work_dir")
+	out, err := h.run(t, "draft_job", in)
+	if err != nil || !strings.Contains(out, "#SBATCH --chdir=/home/alice/labmill/seg\n") {
+		t.Fatalf("draft: %v\n%s", err, out)
+	}
+}
