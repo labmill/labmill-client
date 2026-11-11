@@ -1,0 +1,9 @@
+id: py-venv-pip-small
+title: Make a virtual environment and install a small package
+tags: [python, venv, pip]
+prompt: |
+  Make a Python virtual environment, install the package six with pip, and run a job that uses it. In the job, import six and write six.__name__ to result.txt.
+needs: {cpus: 1, mem_mb: 512, modules: [python3]}
+time_budget: 300
+expect:
+  outcome: completed

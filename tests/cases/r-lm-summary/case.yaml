@@ -1,0 +1,9 @@
+id: r-lm-summary
+title: Fit a line with R
+tags: [r, stats]
+prompt: |
+  Read xy.csv in R. Fit the model y ~ x with lm. Write the slope, rounded to 2 decimals, to slope.txt.
+needs: {cpus: 1, mem_mb: 512, modules: [R]}
+time_budget: 120
+expect:
+  outcome: completed

@@ -1,0 +1,9 @@
+id: py-matplotlib-png
+title: Draw a plot with matplotlib
+tags: [python, matplotlib]
+prompt: |
+  Read points.csv with Python. Draw x against y with matplotlib and save the plot as plot.png.
+needs: {cpus: 1, mem_mb: 512, modules: [python3, matplotlib]}
+time_budget: 120
+expect:
+  outcome: completed

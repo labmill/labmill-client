@@ -1,0 +1,9 @@
+id: r-parallel-apply
+title: Run an R function on 4 cores
+tags: [r, parallel]
+prompt: |
+  Read the number n from n.txt. In R, compute the square of each whole number from 1 to n with mclapply on 4 cores. Write the sum of the squares to total.txt as a whole number, not in scientific notation.
+needs: {cpus: 4, mem_mb: 1024, modules: [R]}
+time_budget: 120
+expect:
+  outcome: completed

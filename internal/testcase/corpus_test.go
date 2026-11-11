@@ -93,11 +93,23 @@ func TestGenDeterministic(t *testing.T) {
 	}
 }
 
+var (
+	pngOK  = "\x89PNG\r\n\x1a\n" + strings.Repeat("x", 1200)
+	pngBad = "not a png " + strings.Repeat("x", 1200)
+)
+
 // checkCases holds, for each case with a check.sh, the files of a right
 // result and of a wrong one. The check must accept the first and refuse the second.
 var checkCases = map[string]struct{ right, wrong map[string]string }{
-	"py-numpy-sum":    {map[string]string{"result.txt": "499995.00\n"}, map[string]string{"result.txt": "1\n"}},
-	"py-stdin-stdout": {map[string]string{"count.txt": "500\n"}, map[string]string{"count.txt": "499\n"}},
+	"py-numpy-sum":       {map[string]string{"result.txt": "499995.00\n"}, map[string]string{"result.txt": "1\n"}},
+	"py-stdin-stdout":    {map[string]string{"count.txt": "500\n"}, map[string]string{"count.txt": "499\n"}},
+	"py-pandas-groupby":  {map[string]string{"totals.csv": "region,total\nr0,60300\nr1,59900\nr2,60100\n"}, map[string]string{"totals.csv": "region,total\nr0,60300\nr1,59900\nr2,1\n"}},
+	"py-matplotlib-png":  {map[string]string{"plot.png": pngOK}, map[string]string{"plot.png": pngBad}},
+	"py-multiprocessing": {map[string]string{"count.txt": "17984\n"}, map[string]string{"count.txt": "17983\n"}},
+	"py-venv-pip-small":  {map[string]string{"result.txt": "six\n"}, map[string]string{"result.txt": "seven\n"}},
+	"r-lm-summary":       {map[string]string{"slope.txt": "2.00\n"}, map[string]string{"slope.txt": "3.00\n"}},
+	"r-ggplot-png":       {map[string]string{"plot.png": pngOK}, map[string]string{"plot.png": pngBad}},
+	"r-parallel-apply":   {map[string]string{"total.txt": "2668667000\n"}, map[string]string{"total.txt": "2.668667e+09\n"}},
 	"array-10-tasks": {
 		map[string]string{"out-1.txt": "1", "out-2.txt": "4", "out-3.txt": "9", "out-4.txt": "16", "out-5.txt": "25", "out-6.txt": "36", "out-7.txt": "49", "out-8.txt": "64", "out-9.txt": "81", "out-10.txt": "100"},
 		map[string]string{"out-1.txt": "1"},
