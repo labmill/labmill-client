@@ -79,7 +79,7 @@ func (t *tray) build(h trayHooks) {
 	systray.AddSeparator()
 	login := systray.AddMenuItemCheckbox("Start in the tray when I log in", "Start Labmill hidden in the tray when you log in to this computer", h.StartAtLoginOn)
 	systray.AddSeparator()
-	quit := systray.AddMenuItem("Quit labmill", "Quit Labmill; your cluster login ends after 10 minutes")
+	quit := systray.AddMenuItem("Quit labmill", "Quit Labmill; your cluster login ends after 12 hours")
 	// Left click (Windows) or activate (Linux) opens the window; the right
 	// click shows the menu.
 	systray.SetOnTapped(h.Open)

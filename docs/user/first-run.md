@@ -35,18 +35,13 @@ You only do this once. Your cluster list is kept in `~/.config/labmill/clusters.
 Labmill reads job times in UTC, so you normally don't need to set anything. Only if a Slurm cluster's job start and end times still look wrong (its Slurm ignores the time zone request), add a `timezone:` line to its entry, for example `timezone: Europe/Berlin`.
 
 If your user name has several Slurm accounts on a cluster, Labmill asks you once which one to charge and saves it as an `account:` line in that cluster's entry (for example `account: mygroup`). Change or remove the line to choose again. With one account, Labmill uses it without asking.
-
-## Coming from yeetl?
-
-If Labmill has no `~/.config/labmill/clusters.yaml` yet, it looks for a yeetl setup on its first start. It copies `~/.config/yeetl/clusters.yaml` (only if the file parses) and `~/.ssh/config.d/yeetl`. It copies the files and does not move them, so yeetl keeps working. The variables `YEETL_MODEL`, `YEETL_BROKER_URL` and `YEETL_BROKER_TOKEN` are read when the matching `LABMILL_` variable is empty.
-
 ## The first login
 
 Labmill signs in to the cluster the first time it needs it, for example when you ask about queues or when you approve an upload. A small box pops up in the window.
 
 1. **Password.** Type your cluster password. The characters are hidden and the password is not saved anywhere.
 2. **Two-factor sign-in.** If your institution uses a push to your phone, Labmill chooses that option for you. Look at your phone and **approve the push notification**. Labmill waits up to about a minute.
-3. That's it. Labmill keeps the login open while you work, so you aren't asked again for every upload or job. A small background helper holds the login and closes it by itself about 10 minutes after you stop using Labmill.
+3. That's it. Labmill keeps the login open while you work, so you aren't asked again for every upload or job. A small background helper holds the login and closes it by itself about 12 hours after you stop using Labmill.
 
 ### If no push arrives
 
