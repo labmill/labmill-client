@@ -10,6 +10,7 @@ import (
 
 	"labmill-client/internal/launch"
 	"labmill-client/internal/site"
+	"labmill-client/internal/sshconfig"
 )
 
 // askSetup shows the first-run form (a Huh form run standalone, before the
@@ -21,6 +22,9 @@ import (
 // user cancels.
 var askSetup launch.SetupFunc = func(ctx context.Context, s site.Site) (launch.SetupAnswers, error) {
 	a := launch.SetupAnswers{Site: s.Domain}
+	if p, err := sshconfig.DefaultPaths(); err == nil {
+		a.Username = launch.SuggestUsername(p, s) // the name already in the ssh settings
+	}
 	choices := site.Choices()
 	bySite := map[string]site.Site{}
 	var opts []huh.Option[string]

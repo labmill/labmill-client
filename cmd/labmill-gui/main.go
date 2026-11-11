@@ -192,6 +192,7 @@ import (
 	"labmill-client/internal/launch"
 	"labmill-client/internal/settings"
 	"labmill-client/internal/site"
+	"labmill-client/internal/sshconfig"
 	"labmill-client/internal/sshx"
 	"labmill-client/internal/startup"
 	"labmill-client/internal/store"
@@ -288,8 +289,9 @@ type SiteChoice struct {
 	Name   string `json:"name"`
 	// NeedsHosts: the form must also offer the login host field
 	// (launch.NeedsHosts).
-	NeedsHosts bool `json:"needsHosts"`
-	Default    bool `json:"default"` // preselected (site.Default)
+	NeedsHosts bool   `json:"needsHosts"`
+	Default    bool   `json:"default"` // preselected (site.Default)
+	User       string `json:"user"`    // account name already in the ssh settings; "" when unknown
 }
 
 // Sites lists the institutions for the first-run form (site.Choices: the
@@ -297,8 +299,9 @@ type SiteChoice struct {
 func (s *Setup) Sites() []SiteChoice {
 	var out []SiteChoice
 	def := site.Default().Domain
+	paths, _ := sshconfig.DefaultPaths()
 	for _, c := range site.Choices() {
-		out = append(out, SiteChoice{Domain: c.Domain, Name: c.Name, NeedsHosts: launch.NeedsHosts(c), Default: c.Domain == def})
+		out = append(out, SiteChoice{Domain: c.Domain, Name: c.Name, NeedsHosts: launch.NeedsHosts(c), Default: c.Domain == def, User: launch.SuggestUsername(paths, c)})
 	}
 	return out
 }

@@ -1337,6 +1337,13 @@
     return false;
   }
   function syncSetupHosts() { $('setup-hosts').hidden = setupOnly || !siteNeedsHosts(); }
+  // Prefill the account name from the ssh settings, unless the user typed one.
+  function prefillUser() {
+    var c = setupSites.find(function (x) { return x.domain === $('setup-site').value; });
+    var u = $('setup-user');
+    if (c && c.user && (!u.value || u.dataset.prefilled)) { u.value = c.user; u.dataset.prefilled = '1'; }
+  }
+  $('setup-user').addEventListener('input', function () { delete this.dataset.prefilled; });
 
   var setupOnly = false;
   function showSetup(note, only) {
@@ -1360,9 +1367,10 @@
         sel.appendChild(o);
       });
       syncSetupHosts();
+      prefillUser();
     }, function (err) { $('setup-error').textContent = errText(err); });
   }
-  $('setup-site').addEventListener('change', syncSetupHosts);
+  $('setup-site').addEventListener('change', function () { syncSetupHosts(); prefillUser(); });
 
   $('setup-form').addEventListener('submit', function (e) {
     e.preventDefault();

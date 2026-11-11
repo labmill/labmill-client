@@ -187,3 +187,21 @@ func useFixtureSite(t *testing.T) {
 	}
 	t.Cleanup(func() { siteForConfig = orig })
 }
+
+func TestSuggestUsername(t *testing.T) {
+	p := sshconfig.Paths{SSHDir: filepath.Join(t.TempDir(), ".ssh")}
+	if err := os.MkdirAll(p.SSHDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	s := site.Site{Hosts: []sshconfig.Host{{Alias: "hpcone", HostName: "login.example.edu"}}}
+	if u := SuggestUsername(p, s); u != "" {
+		t.Errorf("no ssh settings: %q", u)
+	}
+	cfg := "Host mylogin\n  HostName login.example.edu\n  User alice\n"
+	if err := os.WriteFile(p.UserConfig(), []byte(cfg), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if u := SuggestUsername(p, s); u != "alice" {
+		t.Errorf("username = %q, want alice", u)
+	}
+}

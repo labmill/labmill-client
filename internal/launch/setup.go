@@ -155,3 +155,18 @@ func writeSiteHosts(p sshconfig.Paths, templates []sshconfig.Host, username, goo
 	}
 	return rename, nil
 }
+
+// SuggestUsername is the account name the user already has for a login host of s in their ssh settings
+// (Labmill's file or their own), to prefill the setup form. "" when none is known.
+func SuggestUsername(p sshconfig.Paths, s site.Site) string {
+	for _, h := range s.Hosts {
+		alias, _, ok, err := sshconfig.AliasSource(p, h.HostName)
+		if err != nil || !ok {
+			continue
+		}
+		if u, found, err := sshconfig.Lookup(p, alias); err == nil && found && ValidUsername(u.User) {
+			return u.User
+		}
+	}
+	return ""
+}
