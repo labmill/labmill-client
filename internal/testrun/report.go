@@ -60,7 +60,7 @@ func SystemID(ctx context.Context, me func(context.Context) (account.Me, error),
 	return s.ID
 }
 
-var uuidRe = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+var uuidRe = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // Post sends the report to base + "/api/test-runs" with the program token. A 204 is success,
 // also for a private account (the server stores nothing).
