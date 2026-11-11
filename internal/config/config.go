@@ -224,6 +224,9 @@ type Config struct {
 	// and the site skill.
 	Site     string    `yaml:"site,omitempty"`
 	Clusters []Cluster `yaml:"clusters"`
+	// MaxAutoDownloadGB is the most results an automatic download brings, in GB; larger results are only listed and
+	// downloaded when the user asks. 0 means the default (5).
+	MaxAutoDownloadGB float64 `yaml:"max_auto_download_gb,omitempty"`
 
 	// mu guards Clusters once a session shares the Config: add_cluster
 	// (AddCluster) appends while the job monitor and the front ends read
@@ -420,6 +423,9 @@ func (c *Config) Validate() error {
 // tied to its cluster and field.
 func (c *Config) FieldErrors() []FieldError {
 	var errs []FieldError
+	if c.MaxAutoDownloadGB < 0 || c.MaxAutoDownloadGB > 1e6 {
+		errs = append(errs, FieldError{Cluster: -1, Field: "max_auto_download_gb", Message: "max_auto_download_gb must be a number of GB from 0 to 1000000 (0 = the default, 5)"})
+	}
 	if c.Site != "" && !siteRE.MatchString(c.Site) {
 		errs = append(errs, FieldError{Cluster: -1, Field: "site", Message: fmt.Sprintf("site %q must be an institution domain like example.edu (or generic)", c.Site)})
 	}

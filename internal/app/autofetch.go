@@ -29,9 +29,10 @@ import (
 // below.
 
 const (
-	// AutoFetchMaxBytes is the most an automatic download brings: larger
+	// AutoFetchMaxBytes is the default of the most an automatic download brings (clusters.yaml max_auto_download_gb
+	// and Env.MaxAutoDownloadBytes override it; owner decision 2026-11-11): larger
 	// results are left for the user to fetch ("ask me to fetch the results").
-	AutoFetchMaxBytes = int64(2) << 30
+	AutoFetchMaxBytes = int64(5) << 30
 
 	// AutoFetchMaxFiles is the most files an automatic download brings.
 	AutoFetchMaxFiles = 2000
@@ -286,8 +287,8 @@ func (e *Env) AutoFetch(ctx context.Context, jobID int64, logf func(string)) Aut
 		total += f.Size
 	}
 	logf(fmt.Sprintf("job #%d: %s, %s to download into %s (%d left out)", j.ID, plural(len(files), "file", "files"), transfer.FormatBytes(total), p.localDir, leftOut))
-	if total > AutoFetchMaxBytes {
-		return skip(fmt.Sprintf("they total %s, more than the 2 GB limit for automatic downloads.", transfer.FormatBytes(total)))
+	if limit := e.autoFetchLimit(); total > limit {
+		return skip(fmt.Sprintf("they total %s, more than the %s limit for automatic downloads (max_auto_download_gb).", transfer.FormatBytes(total), transfer.FormatBytes(limit)))
 	}
 	if e.FreeSpace != nil {
 		if free, err := e.FreeSpace(existingParent(p.localDir)); err == nil && float64(total) > float64(free)*autoFetchFreeShare {
@@ -445,4 +446,12 @@ func existingParent(dir string) string {
 			return d
 		}
 	}
+}
+
+// autoFetchLimit is the most bytes an automatic download brings.
+func (e *Env) autoFetchLimit() int64 {
+	if e.MaxAutoDownloadBytes > 0 {
+		return e.MaxAutoDownloadBytes
+	}
+	return AutoFetchMaxBytes
 }

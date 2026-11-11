@@ -597,7 +597,7 @@ func (m *model) autoDownloadCommand(arg string) {
 		}
 	}
 	if m.o.AutoDownload() {
-		m.addEntry(roleNotice, "Download results automatically is on: when a job you submitted finishes, Labmill brings its results (up to 2 GB) to your results folder by itself. Turn it off with /autodownload off.")
+		m.addEntry(roleNotice, "Download results automatically is on: when a job you submitted finishes, Labmill brings its results (up to 5 GB by default, see max_auto_download_gb) to your results folder by itself. Turn it off with /autodownload off.")
 	} else {
 		m.addEntry(roleNotice, "Download results automatically is off: ask Labmill to fetch the results of a finished job. Turn it on with /autodownload on.")
 	}

@@ -437,7 +437,8 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	}
 	env := &app.Env{
 		Config: cfg, Store: db, Skills: set,
-		Site: siteInfo(st, cfg.Clusters, others...),
+		MaxAutoDownloadBytes: int64(cfg.MaxAutoDownloadGB * (1 << 30)),
+		Site:                 siteInfo(st, cfg.Clusters, others...),
 		Backend: func(ctx context.Context, c config.Cluster) (backend.Backend, error) {
 			return conns.backendFor(ctx, c)
 		},
