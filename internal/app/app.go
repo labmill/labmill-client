@@ -71,6 +71,8 @@ type Env struct {
 	// MaxAutoDownloadBytes is the most an automatic download brings (clusters.yaml max_auto_download_gb); 0 means
 	// AutoFetchMaxBytes.
 	MaxAutoDownloadBytes int64
+	// Warn tells the user something in the chat (a secret was hidden from the model); nil: no warning.
+	Warn func(text string)
 	// OnJobEnded, if set, is called when job_status saw a job of yours reach
 	// completed or failed before the background job monitor did (M60.1); the
 	// front end starts the automatic download from it. It must not block.
@@ -266,11 +268,11 @@ func (s SiteInfo) SlurmFor(cluster string) rules.SlurmHints {
 // approval is displayed.
 func Tools(env *Env) []agent.Tool {
 	t := &toolset{env: env}
-	return []agent.Tool{
+	return guardSecrets([]agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
 		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
-	}
+	}, env.Warn)
 }
 
 // SystemPrompt builds the agent's system prompt:

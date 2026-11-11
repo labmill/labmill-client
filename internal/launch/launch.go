@@ -640,6 +640,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}}
 	mon.resubmit = rs.Handle
 	env.Resubmitter = rs
+	env.Warn = ui.JobNotice
 	// job_status may see a job end before the monitor does.
 	env.OnJobEnded = mon.jobEnded
 	// A downloaded job's sentence carries its ID so the GUI can offer "Open
