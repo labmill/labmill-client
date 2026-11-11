@@ -406,7 +406,7 @@ func TestBuildReportStates(t *testing.T) {
 		{store.StateFetched, "", "COMPLETED", ""},
 		{store.StateFailed, "TIMEOUT", "TIMEOUT", "timeout"},
 		{store.StateFailed, "NODE_FAIL", "NODE_FAIL", "node_failure"},
-		{store.StateFailed, "exit 1 in /home/x/run.sh", "FAILED", ""},
+		{store.StateFailed, "exit 1 in /home/x/run.sh", "FAILED", "exit_nonzero"},
 		{store.StateCanceled, "", "CANCELLED", ""},
 	} {
 		in, ok := BuildReport(store.Job{State: c.st, Message: c.msg, RemoteID: "1"}, nil, "lmc-x")
@@ -507,7 +507,7 @@ func TestBuildReportRunFacts(t *testing.T) {
 		{Kind: "state", Text: "running -> submitted"},
 	}
 	in, _ := BuildReport(j, evs, "r")
-	if in.Partition != "gpu" || in.QOS != "normal" || in.Resubmissions != 2 || in.FailureCategory != "command_not_found" {
+	if in.Partition != "gpu" || in.QOS != "normal" || in.Resubmissions != 2 || in.FailureCategory != "missing_software" {
 		t.Errorf("report = %+v", in)
 	}
 	j.Message = "PREEMPTED"
@@ -517,5 +517,42 @@ func TestBuildReportRunFacts(t *testing.T) {
 	in, _ = BuildReport(j, []store.Event{{Kind: EventPrivate}}, "r")
 	if in.Partition != "" || in.QOS != "" || in.Resubmissions != 0 || in.FailureCategory != "" {
 		t.Errorf("private job report = %+v", in)
+	}
+}
+
+func TestBuildReportFailureClass(t *testing.T) {
+	out := func(stderr string) []store.Event {
+		b, _ := json.Marshal(Output{RemoteID: "9", Stderr: []string{stderr}})
+		return []store.Event{{Kind: EventOutput, Text: string(b)}}
+	}
+	failed := func(code int) store.Job {
+		return store.Job{State: store.StateFailed, RemoteID: "9", Facts: store.Facts{RemoteID: "9", ExitCode: code}}
+	}
+	tests := []struct {
+		name string
+		j    store.Job
+		evs  []store.Event
+		want string
+	}{
+		{"exit 1", failed(1), nil, "exit_nonzero"},
+		{"no facts", store.Job{State: store.StateFailed, RemoteID: "9"}, nil, "exit_nonzero"},
+		{"missing file", failed(2), out("cat: in.csv: No such file or directory"), "data_missing"},
+		{"missing tool in output", failed(1), out("run.sh: line 2: nosuchtool: command not found"), "missing_software"},
+		{"output of an earlier run", failed(1), func() []store.Event {
+			b, _ := json.Marshal(Output{RemoteID: "8", Stderr: []string{"No such file or directory"}})
+			return []store.Event{{Kind: EventOutput, Text: string(b)}}
+		}(), "exit_nonzero"},
+		{"completed", store.Job{State: store.StateCompleted, RemoteID: "9"}, nil, ""},
+	}
+	for _, tt := range tests {
+		in, _ := BuildReport(tt.j, tt.evs, "r")
+		if in.FailureCategory != tt.want {
+			t.Errorf("%s: category %q, want %q", tt.name, in.FailureCategory, tt.want)
+		}
+	}
+	// A private job sends no class, even when its output was collected.
+	evs := append(out("No such file or directory"), store.Event{Kind: EventPrivate})
+	if in, _ := BuildReport(failed(2), evs, "r"); in.FailureCategory != "" {
+		t.Errorf("private job category %q", in.FailureCategory)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"labmill-client/internal/backend"
+	"labmill-client/internal/failclass"
 	"labmill-client/internal/store"
 )
 
@@ -195,8 +196,12 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 			in.FailureCategory = "node_failure"
 		case in.State == "PREEMPTED":
 			in.FailureCategory = "preempted"
-		case f.RemoteID != "" && f.ExitCode == 127 && in.State != "COMPLETED":
-			in.FailureCategory = "command_not_found"
+		case in.State == "FAILED":
+			code := -1 // unknown: an ended job without an exit code is a plain failure
+			if f.RemoteID != "" {
+				code = f.ExitCode
+			}
+			in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: code, Output: outputText(evs, j.RemoteID)})
 		}
 	}
 	return in, true
@@ -408,3 +413,15 @@ var (
 	toolNameRE = regexp.MustCompile(`^[a-z0-9_]{1,64}$`)
 	versionRE  = regexp.MustCompile(`^[A-Za-z0-9._+-]{1,64}$`)
 )
+
+// outputText is the collected output (stderr first, then stdout) of the
+// current run of a job, or "" when none was collected.
+func outputText(evs []store.Event, remoteID string) string {
+	for i := len(evs) - 1; i >= 0; i-- {
+		var o Output
+		if evs[i].Kind == EventOutput && json.Unmarshal([]byte(evs[i].Text), &o) == nil && o.RemoteID == remoteID {
+			return strings.Join(append(o.Stderr, o.Stdout...), "\n")
+		}
+	}
+	return ""
+}
