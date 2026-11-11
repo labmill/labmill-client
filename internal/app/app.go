@@ -53,6 +53,9 @@ type Env struct {
 	// every remote_command, so a change applies at once. A command that
 	// prints a sign-in secret file still asks.
 	AutoRunRemote func() bool
+	// Problem queues a problem report for the user's Labmill account (nil:
+	// none). jobID is 0 for a problem outside a job; a private job is skipped.
+	Problem func(kind, tool, cluster string, jobID int64, text string)
 	// Upload and Download move data (transfer.Upload/Download in production).
 	Upload   func(ctx context.Context, root string, entries []store.ManifestEntry, dst transfer.Remote, progress func(transfer.Progress)) error
 	Download func(ctx context.Context, src transfer.Remote, paths []string, localDir string, progress func(transfer.Progress)) ([]string, error)

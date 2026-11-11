@@ -33,6 +33,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/config"
@@ -469,6 +470,10 @@ func (t *toolset) runRemote(ctx context.Context, rc remoteCmd) (string, error) {
 			return "", fmt.Errorf("%s on %s didn't finish within %d seconds and was stopped.", rc.display(), rc.cluster.Name, secs)
 		}
 		return "", fmt.Errorf("I couldn't run %s on %s: %w", rc.display(), rc.cluster.Name, err)
+	}
+	if res.ExitCode != 0 && rc.class == remoteGated && t.env.Problem != nil { // read-only commands are probes: grep may exit 1
+		t.env.Problem(account.KindTool, "remote_command", rc.cluster.Name, 0,
+			fmt.Sprintf("exit %d: %s %s", res.ExitCode, clip(rc.display(), 200), clip(oneLine(redactSecrets(res.Stderr)), 200)))
 	}
 	// A laptop-side rule on what reaches Claude, as for preview_file: lines
 	// that assign a password, token or key are hidden in file content.

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/store"
@@ -55,7 +56,11 @@ func (t *toolset) preflight(ctx context.Context, j store.Job) string {
 	case strings.Contains(err.Error(), " failed (exit ") && !controllerDown(err.Error()):
 		// Slurm answered with an error: show it so the user can fix the script.
 		_, msg, _ := strings.Cut(err.Error(), "): ")
-		return "Slurm rejects this script: " + clip(oneLine(sanitize(msg)), 300)
+		msg = "Slurm rejects this script: " + clip(oneLine(sanitize(msg)), 300)
+		if t.env.Problem != nil {
+			t.env.Problem(account.KindSbatch, "submit_job", j.Cluster, j.ID, msg)
+		}
+		return msg
 	}
 	return unavailable
 }
