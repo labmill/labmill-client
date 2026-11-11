@@ -1,0 +1,9 @@
+id: large-output-tail
+title: A job with a long output
+tags: [output]
+prompt: |
+  Run a batch job that prints the numbers 1 to 100000 to its standard output, one number on each line. Then write the last line the job printed to last.txt.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 120
+expect:
+  outcome: completed

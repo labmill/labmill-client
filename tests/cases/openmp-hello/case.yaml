@@ -1,0 +1,9 @@
+id: openmp-hello
+title: An OpenMP program on 4 threads
+tags: [openmp, compiler]
+prompt: |
+  Compile hello.c with OpenMP. Run it as one job with 4 CPUs and 4 threads. Write what the program prints to threads.txt.
+needs: {cpus: 4, mem_mb: 512, modules: [gcc]}
+time_budget: 120
+expect:
+  outcome: completed

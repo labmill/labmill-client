@@ -1,0 +1,9 @@
+id: bio-fastq-count
+title: Count the reads in a FASTQ file
+tags: [bio, fastq]
+prompt: |
+  Count the reads in reads.fastq in a batch job and write the number to count.txt.
+needs: {cpus: 1, mem_mb: 256}
+time_budget: 60
+expect:
+  outcome: completed

@@ -13,7 +13,7 @@ func TestDryRun(t *testing.T) {
 	if code := run([]string{"-dir", "../../tests/cases", "-dry-run", "-cases", "fail-*"}, &out, &errb); code != 0 {
 		t.Fatalf("code %d: %s", code, errb.String())
 	}
-	if !strings.Contains(out.String(), "fail-exit-1") || strings.Contains(out.String(), "py-numpy-sum") || !strings.Contains(out.String(), "3 cases") {
+	if !strings.Contains(out.String(), "fail-exit-1") || strings.Contains(out.String(), "py-numpy-sum") || !strings.Contains(out.String(), "8 cases") {
 		t.Errorf("output:\n%s", out.String())
 	}
 }

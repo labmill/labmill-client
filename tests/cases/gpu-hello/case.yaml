@@ -1,0 +1,9 @@
+id: gpu-hello
+title: List the GPU in a GPU job
+tags: [gpu]
+prompt: |
+  Run nvidia-smi -L in a batch job with one GPU. Write the output to gpus.txt.
+needs: {cpus: 1, mem_mb: 1024, gpu: true}
+time_budget: 180
+expect:
+  outcome: completed

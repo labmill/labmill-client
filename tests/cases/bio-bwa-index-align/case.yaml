@@ -1,0 +1,9 @@
+id: bio-bwa-index-align
+title: Index a reference and align reads with bwa
+tags: [bio, bwa, samtools]
+prompt: |
+  Index ref.fa with bwa. Align reads.fq to it with bwa mem. Sort the result into aligned.bam with samtools. Write the number of mapped reads to mapped.txt.
+needs: {cpus: 2, mem_mb: 2048, modules: [bwa, samtools]}
+time_budget: 300
+expect:
+  outcome: completed
