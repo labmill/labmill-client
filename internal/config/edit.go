@@ -19,7 +19,7 @@ import (
 
 // clusterKeys is the order in which new keys are placed in a cluster's
 // mapping (existing keys keep their place).
-var clusterKeys = []string{"name", "type", "ssh_host", "files_host", "transfer", "timezone", "site", "s3"}
+var clusterKeys = []string{"name", "type", "ssh_host", "files_host", "transfer", "timezone", "site", "account", "s3"}
 
 // s3Keys is the same order for the s3 block.
 var s3Keys = []string{"bucket", "prefix", "region", "profile", "endpoint", "sse", "kms_key_id"}
@@ -149,7 +149,7 @@ func PutClusterYAML(data []byte, oldName string, c Cluster) ([]byte, error) {
 	}
 	for _, kv := range []struct{ k, v string }{
 		{"name", c.Name}, {"type", string(c.Type)}, {"ssh_host", c.SSHHost}, {"files_host", c.FilesHost},
-		{"transfer", string(c.Transfer)}, {"timezone", c.Timezone}, {"site", c.Site},
+		{"transfer", string(c.Transfer)}, {"timezone", c.Timezone}, {"site", c.Site}, {"account", c.Account},
 	} {
 		setScalar(target, kv.k, kv.v, clusterKeys)
 	}

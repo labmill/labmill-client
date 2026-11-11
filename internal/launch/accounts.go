@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"labmill-client/internal/app"
 	"labmill-client/internal/config"
@@ -218,4 +219,33 @@ func wireAccounts(env *app.Env, conns *connCache, cfg *config.Config, homeDomain
 		conns.drop(c, aliases...)
 		return changed, err
 	}
+}
+
+// rememberAccount writes the Slurm account chosen on cluster c into
+// clusters.yaml (key `account:`) and the shared Config.
+func rememberAccount(cfgPath string, cfg *config.Config, c config.Cluster, account string, now time.Time) error {
+	data, parsed, err := readClusters(cfgPath)
+	if err != nil {
+		return err
+	}
+	cur, ok := parsed.Cluster(c.Name)
+	if !ok {
+		return fmt.Errorf("cluster %s is no longer configured", c.Name)
+	}
+	cur.Account = account
+	if err := (&config.Config{Clusters: []config.Cluster{cur}}).Validate(); err != nil {
+		return err
+	}
+	out, err := config.PutClusterYAML(data, c.Name, cur)
+	if err != nil {
+		return err
+	}
+	if _, err := config.Backup(cfgPath, now); err != nil {
+		return err
+	}
+	if err := config.WriteFile(cfgPath, out); err != nil {
+		return err
+	}
+	cfg.SetAccount(c.Name, account)
+	return nil
 }
