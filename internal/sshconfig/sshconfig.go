@@ -70,7 +70,7 @@ func (p Paths) LabmillConfig() string { return filepath.Join(p.SSHDir, "config.d
 // HostName (if set), User (if set), Port (if not 0/22), ProxyJump (if set),
 // IdentityFile (if set) and "ServerAliveInterval 30". When goos is not
 // "windows" it also writes "ControlMaster auto",
-// "ControlPath ~/.ssh/controlmasters/%r@%h:%p" and "ControlPersist 10m";
+// "ControlPath ~/.ssh/controlmasters/%r@%h:%p" and "ControlPersist 12h";
 // Win32-OpenSSH errors on those, so they are left out on Windows. Hosts are
 // written in the given order; output is deterministic.
 func Render(hosts []Host, goos string) []byte {
@@ -100,7 +100,7 @@ func Render(hosts []Host, goos string) []byte {
 		if goos != "windows" {
 			b.WriteString("    ControlMaster auto\n")
 			b.WriteString("    ControlPath ~/.ssh/controlmasters/%r@%h:%p\n")
-			b.WriteString("    ControlPersist 10m\n")
+			b.WriteString("    ControlPersist 12h\n")
 		}
 	}
 	return b.Bytes()
