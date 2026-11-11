@@ -602,47 +602,10 @@ func TestParseTwoFactorName(t *testing.T) {
 	}
 }
 
-func TestParseBrokerIssuers(t *testing.T) {
-	s, err := Parse([]byte(minimal + "broker:\n  issuers: [\"https://idp.example.edu/realms/x/\", https://idp2.example.edu]\n"))
-	if err != nil || len(s.BrokerIssuers) != 2 || s.BrokerIssuers[0] != "https://idp.example.edu/realms/x" {
-		t.Fatalf("issuers = %v %v", s.BrokerIssuers, err)
-	}
-	for _, bad := range []string{
-		"http://idp.example.edu/x", "/realms/x", "idp.example.edu", "https://", "https://idp.example.edu/x?a=1",
-		"https://idp.example.edu/x#f", "[https://a.example.edu, https://a.example.edu/]",
-	} {
-		y := bad
-		if !strings.HasPrefix(bad, "[") {
-			y = "[\"" + bad + "\"]"
-		}
-		if _, err := Parse([]byte(minimal + "broker: {issuers: " + y + "}\n")); err == nil {
-			t.Errorf("issuers %s accepted", bad)
-		}
-	}
-}
-
-func issuerFixture(fsys fstest.MapFS, domain, issuer string) {
-	siteFixture(fsys, domain, false)
-	fsys[domain+"/Site.yaml"].Data = append(fsys[domain+"/Site.yaml"].Data, []byte("broker: {issuers: [\""+issuer+"\"]}\n")...)
-}
-
-func TestIssuersAcrossSites(t *testing.T) {
-	fsys := fstest.MapFS{}
-	issuerFixture(fsys, "a.edu", "https://idp.example.org/realms/a")
-	issuerFixture(fsys, "b.edu", "https://idp.example.org/realms/a/")
-	if _, err := listChecked(fsys); err == nil || !strings.Contains(err.Error(), "claimed by both") {
-		t.Errorf("duplicate issuer err = %v", err)
-	}
-	list, _ := listChecked(fsys)
-	if _, ok := forIssuer(list, "https://idp.example.org/realms/a"); ok {
-		t.Error("ambiguous issuer resolved to a site")
-	}
-}
-
 // A profile that fails to load is skipped by List but reported by the check.
 func TestListCheckedBrokenProfile(t *testing.T) {
 	fsys := fstest.MapFS{"broken.edu/Site.yaml": {Data: []byte("not: [valid")}}
-	issuerFixture(fsys, "a.edu", "https://idp.example.org/realms/a")
+	siteFixture(fsys, "a.edu", false)
 	list, err := listChecked(fsys)
 	if err == nil || !strings.Contains(err.Error(), "broken.edu") {
 		t.Fatalf("err = %v", err)
@@ -652,27 +615,5 @@ func TestListCheckedBrokenProfile(t *testing.T) {
 	}
 	if got := listFS(fsys); len(got) != 1 {
 		t.Errorf("listFS = %d profiles", len(got))
-	}
-}
-
-func TestForIssuer(t *testing.T) {
-	fsys := fstest.MapFS{}
-	issuerFixture(fsys, "a.edu", "https://idp.example.org/realms/a")
-	issuerFixture(fsys, "b.edu", "https://idp.example.org/realms/b")
-	list, err := listChecked(fsys)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for iss, want := range map[string]string{
-		"https://idp.example.org/realms/a":   "a.edu",
-		"https://idp.example.org/realms/b/":  "b.edu",
-		" https://idp.example.org/realms/b ": "b.edu",
-		"https://idp.example.org/realms/c":   GenericDomain,
-		"":                                   GenericDomain,
-	} {
-		s, ok := forIssuer(list, iss)
-		if s.Domain != want || ok != (want != GenericDomain) {
-			t.Errorf("forIssuer(%q) = %q, %v", iss, s.Domain, ok)
-		}
 	}
 }

@@ -92,11 +92,6 @@ type Site struct {
 	// BrokerURL is the Labmill broker endpoint ("" when the site has none). The
 	// LABMILL_BROKER_URL environment variable overrides it (Current, ForConfig).
 	BrokerURL string
-	// BrokerIssuers are the token issuers (Site.yaml `broker.issuers`) whose
-	// users get this profile from the broker (ForIssuer). Each is an
-	// absolute https URL without query or fragment, normalized without a
-	// trailing slash; no issuer is claimed by two profiles.
-	BrokerIssuers []string
 	// TwoFactorHelp is shown when 2FA doesn't complete (not enrolled, no push).
 	TwoFactorHelp string
 	// TwoFactorURL is the 2FA enrollment page ("" if unknown).
@@ -232,9 +227,6 @@ type file struct {
 	Skill     string `yaml:"skill"`
 	DocsURL   string `yaml:"docs_url"`
 	BrokerURL string `yaml:"broker_url"`
-	Broker    struct {
-		Issuers []string `yaml:"issuers"`
-	} `yaml:"broker"`
 	TwoFactor struct {
 		Help string `yaml:"help"`
 		URL  string `yaml:"url"`
@@ -332,12 +324,7 @@ func Parse(data []byte) (Site, error) {
 			bad("%s %q must be an absolute https URL", u.key, u.v)
 		}
 	}
-	issuers, ierr := normalizeIssuers(f.Broker.Issuers)
-	if ierr != nil {
-		bad("broker.issuers: %v", ierr)
-	}
 	s := Site{
-		BrokerIssuers:   issuers,
 		Domain:          f.Domain,
 		IsDefault:       f.Default,
 		Name:            strings.TrimSpace(f.Name),
@@ -663,8 +650,8 @@ func List() []Site {
 }
 
 // Check returns the configuration error that List swallows (a profile that
-// fails to load, two profiles marked default, one broker issuer claimed
-// twice), nil when the embedded
+// fails to load, two profiles marked default)
+// nil when the embedded
 // profiles are fine.
 func Check() error {
 	_, err := listChecked(sites.FS)
@@ -677,8 +664,7 @@ func listFS(fsys fs.FS) []Site {
 }
 
 // listChecked is listFS that also reports a configuration error: more than
-// one profile marked `default: true`, or one broker issuer claimed by two
-// profiles. The profiles are then still returned,
+// one profile marked `default: true`. The profiles are then still returned,
 // sorted by Name with the default flag cleared, so a broken build keeps
 // working with the generic default.
 func listChecked(fsys fs.FS) ([]Site, error) {
@@ -705,16 +691,6 @@ func listChecked(fsys fs.FS) ([]Site, error) {
 			defaults = append(defaults, s.Domain)
 		}
 	}
-	claimed := map[string]string{}
-	for _, s := range out {
-		for _, iss := range s.BrokerIssuers {
-			if other, ok := claimed[iss]; ok && other != s.Domain {
-				derr = errors.Join(derr, fmt.Errorf("broker issuer %s is claimed by both %s and %s", iss, other, s.Domain))
-				continue
-			}
-			claimed[iss] = s.Domain
-		}
-	}
 	if len(defaults) > 1 {
 		derr = errors.Join(derr, fmt.Errorf("sites %s are all marked default: true; only one may be", strings.Join(defaults, ", ")))
 		for i := range out {
@@ -728,64 +704,6 @@ func listChecked(fsys fs.FS) ([]Site, error) {
 		return out[i].Name < out[j].Name
 	})
 	return out, derr
-}
-
-// normalizeIssuer trims surrounding spaces and one trailing slash, so
-// "https://idp.example.edu/realms/x/" and "https://idp.example.edu/realms/x"
-// are the same issuer.
-func normalizeIssuer(iss string) string {
-	return strings.TrimSuffix(strings.TrimSpace(iss), "/")
-}
-
-// normalizeIssuers validates a Site.yaml issuer list: each an absolute https
-// URL with a host and no query or fragment, no duplicates after
-// normalization. It returns the normalized list.
-func normalizeIssuers(in []string) ([]string, error) {
-	var out []string
-	seen := map[string]bool{}
-	for _, raw := range in {
-		iss := normalizeIssuer(raw)
-		p, err := url.Parse(iss)
-		if err != nil || p.Scheme != "https" || p.Host == "" || p.Opaque != "" || p.User != nil {
-			return nil, fmt.Errorf("%q must be an absolute https URL", raw)
-		}
-		if p.RawQuery != "" || p.Fragment != "" || strings.ContainsAny(iss, "?#") {
-			return nil, fmt.Errorf("%q must not have a query or fragment", raw)
-		}
-		if seen[iss] {
-			return nil, fmt.Errorf("%q is listed twice", raw)
-		}
-		seen[iss] = true
-		out = append(out, iss)
-	}
-	return out, nil
-}
-
-// ForIssuer returns the embedded profile whose broker.issuers lists iss (a
-// trailing slash is ignored), or Generic and false when none does or the
-// build wrongly lets two profiles claim it.
-func ForIssuer(iss string) (Site, bool) { return forIssuer(List(), iss) }
-
-// ForIssuerIn is ForIssuer over the given list instead of the embedded one.
-func ForIssuerIn(list []Site, iss string) (Site, bool) { return forIssuer(list, iss) }
-
-func forIssuer(list []Site, iss string) (Site, bool) {
-	iss = normalizeIssuer(iss)
-	if iss == "" {
-		return Generic(), false
-	}
-	var found []Site
-	for _, s := range list {
-		for _, i := range s.BrokerIssuers {
-			if i == iss {
-				found = append(found, s)
-			}
-		}
-	}
-	if len(found) != 1 {
-		return Generic(), false
-	}
-	return found[0], true
 }
 
 // Choices is List followed by Generic: the options of the first-run

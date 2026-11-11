@@ -102,8 +102,6 @@ name: Example University       # shown in the first-run choice
 skill: site-example-edu        # must be "site-" + domain with dots as dashes
 docs_url: https://hpc.example.edu/docs      # optional, https
 broker_url: ""                 # optional Claude broker for this site; empty = call Anthropic directly with ANTHROPIC_API_KEY
-broker:
-  issuers: []                  # optional: token issuers a broker maps to this profile; no issuer may be listed by two sites
 two_factor:
   help: >-                     # shown when two-factor sign-in doesn't complete
     Example uses Duo. Enroll at https://it.example.edu/duo, then try again.

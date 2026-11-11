@@ -47,14 +47,14 @@ func TestUnmarshalCapAtBlockBoundary(t *testing.T) {
 }
 
 func TestIndexOmissions(t *testing.T) {
-	out, err := dropKeys([]byte("name: x\nbroker_url: https://b\nbroker:\n  issuers: [https://i]\ndevice_policy: {a: 1}\nkeep: 1\n"),
+	out, err := dropKeys([]byte("name: x\nbroker_url: https://b\ndevice_policy: {a: 1}\nkeep: 1\n"),
 		"device_policy", "forbidden_terms", "broker_url", "broker")
 	if err != nil || out != "name: x\nkeep: 1" {
 		t.Errorf("dropKeys = %q, %v", out, err)
 	}
 	// Index drops them from a real profile parse and omits an empty DocsURL.
 	fsys := siteFiles("a.edu")
-	fsys["a.edu/Site.yaml"] = &fstest.MapFile{Data: []byte(strings.Replace(siteYAML("a.edu"), `docs_url: "https://docs.a.edu"`, `docs_url: ""`, 1) + "broker_url: https://b.a.edu\nbroker: {issuers: [\"https://idp.a.edu/realms/a\"]}\n")}
+	fsys["a.edu/Site.yaml"] = &fstest.MapFile{Data: []byte(strings.Replace(siteYAML("a.edu"), `docs_url: "https://docs.a.edu"`, `docs_url: ""`, 1) + "broker_url: https://b.a.edu\n")}
 	s := loadSite(t, fsys, "a.edu")
 	b, err := Build(genericFS, s)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestIndexOmissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(idx, "Documentation") || strings.Contains(idx, "broker_url") || strings.Contains(idx, "b.a.edu") || strings.Contains(idx, "issuers") || strings.Contains(idx, "idp.a.edu") {
+	if strings.Contains(idx, "Documentation") || strings.Contains(idx, "broker_url") || strings.Contains(idx, "b.a.edu") {
 		t.Errorf("index:\n%s", idx)
 	}
 	if !strings.Contains(idx, "Institution: Univ a.edu (a.edu).\n") {
