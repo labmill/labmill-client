@@ -107,6 +107,7 @@ type jobMonitor struct {
 	// failed monitorMaxFailures times in a row.
 	collect func(ctx context.Context, j store.Job, be backend.Backend) error
 	problem func(j store.Job, err error)
+	outMu   sync.Mutex    // collectLater runs beside check
 	outFail map[int64]int // failed output reads of ended jobs
 
 	interval, timeout time.Duration // 0 means monitorInterval / monitorCallTimeout
@@ -294,6 +295,8 @@ const (
 // collectOutput runs collect for ended job j and counts failed reads.
 func (m *jobMonitor) collectOutput(ctx context.Context, j store.Job, be backend.Backend) {
 	err := m.collect(ctx, j, be)
+	m.outMu.Lock()
+	defer m.outMu.Unlock()
 	if err == nil {
 		delete(m.outFail, j.ID)
 		return
@@ -305,6 +308,12 @@ func (m *jobMonitor) collectOutput(ctx context.Context, j store.Job, be backend.
 	if m.outFail[j.ID] == outputMaxFailures && m.problem != nil {
 		m.problem(j, err)
 	}
+}
+
+func (m *jobMonitor) outputGaveUp(id int64) bool {
+	m.outMu.Lock()
+	defer m.outMu.Unlock()
+	return m.outFail[id] >= outputMaxFailures
 }
 
 // retryOutputs reads again the output of jobs that ended in the last
@@ -326,7 +335,7 @@ func (m *jobMonitor) retryOutputs(ctx context.Context, backends map[string]beRes
 		if ctx.Err() != nil {
 			return
 		}
-		if !account.Final(j.State) || j.RemoteID == "" || m.outFail[j.ID] >= outputMaxFailures {
+		if !account.Final(j.State) || j.RemoteID == "" || m.outputGaveUp(j.ID) {
 			continue
 		}
 		c, ok := m.cfg.Cluster(j.Cluster)
