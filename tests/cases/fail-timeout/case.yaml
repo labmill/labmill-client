@@ -1,0 +1,11 @@
+id: fail-timeout
+title: A job that runs past its time limit
+tags: [failure, timeout]
+prompt: |
+  Run sleep.sh as a batch job with a time limit of 1 minute.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 300
+expect:
+  outcome: failed
+  failure_class: timeout
+  agent_should: fix_and_resubmit

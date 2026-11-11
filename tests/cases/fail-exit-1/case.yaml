@@ -1,0 +1,12 @@
+id: fail-exit-1
+title: A script that exits with code 1
+tags: [failure, exit]
+prompt: |
+  Submit the script fail.sh as a batch job and tell me how it went.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 90
+expect:
+  outcome: failed
+  failure_class: exit_nonzero
+  agent_should: explain
+  agent_keywords: [exit, fail]
