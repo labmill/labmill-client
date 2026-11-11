@@ -89,7 +89,44 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 			p.IdleNodes += n
 		}
 	}
+	info.Accounts = s.accounts(ctx)
 	return info, nil
+}
+
+// accountScript reads the user's associations: account, default account, allowed QOS, default QOS.
+const accountScript = `sacctmgr -nP show assoc user="$USER" format=Account,DefaultAccount,QOS,DefaultQOS`
+
+// accounts lists the user's accounts. A hidden or failing sacctmgr gives none: the job then uses the site default.
+func (s *Slurm) accounts(ctx context.Context) []backend.Account {
+	res, err := s.Runner.Run(ctx, []string{"sh", "-c", accountScript}, nil)
+	if err != nil || res.ExitCode != 0 {
+		return nil
+	}
+	return parseAccounts(res.Stdout)
+}
+
+// parseAccounts merges the association rows (one per partition and cluster) by account name.
+func parseAccounts(out string) []backend.Account {
+	var accts []backend.Account
+	idx := map[string]int{}
+	for _, line := range strings.Split(out, "\n") {
+		f := strings.Split(strings.TrimSpace(line), "|")
+		if len(f) < 4 || f[0] == "" {
+			continue
+		}
+		i, ok := idx[f[0]]
+		if !ok {
+			accts = append(accts, backend.Account{Name: f[0], Default: f[0] == f[1], DefaultQOS: f[3]})
+			i = len(accts) - 1
+			idx[f[0]] = i
+		}
+		for _, q := range strings.Split(f[2], ",") {
+			if q != "" && !slices.Contains(accts[i].QOS, q) {
+				accts[i].QOS = append(accts[i].QOS, q)
+			}
+		}
+	}
+	return accts
 }
 
 // isIdleAvailable reports whether a sinfo %t node state counts as an idle,
@@ -126,6 +163,7 @@ func isIdleAvailable(state string) bool {
 //	#SBATCH --time=<D-HH:MM:SS>            (if set)
 //	#SBATCH --chdir=<WorkDir>
 //	#SBATCH --output=<WorkDir>/%x-%j.out
+//	#SBATCH --account=<Account>            (if set)
 //	#SBATCH --qos=<QOS>                    (if set)
 //	#SBATCH --requeue                      (if Requeue)
 //	#SBATCH --mail-type=END,FAIL           (if MailOnEnd)
@@ -150,6 +188,9 @@ func (s *Slurm) Render(spec backend.JobSpec) (string, error) {
 	fmt.Fprintf(&b, "#SBATCH --job-name=%s\n", spec.Name)
 	if spec.Partition != "" {
 		fmt.Fprintf(&b, "#SBATCH --partition=%s\n", spec.Partition)
+	}
+	if spec.Account != "" {
+		fmt.Fprintf(&b, "#SBATCH --account=%s\n", spec.Account)
 	}
 	if spec.QOS != "" {
 		fmt.Fprintf(&b, "#SBATCH --qos=%s\n", spec.QOS)

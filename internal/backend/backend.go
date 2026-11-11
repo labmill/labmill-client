@@ -89,9 +89,18 @@ type Partition struct {
 	IdleNodes int
 }
 
+// Account is one scheduler account the user may charge jobs to (Slurm association).
+type Account struct {
+	Name       string
+	Default    bool     // the user's default account
+	QOS        []string // QOS allowed with this account
+	DefaultQOS string
+}
+
 // ClusterInfo summarizes what a cluster offers right now.
 type ClusterInfo struct {
 	Partitions []Partition
+	Accounts   []Account // empty when the scheduler does not tell
 }
 
 // JobSpec is what the agent asks for. Backends render it into a script.
@@ -112,6 +121,9 @@ type JobSpec struct {
 	// QOS is the Slurm QOS (#SBATCH --qos); "" means none. Set by Labmill from
 	// the site profile's preemptible resource (M61). Slurm only.
 	QOS string `json:",omitempty"`
+	// Account is the Slurm account (#SBATCH --account); "" means the user's
+	// default. Slurm only.
+	Account string `json:",omitempty"`
 	// MailOnEnd adds #SBATCH --mail-type=END,FAIL (no --mail-user: Slurm
 	// mails the site's default address). Set from the "Email me when a
 	// Slurm job ends" setting (M64.3). Slurm only.
@@ -147,6 +159,9 @@ func (s JobSpec) Validate() error {
 	}
 	if !tokenRe.MatchString(s.QOS) {
 		return invalid("qos %q must match [A-Za-z0-9._-]*", s.QOS)
+	}
+	if !tokenRe.MatchString(s.Account) {
+		return invalid("account %q must match [A-Za-z0-9._-]*", s.Account)
 	}
 	if s.Nodes < 0 {
 		return invalid("nodes must not be negative")

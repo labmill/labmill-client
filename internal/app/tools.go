@@ -565,6 +565,16 @@ func (t *toolset) clusterInfo() agent.Tool {
 				}
 				b.WriteString("\n")
 			}
+			for _, a := range info.Accounts {
+				fmt.Fprintf(&b, "- account %s", sanitize(a.Name))
+				if a.Default {
+					b.WriteString(" (default)")
+				}
+				if len(a.QOS) > 0 {
+					fmt.Fprintf(&b, ", QOS: %s", sanitize(strings.Join(a.QOS, ", ")))
+				}
+				b.WriteString("\n")
+			}
 			b.WriteString(sanitizeLines(slurmPlacementNote(t.env.Site.SlurmFor(c.Name))))
 			return b.String(), nil
 		},
@@ -795,6 +805,7 @@ func (t *toolset) draftJob() agent.Tool {
 					"nodes":        intProp("number of nodes; 0 or 1 for a single-node job (the default); local scratch needs a single node"),
 					"gpus":         intProp("number of GPUs, 0 for none"),
 					"gpu_type":     strProp("GPU type such as a100; empty for any"),
+					"account":      strProp("Slurm account to charge; empty to use the single account found, else the user's default. cluster_info lists the accounts"),
 					"cpus":         intProp("CPU cores; 0 for the default"),
 					"memory_gb":    intProp("memory in GB; 0 for the default"),
 					"time_minutes": intProp("time limit in minutes; 0 for the partition default"),
@@ -822,6 +833,7 @@ func (t *toolset) draftJob() agent.Tool {
 					Nodes       int               `json:"nodes"`
 					GPUs        int               `json:"gpus"`
 					GPUType     string            `json:"gpu_type"`
+					Account     string            `json:"account"`
 					CPUs        int               `json:"cpus"`
 					MemoryGB    int               `json:"memory_gb"`
 					TimeMinutes int               `json:"time_minutes"`
@@ -892,7 +904,7 @@ func (t *toolset) draftJob() agent.Tool {
 			spec := backend.JobSpec{
 				Name: s.Name, Partition: s.Partition, GPUs: s.GPUs, GPUType: s.GPUType, CPUs: s.CPUs,
 				MemoryGB: s.MemoryGB, Time: time.Duration(s.TimeMinutes) * time.Minute, Command: s.Command, Nodes: s.Nodes,
-				WorkDir: s.WorkDir, Env: s.Env, Environment: in.Environment,
+				Account: s.Account, WorkDir: s.WorkDir, Env: s.Env, Environment: in.Environment,
 			}
 			if spec.Name == "" {
 				spec.Name = j.Name
@@ -913,6 +925,11 @@ func (t *toolset) draftJob() agent.Tool {
 			plan, err := t.planSlurm(ctx, c, be, j, &spec, slurmAsk{Scratch: in.Scratch, Preemptible: in.Preemptible, Queue: in.Queue, Checkpoint: in.Checkpoint})
 			if err != nil {
 				return "", err
+			}
+			if spec.Account == "" {
+				if info, err := be.Info(ctx); err == nil && len(info.Accounts) == 1 {
+					spec.Account = info.Accounts[0].Name // one choice: no question
+				}
 			}
 			script, err := be.Render(spec)
 			if err != nil {
