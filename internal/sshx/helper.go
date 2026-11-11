@@ -57,7 +57,7 @@ type DialFunc func(ctx context.Context, p sshconfig.Paths, alias string, pr Prom
 // HelperOptions configures Serve.
 type HelperOptions struct {
 	SocketPath  string          // required
-	IdleTimeout time.Duration   // exit after this long with no local clients; 0 means 10m
+	IdleTimeout time.Duration   // exit after this long with no local clients; 0 means 12h
 	Paths       sshconfig.Paths // ssh config location for resolving aliases
 	Login       LoginOptions    // base login options (TwoFactorHelp, PushTimeout, ...); User is per alias
 	// LoginFor, when set, returns the login options for each upstream login
@@ -104,7 +104,7 @@ func Serve(ctx context.Context, opts HelperOptions) error {
 	}
 	idle := opts.IdleTimeout
 	if idle == 0 {
-		idle = 10 * time.Minute
+		idle = 12 * time.Hour // 2FA sites ask for a code once (owner 2026-11-11)
 	}
 	dial := opts.Dial
 	if dial == nil {
