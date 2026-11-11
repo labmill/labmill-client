@@ -31,7 +31,7 @@ var ErrNoHelper = errors.New("no connection helper is running")
 // HoldConn is a connection to the helper that keeps it running: the helper
 // never idle-expires while a client is connected, and a HoldConn is such a
 // client that carries no SSH traffic. Closing it lets the normal idle expiry
-// (HelperOptions.IdleTimeout, 10 minutes by default) start again.
+// (HelperOptions.IdleTimeout, 12 hours by default) start again.
 type HoldConn struct {
 	cl *ssh.Client
 }
@@ -98,7 +98,7 @@ var ErrForgetUnsupported = errors.New("helper can't forget logins (older version
 
 // ErrStillLoggedIn is returned by ForgetLogins when an older helper can't
 // sign out and still holds a login for one of the aliases.
-var ErrStillLoggedIn = errors.New("signing out isn't possible with the running helper: restart the computer, or wait 10 minutes after quitting labmill")
+var ErrStillLoggedIn = errors.New("signing out isn't possible with the running helper: restart the computer, or wait up to 12 hours after quitting labmill")
 
 // Forget makes the helper close and forget its logins for aliases. An older
 // helper that doesn't know the request returns ErrForgetUnsupported.
