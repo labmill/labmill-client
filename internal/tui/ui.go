@@ -392,6 +392,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.refresh()
 		return m, nil
 
+	case browseResultMsg:
+		m.browseResult(msg)
+		m.refresh()
+		m.vp.GotoBottom()
+		return m, nil
+
 	case jobsMsg:
 		m.jobs, m.jobsErr = msg.jobs, msg.err
 		return m, nil
@@ -854,10 +860,10 @@ func (m *model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		if arg, ok := browseCmd(text); ok {
 			m.input.Reset()
 			m.notice = ""
-			m.browseCommand(arg)
+			cmd := m.browseCommand(arg)
 			m.refresh()
 			m.vp.GotoBottom()
-			return m, nil
+			return m, cmd
 		}
 		if kind, arg, ok := folderCmd(text); ok {
 			m.input.Reset()
