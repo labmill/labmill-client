@@ -563,6 +563,18 @@ func (t *toolset) clusterInfo() agent.Tool {
 				if len(p.GPUTypes) > 0 {
 					fmt.Fprintf(&b, ", GPUs: %s", strings.Join(p.GPUTypes, ", "))
 				}
+				if p.CPUs > 0 {
+					fmt.Fprintf(&b, ", %d cores and %d GB per node", p.CPUs, p.MemoryMB/1024)
+				}
+				if p.DefaultTime > 0 {
+					fmt.Fprintf(&b, ", default time %s", p.DefaultTime)
+				}
+				if p.DefaultMemory != "" {
+					fmt.Fprintf(&b, ", default memory %s", sanitize(p.DefaultMemory))
+				}
+				if len(p.AllowAccounts) > 0 {
+					fmt.Fprintf(&b, ", only accounts: %s", sanitize(strings.Join(p.AllowAccounts, ", ")))
+				}
 				b.WriteString("\n")
 			}
 			for _, a := range info.Accounts {
@@ -926,10 +938,9 @@ func (t *toolset) draftJob() agent.Tool {
 			if err != nil {
 				return "", err
 			}
-			if spec.Account == "" {
-				if info, err := be.Info(ctx); err == nil && len(info.Accounts) == 1 {
-					spec.Account = info.Accounts[0].Name // one choice: no question
-				}
+			info, _ := be.Info(ctx) // best effort: accounts and partition defaults
+			if spec.Account == "" && len(info.Accounts) == 1 {
+				spec.Account = info.Accounts[0].Name // one choice: no question
 			}
 			script, err := be.Render(spec)
 			if err != nil {
@@ -988,6 +999,9 @@ func (t *toolset) draftJob() agent.Tool {
 				return "", fmt.Errorf("I couldn't save the job's files: %w", err)
 			}
 			out := fmt.Sprintf("Drafted the script for job %d on %s (not submitted yet):\n%s", j.ID, c.Name, script)
+			if note := defaultsNote(info, spec); note != "" {
+				out += "\n\n" + note
+			}
 			out += "\n\n" + plan.answer() + "\nTell the user this plan: they approve it, including the resubmissions, when they approve the submit."
 			if note := t.failureNote(ctx, j.ID, c); note != "" {
 				out += "\n\n" + note
@@ -2097,4 +2111,38 @@ func normEndpoint(e string) string {
 	}
 	u.Scheme, u.Host = strings.ToLower(u.Scheme), strings.ToLower(u.Host)
 	return u.String()
+}
+
+// defaultsNote states the time and memory a draft gets when the spec leaves them out, from the partition it runs in
+// (the named one, else the default one). Unknown values are said to be unknown, not guessed.
+func defaultsNote(info backend.ClusterInfo, spec backend.JobSpec) string {
+	var p backend.Partition
+	for _, q := range info.Partitions {
+		if q.Name == spec.Partition || (spec.Partition == "" && q.Default) {
+			p = q
+		}
+	}
+	var lines []string
+	if spec.Time == 0 {
+		d := p.DefaultTime
+		if d == 0 {
+			d = p.MaxTime
+		}
+		if d > 0 {
+			lines = append(lines, "time limit: "+d.String()+" (partition default)")
+		} else {
+			lines = append(lines, "time limit: the partition default (not known)")
+		}
+	}
+	if spec.MemoryGB == 0 {
+		m := sanitize(p.DefaultMemory)
+		if m == "" {
+			m = "the cluster default (not known)"
+		}
+		lines = append(lines, "memory: "+m)
+	}
+	if len(lines) == 0 {
+		return ""
+	}
+	return "Defaults used for what the spec left out: " + strings.Join(lines, "; ") + "."
 }

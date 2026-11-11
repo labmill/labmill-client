@@ -63,3 +63,15 @@ func TestDraftAccount(t *testing.T) {
 		t.Errorf("cluster_info: %v\n%s", err, info)
 	}
 }
+
+func TestDraftPartitionDefaults(t *testing.T) {
+	h := gapHarness(t, &gapRunner{scontrol: "PartitionName=std AllowAccounts=lab1,lab2 DefaultTime=NONE MaxTime=2-00:00:00 DefMemPerCPU=4000\n"})
+	out, err := h.run(t, "draft_job", draftSpec(nil, nil))
+	if err != nil || !strings.Contains(out, "time limit: 48h0m0s (partition default)") || !strings.Contains(out, "memory: 4000M per CPU") {
+		t.Fatalf("draft: %v\n%s", err, out)
+	}
+	info, _ := h.run(t, "cluster_info", map[string]any{"cluster": "hpcone"})
+	if !strings.Contains(info, "32 cores and 125 GB per node") || !strings.Contains(info, "default memory 4000M per CPU") || !strings.Contains(info, "only accounts: lab1, lab2") {
+		t.Errorf("cluster_info:\n%s", info)
+	}
+}

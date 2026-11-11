@@ -33,7 +33,7 @@ type Slurm struct {
 // Type returns "slurm".
 func (s *Slurm) Type() string { return "slurm" }
 
-// Info runs `sinfo -h -o "%P|%a|%l|%G|%D|%t"` (partition with "*" marking the
+// Info runs `sinfo -h -o "%P|%a|%l|%G|%D|%t|%c|%m"` (cores and memory per node are optional; partition with "*" marking the
 // default, availability, time limit, GRES, node count, node state), one line
 // per partition/state group, and aggregates per partition: Nodes sums %D,
 // IdleNodes sums %D where %t is exactly "idle" (see isIdleAvailable: "idle*", "idle~" etc. are excluded), GPU types come from GRES entries like
@@ -42,7 +42,7 @@ func (s *Slurm) Type() string { return "slurm" }
 // "1-00:00:00", "2:00:00", "30:00"). A non-zero exit is an error including
 // stderr.
 func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
-	res, err := s.Runner.Run(ctx, []string{"sinfo", "-h", "-o", "%P|%a|%l|%G|%D|%t"}, nil)
+	res, err := s.Runner.Run(ctx, []string{"sinfo", "-h", "-o", "%P|%a|%l|%G|%D|%t|%c|%m"}, nil)
 	if err != nil {
 		return backend.ClusterInfo{}, fmt.Errorf("sinfo: %w", err)
 	}
@@ -85,12 +85,49 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 			return backend.ClusterInfo{}, fmt.Errorf("sinfo: bad node count in %q", line)
 		}
 		p.Nodes += n
+		if len(f) > 7 {
+			p.CPUs, _ = strconv.Atoi(strings.TrimSuffix(strings.TrimSpace(f[6]), "+"))
+			p.MemoryMB, _ = strconv.Atoi(strings.TrimSuffix(strings.TrimSpace(f[7]), "+"))
+		}
 		if isIdleAvailable(f[5]) {
 			p.IdleNodes += n
 		}
 	}
 	info.Accounts = s.accounts(ctx)
+	s.partitionDefaults(ctx, &info)
 	return info, nil
+}
+
+// partitionDefaults adds the scontrol fields to the partitions. A failing scontrol leaves them empty.
+func (s *Slurm) partitionDefaults(ctx context.Context, info *backend.ClusterInfo) {
+	res, err := s.Runner.Run(ctx, []string{"scontrol", "show", "partition", "-o"}, nil)
+	if err != nil || res.ExitCode != 0 {
+		return
+	}
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		kv := map[string]string{}
+		for _, w := range strings.Fields(line) {
+			if k, v, ok := strings.Cut(w, "="); ok {
+				kv[k] = v
+			}
+		}
+		for i := range info.Partitions {
+			p := &info.Partitions[i]
+			if p.Name != kv["PartitionName"] {
+				continue
+			}
+			p.DefaultTime, _ = parseTimeLimit(kv["DefaultTime"]) // "NONE" and errors give 0
+			switch {
+			case kv["DefMemPerCPU"] != "" && kv["DefMemPerCPU"] != "UNLIMITED":
+				p.DefaultMemory = kv["DefMemPerCPU"] + "M per CPU"
+			case kv["DefMemPerNode"] != "" && kv["DefMemPerNode"] != "UNLIMITED":
+				p.DefaultMemory = kv["DefMemPerNode"] + "M per node"
+			}
+			if a := kv["AllowAccounts"]; a != "" && a != "ALL" {
+				p.AllowAccounts = strings.Split(a, ",")
+			}
+		}
+	}
 }
 
 // accountScript reads the user's associations: account, default account, allowed QOS, default QOS.

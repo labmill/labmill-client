@@ -87,6 +87,12 @@ type Partition struct {
 	GPUTypes  []string      // e.g. ["a100", "h100"], from GRES; empty if none
 	Nodes     int           // node count
 	IdleNodes int
+	CPUs      int // cores per node (sinfo %c); 0 if unknown
+	MemoryMB  int // memory per node (sinfo %m); 0 if unknown
+	// From scontrol show partition; empty when it was not readable.
+	DefaultTime   time.Duration // 0 means none set: a job gets MaxTime
+	DefaultMemory string        // e.g. "4000M per CPU"; "" means the cluster default
+	AllowAccounts []string      // empty means all
 }
 
 // Account is one scheduler account the user may charge jobs to (Slurm association).
