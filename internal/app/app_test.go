@@ -22,9 +22,11 @@ type fakeBackend struct {
 	submitted []string
 	canceled  []string
 	status    backend.Status
+	accounts  []string
 }
 
-func (f *fakeBackend) Type() string { return f.typ }
+func (f *fakeBackend) Type() string                                { return f.typ }
+func (f *fakeBackend) Accounts(context.Context) ([]string, string) { return f.accounts, "" }
 func (f *fakeBackend) Info(context.Context) (backend.ClusterInfo, error) {
 	return backend.ClusterInfo{Partitions: []backend.Partition{{Name: "gpu", Default: true, State: "up", GPUTypes: []string{"a100"}, Nodes: 4, IdleNodes: 2}}}, nil
 }
@@ -32,7 +34,7 @@ func (f *fakeBackend) Render(s backend.JobSpec) (string, error) {
 	if err := s.Validate(); err != nil {
 		return "", err
 	}
-	return "#!/bin/bash\n#SBATCH --job-name=" + s.Name + "\n#SBATCH --chdir=" + s.WorkDir + "\n" + s.Command + "\n", nil
+	return "#!/bin/bash\n#SBATCH --job-name=" + s.Name + "\n#SBATCH --account=" + s.Account + "\n#SBATCH --chdir=" + s.WorkDir + "\n" + s.Command + "\n", nil
 }
 func (f *fakeBackend) Submit(_ context.Context, script string, _ backend.JobSpec) (string, error) {
 	f.submitted = append(f.submitted, script)

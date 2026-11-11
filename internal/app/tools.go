@@ -565,6 +565,15 @@ func (t *toolset) clusterInfo() agent.Tool {
 				}
 				b.WriteString("\n")
 			}
+			if al, ok := be.(backend.AccountLister); ok {
+				if accts, def := al.Accounts(ctx); len(accts) > 1 {
+					fmt.Fprintf(&b, "Accounts: %s", sanitize(strings.Join(accts, ", ")))
+					if def != "" {
+						fmt.Fprintf(&b, " (default %s)", sanitize(def))
+					}
+					b.WriteString(". Ask the user which one to charge and pass it as spec.account in draft_job.\n")
+				}
+			}
 			b.WriteString(sanitizeLines(slurmPlacementNote(t.env.Site.SlurmFor(c.Name))))
 			return b.String(), nil
 		},
@@ -791,6 +800,7 @@ func (t *toolset) draftJob() agent.Tool {
 				"description": "what to run and the resources it needs",
 				"properties": map[string]any{
 					"name":         strProp("job name (defaults to the job's name)"),
+					"account":      strProp("Slurm account; leave out to use the only account of the user or the default (cluster_info lists several)"),
 					"partition":    strProp("partition; empty for the cluster default. On a cluster with a preemptible partition Labmill submits there first and uses this one (when you name it) as the fallback after the failed attempts"),
 					"nodes":        intProp("number of nodes; 0 or 1 for a single-node job (the default); local scratch needs a single node"),
 					"gpus":         intProp("number of GPUs, 0 for none"),
@@ -818,6 +828,7 @@ func (t *toolset) draftJob() agent.Tool {
 				Environment *backend.Environment `json:"environment"`
 				Spec        struct {
 					Name        string            `json:"name"`
+					Account     string            `json:"account"`
 					Partition   string            `json:"partition"`
 					Nodes       int               `json:"nodes"`
 					GPUs        int               `json:"gpus"`
@@ -890,7 +901,7 @@ func (t *toolset) draftJob() agent.Tool {
 				return "", errors.New("The time limit can't be negative.")
 			}
 			spec := backend.JobSpec{
-				Name: s.Name, Partition: s.Partition, GPUs: s.GPUs, GPUType: s.GPUType, CPUs: s.CPUs,
+				Name: s.Name, Account: s.Account, Partition: s.Partition, GPUs: s.GPUs, GPUType: s.GPUType, CPUs: s.CPUs,
 				MemoryGB: s.MemoryGB, Time: time.Duration(s.TimeMinutes) * time.Minute, Command: s.Command, Nodes: s.Nodes,
 				WorkDir: s.WorkDir, Env: s.Env, Environment: in.Environment,
 			}
@@ -913,6 +924,11 @@ func (t *toolset) draftJob() agent.Tool {
 			plan, err := t.planSlurm(ctx, c, be, j, &spec, slurmAsk{Scratch: in.Scratch, Preemptible: in.Preemptible, Queue: in.Queue, Checkpoint: in.Checkpoint})
 			if err != nil {
 				return "", err
+			}
+			if al, ok := be.(backend.AccountLister); ok && spec.Account == "" {
+				if accts, _ := al.Accounts(ctx); len(accts) == 1 {
+					spec.Account = accts[0]
+				}
 			}
 			script, err := be.Render(spec)
 			if err != nil {
