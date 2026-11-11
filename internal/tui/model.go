@@ -28,6 +28,10 @@ type Options struct {
 	Welcome string    // first assistant message shown (markdown)
 	// Folders is the chosen data and code folders (nil: no /data and /code).
 	Folders Folders
+	// Clusters and Browse feed /browse, the Cluster source of the folder picker: Browse lists the sub-folders of a
+	// cluster folder ("" is home) over the open SSH session. Both nil: /browse says it is not available.
+	Clusters func() []string
+	Browse   func(ctx context.Context, cluster, path string) (dir string, dirs []string, err error)
 	// Home is the home folder for Tab completion of "~" in /code and /data
 	// ("" leaves "~" alone).
 	Home string

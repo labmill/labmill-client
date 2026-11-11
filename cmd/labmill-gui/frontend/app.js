@@ -634,6 +634,7 @@
     menuEl.textContent = '';
     menuItem('Add data folder…', 'Choose the folder with your data', function () { pickFolder('data'); }, { action: 'add', kind: 'data' });
     menuItem('Add code folder…', 'Choose the folder with your code (optional: Labmill can write the code for you)', function () { pickFolder('code'); }, { action: 'add', kind: 'code' });
+    menuItem('Browse cluster folders…', 'Look at the folders on a cluster and pick one', function () { if (window.labmillClusterBrowse) window.labmillClusterBrowse.open(); }, { action: 'cluster' });
     var recent = recentItems(st), removable = FOLDER_KINDS.filter(function (k) { return (st[k] || {}).path; });
     if (recent.length) {
       menuSeparator();

@@ -51,6 +51,8 @@ The two "Add" items open the usual folder window (Explorer on Windows, Finder on
 
 The chosen folders show as small labels just above your text, data first: `Data: ~/…/mri-2026` and `Code: ~/…/mri/code`. Point at one to see the full path; its **×** removes it.
 
+**Browse cluster folders…** in the same menu opens a small folder tree for a cluster. Choose the cluster, open folders one at a time, and press **Use this folder**. The path goes into your message; nothing is sent until you send it. You never need to type a cluster path.
+
 You can also drag a folder from Explorer or Finder and drop it onto the chat box. Labmill then asks **Add as data folder** or **Add as code folder** (press Enter for data, or Esc to cancel). Drops anywhere else are ignored.
 
 Only the folder's location is used; nothing is copied or uploaded when you choose or drop a folder. Labmill remembers your choice and shows it again the next time you start it. The terminal version of Labmill uses the same folders (see [your first job](first-job.md)).

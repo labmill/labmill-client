@@ -297,3 +297,9 @@ header .term-open[aria-expanded="true"] { border-color: var(--accent); backgroun
 #terminal-views { flex: 1; min-height: 12rem; position: relative; }
 .term-view { position: absolute; inset: 0; background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 6px; overflow: hidden; }
 .term-view .xterm { height: 100%; }
+#cluster-browser { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 6px; background: var(--panel); }
+#cluster-browser ul { list-style: none; margin: 4px 0; padding: 0; max-height: 12rem; overflow: auto; }
+#cluster-browser li button { border: 0; background: none; text-align: left; width: 100%; padding: 2px 6px; font-family: var(--mono); font-size: 0.8125rem; }
+#cluster-browser li button:hover, #cluster-browser li button:focus { background: var(--user); }
+#cb-path { font-size: 0.8125rem; margin: 4px 0; }
+#cb-error:empty { display: none; }

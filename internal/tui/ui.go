@@ -139,6 +139,7 @@ func (md *modal) replyPrompt(a PromptAnswer) {
 
 type model struct {
 	o      Options
+	browse browseState
 	bridge *Bridge
 
 	width, height int
@@ -846,6 +847,14 @@ func (m *model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.input.Reset()
 			m.notice = ""
 			m.settingsCommand()
+			m.refresh()
+			m.vp.GotoBottom()
+			return m, nil
+		}
+		if arg, ok := browseCmd(text); ok {
+			m.input.Reset()
+			m.notice = ""
+			m.browseCommand(arg)
 			m.refresh()
 			m.vp.GotoBottom()
 			return m, nil

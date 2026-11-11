@@ -172,3 +172,7 @@ Labmill keeps SSH settings in OpenSSH format, so a user who later opens a termin
 
 
 `cmd/labmill` → (`tui`, `app`, `site`) → `agent` → (`skill`, `broker`, `backend`, `transfer`, `store`, `knowledge`, `rules`) → (`sshx`, `config`, `sshconfig`). `cmd/labmill` and `cmd/labmill-gui` wire the pieces together through `launch`; `app` takes everything through the `app.Env` function fields. `rules` has no internal dependencies on the heavy packages. Every backend, transfer target and the model client has an interface, so tests use in-process fakes and need no network.
+
+### Folder picker: Local and Cluster sources
+
+`Env.BrowseRemote(ctx, cluster, path)` (`internal/app/browseremote.go`) is the one lazy source of cluster folders: one read-only login-node call per level over the open SSH session. Callers: the `browse_remote` tool (chat: the model walks the tree with `ask_user`, the prompt says users never type a path), the desktop app's Cluster tab (`gui.App.BrowseCluster`, `ClusterNames`, `frontend/clusterbrowse.js`, reached from the + menu) and the terminal's `/browse` (`internal/tui/browse.go`). The Local source is the native folder dialog in the desktop app and `/data`, `/code` with Tab completion in the terminal. Choosing a cluster folder only puts its path into the message; nothing is read or sent.

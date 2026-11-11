@@ -44,6 +44,19 @@ func runTUI(ctx context.Context, stderr io.Writer) int {
 	}
 	// /settings shows every setting and the files (editing is in the
 	// desktop app's Settings page).
+	if rt.Env != nil && rt.Env.Config != nil {
+		opts.Clusters = func() []string {
+			var n []string
+			for _, c := range rt.Env.Config.List() {
+				n = append(n, c.Name)
+			}
+			return n
+		}
+		opts.Browse = func(ctx context.Context, cluster, path string) (string, []string, error) {
+			r, err := rt.Env.BrowseRemote(ctx, cluster, path)
+			return r.Path, r.Dirs, err
+		}
+	}
 	opts.Settings = func() string {
 		p, err := settings.DefaultPaths()
 		if err != nil {
