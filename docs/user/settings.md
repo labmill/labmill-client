@@ -47,7 +47,7 @@ The connections Labmill uses: name, host name, user name, port and jump host.
 
 - Labmill's own connections (in `~/.ssh/config.d/labmill`) can be edited, added and removed here. The name of an existing connection can't change, because clusters refer to it. A connection that a cluster uses can't be removed.
 - Your own entries in `~/.ssh/config` are shown read-only. Labmill never changes them, and won't add a connection with the same name.
-- Each connection shows whether Labmill is logged in to it right now. Logins end by themselves 10 minutes after Labmill quits.
+- Each connection shows whether Labmill is logged in to it right now. Logins end by themselves 12 hours after Labmill quits. Clusters with a two-step code (Duo, TOTP) ask for it once; Labmill asks again only when the login has dropped.
 
 ## Folders
 

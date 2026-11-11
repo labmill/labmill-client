@@ -17,8 +17,8 @@
 //     helper must log in upstream, it relays the upstream keyboard-interactive
 //     challenges back to the connecting Labmill process through the local
 //     server's own keyboard-interactive auth, so all prompts appear in the
-//     foreground UI and the helper itself needs no UI. It exits after 10
-//     idle minutes, like ControlPersist.
+//     foreground UI and the helper itself needs no UI. It exits after 12
+//     idle hours.
 package sshx
 
 import (

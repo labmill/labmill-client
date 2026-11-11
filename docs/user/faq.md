@@ -28,7 +28,7 @@ Yes. Add a data folder only. Labmill can write the analysis code, and you see it
 Yes. The job runs on the cluster. On Windows and Linux the desktop app keeps running in the tray, so your login stays open. See [The desktop app and the tray](desktop-app.md).
 
 **Is anything left running on my computer?**
-Only the desktop app in the tray (you quit it from the tray menu) and a small SSH helper that exits about 10 minutes after you stop.
+Only the desktop app in the tray (you quit it from the tray menu) and a small SSH helper that exits about 12 hours after you stop.
 
 **Where are my results?**
 In `~/labmill-results/<job name>`.

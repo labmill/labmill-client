@@ -190,7 +190,7 @@ var migrations = []string{
 		text   TEXT NOT NULL
 	);
 	CREATE INDEX events_job ON events(job_id, id);`,
-	// 2: a table from yeetl's container checks; unused here, kept so the
+	// 2: a table from earlier container checks; unused here, kept so the
 	// schema versions stay the same.
 	`CREATE TABLE probes (
 		cluster    TEXT NOT NULL,
