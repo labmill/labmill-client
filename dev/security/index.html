@@ -24,7 +24,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="zensical-0.0.74">
+      <meta name="generator" content="zensical-0.1.1">
     
     
       
@@ -35,7 +35,7 @@
       
         
       
-      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.ebb7f775.min.css">
       
       
 
@@ -1570,7 +1570,7 @@
 <h2 id="the-ssh-helper">The SSH helper<a class="headerlink" href="#the-ssh-helper" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The helper socket lives in a directory created with mode 0700; the helper refuses a symlinked directory or one owned by another user (Unix), forces the socket to mode 0600, and holds a lock file (named after the versioned socket, <code>ssh-v1.lock</code>) for its lifetime so two helpers can't race to replace each other's socket. A stale socket is replaced only when nothing answers on it.</li>
-<li>Its local SSH server uses an ephemeral host key. Upstream prompts are relayed to the foreground process; the helper has no UI of its own. It exits after 10 idle minutes. (<code>internal/sshx/helper.go</code>, <code>lock_unix.go</code>)</li>
+<li>Its local SSH server uses an ephemeral host key. Upstream prompts are relayed to the foreground process; the helper has no UI of its own. It exits after 12 idle hours. (<code>internal/sshx/helper.go</code>, <code>lock_unix.go</code>)</li>
 <li>The job database, <code>labmill.log</code> and the helper directory are created with owner-only permissions where Labmill creates them. Tightening an already existing database file is a known follow-up.</li>
 </ul>
 <h2 id="model-access">Model access<a class="headerlink" href="#model-access" title="Permanent link">&para;</a></h2>
@@ -1701,7 +1701,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.code.copy","navigation.footer","navigation.indexes","navigation.sections","navigation.top","search.highlight"],"redirect":null,"search":"../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      <script src="../../assets/javascripts/bundle.3cb411a8.min.js"></script>
       
     
   </body>
