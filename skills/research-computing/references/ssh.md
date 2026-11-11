@@ -158,7 +158,7 @@ Host login-behind-gateway
 Host mycluster
     ControlMaster auto
     ControlPath ~/.ssh/controlmasters/%r@%h:%p
-    ControlPersist 10m
+    ControlPersist 12h
 ```
 
 - `ProxyJump` chains hops (`ProxyJump a,b`), each with its own authentication.

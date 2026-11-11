@@ -18,7 +18,7 @@ Labmill signs in over SSH. It does its own SSH. It does not start the `ssh` prog
 - It adds one `Include` line at the top of `~/.ssh/config`. It makes a backup of your file first.
 - It never changes entries that you wrote yourself.
 - Because the format is standard, `ssh <alias>` works in a terminal too. See [Using the saved SSH settings in a terminal](terminal.md).
-- Labmill keeps one login open while you work. A small helper program holds it and exits about 10 minutes after you stop.
+- Labmill keeps one login open while you work. A small helper program holds it and exits about 12 hours after you stop.
 - Host keys go to your normal `~/.ssh/known_hosts` file. The first time, Labmill asks "Do you trust this server?". The default answer is **No**.
 
 ## Two-factor sign-in

@@ -47,7 +47,7 @@ This page lists the protections that exist in the code today, with where to find
 ## The SSH helper
 
 - The helper socket lives in a directory created with mode 0700; the helper refuses a symlinked directory or one owned by another user (Unix), forces the socket to mode 0600, and holds a lock file (named after the versioned socket, `ssh-v1.lock`) for its lifetime so two helpers can't race to replace each other's socket. A stale socket is replaced only when nothing answers on it.
-- Its local SSH server uses an ephemeral host key. Upstream prompts are relayed to the foreground process; the helper has no UI of its own. It exits after 10 idle minutes. (`internal/sshx/helper.go`, `lock_unix.go`)
+- Its local SSH server uses an ephemeral host key. Upstream prompts are relayed to the foreground process; the helper has no UI of its own. It exits after 12 idle hours. (`internal/sshx/helper.go`, `lock_unix.go`)
 - The job database, `labmill.log` and the helper directory are created with owner-only permissions where Labmill creates them. Tightening an already existing database file is a known follow-up.
 
 ## Model access
