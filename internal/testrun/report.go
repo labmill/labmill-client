@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"time"
+
+	"labmill-client/internal/account"
 )
 
 // Result is one case of a run. Field names match the server (internal/api/testruns.go).
@@ -26,6 +29,7 @@ type Report struct {
 	RunRef        string    `json:"run_ref"`
 	ClientVersion string    `json:"client_version"`
 	ClusterHash   string    `json:"cluster_hash"`
+	HPCSystemID   string    `json:"hpc_system_id,omitempty"` // only for a listed system and a contributing account
 	Scheduler     string    `json:"scheduler"`
 	StartedAt     time.Time `json:"started_at"`
 	Results       []Result  `json:"results"`
@@ -36,6 +40,27 @@ func ClusterHash(salt, alias string) string {
 	sum := sha256.Sum256([]byte(salt + "\x00" + alias))
 	return hex.EncodeToString(sum[:])
 }
+
+// SystemID finds the API id of the listed system for a cluster alias. It asks
+// the server only when the account contributes (a fully private account does
+// not tell the server a cluster name; nil, from an older server, counts as private). Any failure gives "": the report then
+// carries the hash only.
+func SystemID(ctx context.Context, me func(context.Context) (account.Me, error), resolve func(context.Context, account.SystemRef) (account.System, error), cluster string) string {
+	m, err := me(ctx)
+	if err != nil || (m.Contributes == nil || !*m.Contributes) {
+		return ""
+	}
+	s, err := resolve(ctx, account.SystemRef{Name: cluster})
+	if err != nil {
+		return ""
+	}
+	if !uuidRe.MatchString(s.ID) {
+		return ""
+	}
+	return s.ID
+}
+
+var uuidRe = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
 // Post sends the report to base + "/api/test-runs" with the program token. A 204 is success,
 // also for a private account (the server stores nothing).

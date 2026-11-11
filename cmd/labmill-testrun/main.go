@@ -142,6 +142,12 @@ func play(cases []testcase.Case, dir, cluster, have string, capUSD float64, repo
 	fmt.Fprint(stdout, testrun.Table(results))
 	rep := testrun.Report{RunRef: ref, ClientVersion: launch.Version, ClusterHash: testrun.ClusterHash(salt, cluster),
 		Scheduler: "slurm", StartedAt: started, Results: results}
+	if report && ctx.Err() == nil {
+		c := &account.Client{URL: link.URL, Token: link.Token, HTTP: &http.Client{Timeout: 30 * time.Second}}
+		sctx, scancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+		rep.HPCSystemID = testrun.SystemID(sctx, c.Whoami, c.Resolve, cluster)
+		scancel()
+	}
 	if b, err := json.MarshalIndent(rep, "", "  "); err == nil {
 		_ = os.MkdirAll(runDir, 0o755)
 		_ = os.WriteFile(filepath.Join(runDir, "report.json"), b, 0o644)

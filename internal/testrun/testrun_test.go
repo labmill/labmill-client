@@ -3,12 +3,15 @@ package testrun
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/testcase"
 )
 
@@ -113,5 +116,55 @@ func TestPost(t *testing.T) {
 func TestClassExit127(t *testing.T) {
 	if got := Class(Observation{JobState: "FAILED", ExitCode: 127}); got != "missing_software" {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestSystemID(t *testing.T) {
+	yes, no := true, false
+	me := func(m account.Me, err error) func(context.Context) (account.Me, error) {
+		return func(context.Context) (account.Me, error) { return m, err }
+	}
+	var asked []account.SystemRef
+	res := func(s account.System, err error) func(context.Context, account.SystemRef) (account.System, error) {
+		return func(_ context.Context, r account.SystemRef) (account.System, error) {
+			asked = append(asked, r)
+			return s, err
+		}
+	}
+	ctx := context.Background()
+	if got := SystemID(ctx, me(account.Me{Contributes: &yes}, nil), res(account.System{ID: "0b9d4f6e-1c2a-4b7d-9e3f-5a6b7c8d9e0f"}, nil), "bigcluster"); got != "0b9d4f6e-1c2a-4b7d-9e3f-5a6b7c8d9e0f" {
+		t.Fatalf("contributing: %q", got)
+	}
+	if len(asked) != 1 || asked[0].Name != "bigcluster" {
+		t.Fatalf("asked %v", asked)
+	}
+	if got := SystemID(ctx, me(account.Me{}, nil), res(account.System{ID: "0b9d4f6e-1c2a-4b7d-9e3f-5a6b7c8d9e0f"}, nil), "bigcluster"); got != "" || len(asked) != 1 {
+		t.Fatalf("contributes unset: %q", got)
+	}
+	asked = nil
+	if got := SystemID(ctx, me(account.Me{Contributes: &no}, nil), res(account.System{ID: "0b9d4f6e-1c2a-4b7d-9e3f-5a6b7c8d9e0f"}, nil), "bigcluster"); got != "" || len(asked) != 0 {
+		t.Fatalf("private: %q asked %v", got, asked)
+	}
+	if got := SystemID(ctx, me(account.Me{}, errors.New("x")), res(account.System{ID: "0b9d4f6e-1c2a-4b7d-9e3f-5a6b7c8d9e0f"}, nil), "c"); got != "" {
+		t.Fatalf("me error: %q", got)
+	}
+	if got := SystemID(ctx, me(account.Me{}, nil), res(account.System{}, errors.New("404")), "c"); got != "" {
+		t.Fatalf("resolve error: %q", got)
+	}
+	b, _ := json.Marshal(Report{})
+	if strings.Contains(string(b), "hpc_system_id") {
+		t.Fatalf("empty id must be omitted: %s", b)
+	}
+}
+
+func TestSystemIDBadID(t *testing.T) {
+	yes := true
+	got := SystemID(context.Background(),
+		func(context.Context) (account.Me, error) { return account.Me{Contributes: &yes}, nil },
+		func(context.Context, account.SystemRef) (account.System, error) {
+			return account.System{ID: "not-a-uuid"}, nil
+		}, "c")
+	if got != "" {
+		t.Fatalf("got %q", got)
 	}
 }
