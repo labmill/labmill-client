@@ -1,0 +1,9 @@
+id: bio-blast-tiny
+title: Find the best BLAST hit for a short query
+tags: [bio, blast]
+prompt: |
+  Make a nucleotide BLAST database from db.fa. Search query.fa against it with blastn. Write the ID of the best hit to hit.txt.
+needs: {cpus: 1, mem_mb: 1024, modules: [blast]}
+time_budget: 180
+expect:
+  outcome: completed

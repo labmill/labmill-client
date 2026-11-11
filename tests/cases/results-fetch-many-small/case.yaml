@@ -1,0 +1,9 @@
+id: results-fetch-many-small
+title: Bring back 200 small result files
+tags: [transfer, results]
+prompt: |
+  Run a batch job that writes 200 files, f-1.txt to f-200.txt, in its working directory. File f-N.txt holds the number N. Bring all 200 files back to me.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 120
+expect:
+  outcome: completed

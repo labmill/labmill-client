@@ -1,0 +1,9 @@
+id: mpi-hello-4
+title: An MPI program on 4 tasks
+tags: [mpi]
+prompt: |
+  Compile hello.c with the MPI compiler. Run it as one job with 4 MPI tasks. Write what the program prints to hello.txt.
+needs: {cpus: 4, mem_mb: 1024, mpi: true, modules: [mpi]}
+time_budget: 180
+expect:
+  outcome: completed

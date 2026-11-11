@@ -1,0 +1,9 @@
+id: r-ggplot-png
+title: Draw a plot with ggplot2
+tags: [r, ggplot2]
+prompt: |
+  Read xy.csv in R. Draw y against x with ggplot2 and save the plot as plot.png.
+needs: {cpus: 1, mem_mb: 1024, modules: [R, ggplot2]}
+time_budget: 180
+expect:
+  outcome: completed

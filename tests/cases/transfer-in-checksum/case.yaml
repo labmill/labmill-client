@@ -1,0 +1,9 @@
+id: transfer-in-checksum
+title: Send a file to the cluster and check it arrived whole
+tags: [transfer, checksum]
+prompt: |
+  Send data.bin from the local folder to the cluster. In a batch job, compute its SHA-256 checksum there and write the checksum to sum.txt.
+needs: {cpus: 1, mem_mb: 256}
+time_budget: 120
+expect:
+  outcome: completed

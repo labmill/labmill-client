@@ -1,0 +1,11 @@
+id: fail-bad-account
+title: A job for an account that does not exist
+tags: [failure, submit]
+prompt: |
+  Submit the script hello.sh as a batch job with the account nosuchacct.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 60
+expect:
+  outcome: failed
+  failure_class: submit_rejected
+  agent_should: ask_user

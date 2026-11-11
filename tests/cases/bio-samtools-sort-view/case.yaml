@@ -1,0 +1,9 @@
+id: bio-samtools-sort-view
+title: Convert, sort and count alignments with samtools
+tags: [bio, samtools]
+prompt: |
+  Convert small.sam to BAM with samtools and sort it by position into sorted.bam. Write the number of alignments in sorted.bam to count.txt.
+needs: {cpus: 1, mem_mb: 512, modules: [samtools]}
+time_budget: 120
+expect:
+  outcome: completed

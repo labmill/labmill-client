@@ -1,0 +1,12 @@
+id: fail-missing-module
+title: A script that loads a module that does not exist
+tags: [failure, modules]
+prompt: |
+  Submit the script mod.sh as a batch job and tell me how it went.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 90
+expect:
+  outcome: failed
+  failure_class: missing_software
+  agent_should: explain
+  agent_keywords: [module, nosuchmodule]

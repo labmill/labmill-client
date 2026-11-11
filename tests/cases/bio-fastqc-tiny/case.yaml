@@ -1,0 +1,9 @@
+id: bio-fastqc-tiny
+title: Run FastQC on a small file
+tags: [bio, fastqc]
+prompt: |
+  Run FastQC on reads.fastq in a batch job. Bring the report zip file back. Write the value of Total Sequences from the FastQC report to total.txt.
+needs: {cpus: 1, mem_mb: 1024, modules: [fastqc]}
+time_budget: 180
+expect:
+  outcome: completed

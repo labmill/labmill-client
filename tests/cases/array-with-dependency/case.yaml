@@ -1,0 +1,9 @@
+id: array-with-dependency
+title: A job array and a job that waits for it
+tags: [parallel, array, dependency]
+prompt: |
+  Submit a Slurm job array with 5 tasks, numbered 1 to 5. Task N writes N times N to part-N.txt. Then submit a second job that starts only after the whole array ended well. It adds the numbers in the five part files and writes the sum to total.txt.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 240
+expect:
+  outcome: completed

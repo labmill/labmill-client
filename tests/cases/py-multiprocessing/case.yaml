@@ -1,0 +1,9 @@
+id: py-multiprocessing
+title: Count primes with 4 Python processes
+tags: [python, parallel]
+prompt: |
+  Read the limit from limit.txt. Count the prime numbers below the limit with the Python multiprocessing module and 4 processes. Write the count to count.txt.
+needs: {cpus: 4, mem_mb: 1024, modules: [python3]}
+time_budget: 120
+expect:
+  outcome: completed

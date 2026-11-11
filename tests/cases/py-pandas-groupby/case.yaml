@@ -1,0 +1,9 @@
+id: py-pandas-groupby
+title: Group a table by a column with pandas
+tags: [python, pandas]
+prompt: |
+  Read sales.csv with Python and pandas. Sum the column amount for each region. Write the sums to totals.csv with the header region,total and one line for each region.
+needs: {cpus: 1, mem_mb: 1024, modules: [python3, pandas]}
+time_budget: 120
+expect:
+  outcome: completed

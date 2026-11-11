@@ -93,11 +93,45 @@ func TestGenDeterministic(t *testing.T) {
 	}
 }
 
+// manyFiles gives the files f-1.txt to f-n.txt, each with its number.
+func manyFiles(n int) map[string]string {
+	m := map[string]string{}
+	for i := 1; i <= n; i++ {
+		m[fmt.Sprintf("f-%d.txt", i)] = fmt.Sprintf("%d\n", i)
+	}
+	return m
+}
+
+var (
+	bamHead = "\x1f\x8b" + strings.Repeat("x", 100)
+	pngOK   = "\x89PNG\r\n\x1a\n" + strings.Repeat("x", 1200)
+	pngBad  = "not a png " + strings.Repeat("x", 1200)
+)
+
 // checkCases holds, for each case with a check.sh, the files of a right
 // result and of a wrong one. The check must accept the first and refuse the second.
 var checkCases = map[string]struct{ right, wrong map[string]string }{
-	"py-numpy-sum":    {map[string]string{"result.txt": "499995.00\n"}, map[string]string{"result.txt": "1\n"}},
-	"py-stdin-stdout": {map[string]string{"count.txt": "500\n"}, map[string]string{"count.txt": "499\n"}},
+	"py-numpy-sum":             {map[string]string{"result.txt": "499995.00\n"}, map[string]string{"result.txt": "1\n"}},
+	"py-stdin-stdout":          {map[string]string{"count.txt": "500\n"}, map[string]string{"count.txt": "499\n"}},
+	"py-pandas-groupby":        {map[string]string{"totals.csv": "region,total\nr0,60300\nr1,59900\nr2,60100\n"}, map[string]string{"totals.csv": "region,total\nr0,60300\nr1,59900\nr2,1\n"}},
+	"py-matplotlib-png":        {map[string]string{"plot.png": pngOK}, map[string]string{"plot.png": pngBad}},
+	"py-multiprocessing":       {map[string]string{"count.txt": "17984\n"}, map[string]string{"count.txt": "17983\n"}},
+	"py-venv-pip-small":        {map[string]string{"result.txt": "1.16.0\n"}, map[string]string{"result.txt": "six\n"}},
+	"r-lm-summary":             {map[string]string{"slope.txt": "2.00\n"}, map[string]string{"slope.txt": "3.00\n"}},
+	"r-ggplot-png":             {map[string]string{"plot.png": pngOK}, map[string]string{"plot.png": pngBad}},
+	"r-parallel-apply":         {map[string]string{"total.txt": "2668667000\n"}, map[string]string{"total.txt": "2.668667e+09\n"}},
+	"bio-fastq-count":          {map[string]string{"count.txt": "250\n"}, map[string]string{"count.txt": "249\n"}},
+	"bio-fastqc-tiny":          {map[string]string{"total.txt": "100\n", "reads_fastqc.zip": "PK" + strings.Repeat("x", 50)}, map[string]string{"total.txt": "99\n", "reads_fastqc.zip": "PK"}},
+	"bio-bwa-index-align":      {map[string]string{"aligned.bam": bamHead, "mapped.txt": "100\n"}, map[string]string{"aligned.bam": bamHead, "mapped.txt": "10\n"}},
+	"bio-samtools-sort-view":   {map[string]string{"sorted.bam": bamHead, "count.txt": "20\n"}, map[string]string{"sorted.bam": "@HD", "count.txt": "20\n"}},
+	"bio-blast-tiny":           {map[string]string{"hit.txt": "seq2\n"}, map[string]string{"hit.txt": "seq1\n"}},
+	"array-with-dependency":    {map[string]string{"total.txt": "55\n", "part-5.txt": "25\n"}, map[string]string{"total.txt": "50\n", "part-5.txt": "25\n"}},
+	"mpi-hello-4":              {map[string]string{"hello.txt": "rank 2 of 4\nrank 0 of 4\nrank 3 of 4\nrank 1 of 4\n"}, map[string]string{"hello.txt": "rank 0 of 1\n"}},
+	"openmp-hello":             {map[string]string{"threads.txt": "threads 4\n"}, map[string]string{"threads.txt": "threads 1\n"}},
+	"gpu-hello":                {map[string]string{"gpus.txt": "GPU 0: Example GPU (UUID: GPU-0000)\n"}, map[string]string{"gpus.txt": "No devices were found\n"}},
+	"transfer-in-checksum":     {map[string]string{"sum.txt": "a4b4117713bb8f55f83cb61b581a0e4b247ea6b17e5935fb6659dc957285478d  data.bin\n"}, map[string]string{"sum.txt": "0000\n"}},
+	"results-fetch-many-small": {manyFiles(200), manyFiles(3)},
+	"large-output-tail":        {map[string]string{"last.txt": "18000003000000\n"}, map[string]string{"last.txt": "100000\n"}},
 	"array-10-tasks": {
 		map[string]string{"out-1.txt": "1", "out-2.txt": "4", "out-3.txt": "9", "out-4.txt": "16", "out-5.txt": "25", "out-6.txt": "36", "out-7.txt": "49", "out-8.txt": "64", "out-9.txt": "81", "out-10.txt": "100"},
 		map[string]string{"out-1.txt": "1"},
