@@ -34,6 +34,8 @@ You only do this once. Your cluster list is kept in `~/.config/labmill/clusters.
 
 Labmill reads job times in UTC, so you normally don't need to set anything. Only if a Slurm cluster's job start and end times still look wrong (its Slurm ignores the time zone request), add a `timezone:` line to its entry, for example `timezone: Europe/Berlin`.
 
+If your user name has several Slurm accounts on a cluster, Labmill asks you once which one to charge and saves it as an `account:` line in that cluster's entry (for example `account: mygroup`). Change or remove the line to choose again. With one account, Labmill uses it without asking.
+
 ## Coming from yeetl?
 
 If Labmill has no `~/.config/labmill/clusters.yaml` yet, it looks for a yeetl setup on its first start. It copies `~/.config/yeetl/clusters.yaml` (only if the file parses) and `~/.ssh/config.d/yeetl`. It copies the files and does not move them, so yeetl keeps working. The variables `YEETL_MODEL`, `YEETL_BROKER_URL` and `YEETL_BROKER_TOKEN` are read when the matching `LABMILL_` variable is empty.

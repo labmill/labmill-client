@@ -571,7 +571,11 @@ func (t *toolset) clusterInfo() agent.Tool {
 					if def != "" {
 						fmt.Fprintf(&b, " (default %s)", sanitize(def))
 					}
-					b.WriteString(". Ask the user which one to charge and pass it as spec.account in draft_job.\n")
+					if c.Account != "" {
+						fmt.Fprintf(&b, " Saved choice: %s (draft_job uses it).\n", sanitize(c.Account))
+					} else {
+						b.WriteString(". Ask the user which one to charge (ask_user) and pass it as spec.account in draft_job; Labmill saves the choice.\n")
+					}
 				}
 			}
 			b.WriteString(sanitizeLines(slurmPlacementNote(t.env.Site.SlurmFor(c.Name))))
@@ -925,9 +929,11 @@ func (t *toolset) draftJob() agent.Tool {
 			if err != nil {
 				return "", err
 			}
-			if al, ok := be.(backend.AccountLister); ok && spec.Account == "" {
-				if accts, _ := al.Accounts(ctx); len(accts) == 1 {
-					spec.Account = accts[0]
+			rememberNote := ""
+			if al, ok := be.(backend.AccountLister); ok {
+				var err error
+				if rememberNote, err = t.chooseAccount(ctx, al, c, &spec); err != nil {
+					return "", err
 				}
 			}
 			script, err := be.Render(spec)
@@ -987,6 +993,9 @@ func (t *toolset) draftJob() agent.Tool {
 				return "", fmt.Errorf("I couldn't save the job's files: %w", err)
 			}
 			out := fmt.Sprintf("Drafted the script for job %d on %s (not submitted yet):\n%s", j.ID, c.Name, script)
+			if rememberNote != "" {
+				out += "\n\n" + rememberNote
+			}
 			out += "\n\n" + plan.answer() + "\nTell the user this plan: they approve it, including the resubmissions, when they approve the submit."
 			if note := t.failureNote(ctx, j.ID, c); note != "" {
 				out += "\n\n" + note

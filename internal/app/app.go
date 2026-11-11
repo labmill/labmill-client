@@ -135,7 +135,10 @@ type Env struct {
 	// writes the SSH settings and the cluster to clusters.yaml (with
 	// `site:` set) and returns the cluster as configured (final aliases).
 	// add_cluster then makes it visible to the other tools in this session.
-	AddCluster func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
+	// RememberAccount saves the Slurm account the user chose on a cluster in
+	// clusters.yaml (account:). Nil: it is not remembered.
+	RememberAccount func(ctx context.Context, c config.Cluster, account string) error
+	AddCluster      func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
 	// LocalRoots are the directories find_local_data and preview_file may
 	// look into (default: the user's home directory). Nothing outside them
 	// is ever listed or read.

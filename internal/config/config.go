@@ -76,6 +76,9 @@ type Cluster struct {
 	// another institution is added on the user's explicit request; its
 	// hosts, 2FA text and site skill come from that institution's profile.
 	Site string `yaml:"site,omitempty"`
+	// Account is the Slurm account the user chose for this cluster when they
+	// have several; draft_job uses it (--account) and does not ask again.
+	Account string `yaml:"account,omitempty"`
 }
 
 // S3 configures the S3 staging path (Transfer == TransferS3). Credentials
@@ -461,6 +464,9 @@ func (c *Config) FieldErrors() []FieldError {
 				bad("files_host", "files_host: %v", err)
 			}
 		}
+		if cl.Account != "" && !accountRE.MatchString(cl.Account) {
+			bad("account", "account %q must match [A-Za-z0-9._-]+", cl.Account)
+		}
 		if cl.Site != "" && !siteRE.MatchString(cl.Site) {
 			bad("site", "site %q must be an institution domain like example.edu (or generic)", cl.Site)
 		}
@@ -491,4 +497,20 @@ func (c *Config) Cluster(name string) (Cluster, bool) {
 		}
 	}
 	return Cluster{}, false
+}
+
+var accountRE = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+
+// SetAccount sets the remembered Slurm account of the named cluster in
+// memory; it reports whether the cluster exists.
+func (c *Config) SetAccount(name, account string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i := range c.Clusters {
+		if c.Clusters[i].Name == name {
+			c.Clusters[i].Account = account
+			return true
+		}
+	}
+	return false
 }
