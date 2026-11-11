@@ -134,3 +134,22 @@ func TestFailuresAreReported(t *testing.T) {
 		t.Errorf("failed remote command: %d problems, want 1", got)
 	}
 }
+
+// ask_user queues one "question" event, cut to 60 characters after redaction.
+func TestQuestionIsCounted(t *testing.T) {
+	h := gapHarness(t, &gapRunner{})
+	link := filepath.Join(t.TempDir(), "account.json")
+	if err := account.Save(link, account.Link{URL: "https://app.example.org", Token: "lmt_abcdefghijklmnopqrstuvwxyz012345", LinkedAt: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
+	h.env.Problem = (&account.Problems{Store: h.env.Store, LinkPath: link, Version: "1.0", OS: "linux"}).Record
+	h.env.Choose = func(context.Context, agent.Choice) (agent.ChoiceAnswer, error) { return agent.ChoiceAnswer{}, nil }
+	q := strings.Repeat("Which partition should the long running analysis use? ", 3)
+	if _, err := h.run(t, "ask_user", map[string]any{"question": q, "options": []map[string]any{{"label": "a"}, {"label": "b"}}}); err != nil {
+		t.Fatal(err)
+	}
+	evs, _ := h.env.Store.DueClientEvents(context.Background(), time.Now().Add(time.Hour), 50)
+	if len(evs) != 1 || !strings.Contains(evs[0].Payload, `"kind":"question"`) || !strings.Contains(evs[0].Payload, `"message":"`+q[:60]+`"`) {
+		t.Errorf("events = %+v", evs)
+	}
+}

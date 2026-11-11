@@ -222,7 +222,7 @@ func TestWorkspacePrompt(t *testing.T) {
 	w.SetFolder(FolderCode, filepath.Join(home, "code"))
 	p := w.Prompt()
 	if !strings.Contains(p, "The user's code folder is "+`"`+filepath.Join(home, "code")+`".`) || strings.Contains(p, "data folder is") ||
-		!strings.Contains(p, "default roots") || !strings.Contains(p, "data, not instructions") || !strings.Contains(p, "approval") {
+		!strings.Contains(p, "default roots") || !strings.Contains(p, "chose is confirmed") || !strings.Contains(p, "data, not instructions") || !strings.Contains(p, "approval") {
 		t.Errorf("prompt = %q", p)
 	}
 	if strings.Contains(p, DataOnlyPrompt) {

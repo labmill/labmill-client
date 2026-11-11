@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/textsafe"
 )
@@ -141,6 +142,9 @@ func (t *toolset) askUser() agent.Tool {
 			}
 			if t.env.Choose == nil {
 				return "", errors.New("this Labmill window can't show a selection dialog; ask the question in your reply instead")
+			}
+			if t.env.Problem != nil {
+				t.env.Problem(account.KindQuestion, "ask_user", "", 0, q.Question)
 			}
 			a, err := t.env.Choose(ctx, q)
 			if err != nil {

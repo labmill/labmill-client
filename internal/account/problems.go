@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"labmill-client/internal/backend"
 	"labmill-client/internal/store"
@@ -37,6 +38,7 @@ const (
 	KindTransfer   = "transfer"   // an upload or download failed
 	KindCrash      = "crash"      // a recovered panic
 	KindCancel     = "cancel"     // the user stopped a turn
+	KindQuestion   = "question"   // the agent asked the user (counted by the first words)
 )
 
 const (
@@ -112,6 +114,9 @@ func (p *Problems) Record(kind, tool, cluster string, jobID int64, msg string) {
 	}
 	e := ClientEvent{At: now().UTC(), ClientVersion: clientVersion(p.Version), OS: p.OS, SessionID: p.Session(),
 		Kind: kind, Tool: tool, Message: NewRedactor(words...).Message(msg)}
+	if kind == KindQuestion { // counted by its first 60 characters, after redaction
+		e.Message = string([]rune(e.Message)[:min(60, utf8.RuneCountInString(e.Message))])
+	}
 	b, err := json.Marshal(e)
 	if err != nil {
 		return
