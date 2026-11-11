@@ -723,6 +723,9 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}
 	}
 	if probs != nil {
+		env.Problem = func(kind, tool, cluster string, jobID int64, text string) {
+			go probs.p.Record(kind, tool, cluster, jobID, text)
+		}
 		mon.problem = func(j store.Job, err error) {
 			probs.p.Record(account.KindConnection, "", j.Cluster, j.ID, err.Error())
 		}

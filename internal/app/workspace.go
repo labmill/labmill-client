@@ -307,7 +307,7 @@ func (w *Workspace) Prompt() string {
 	if data != "" && code == "" {
 		b.WriteString(DataOnlyPrompt + "\n")
 	}
-	b.WriteString("Use them as the default roots: find_local_data searches them when you pass no under, preview_file accepts paths relative to them, stage_data stages from the data folder (else the code folder) when you pass no root, and suggest_images looks at the code folder when you pass neither job_id nor root. Choosing a folder sent nothing: staging and uploading still need the user's approval as usual. To look elsewhere in the allowed folders, pass the full path.\n")
+	b.WriteString("Use them as the default roots: find_local_data searches them when you pass no under, preview_file accepts paths relative to them, stage_data stages from the data folder (else the code folder) when you pass no root, and suggest_images looks at the code folder when you pass neither job_id nor root. A folder the user chose is confirmed: do not ask again which folder to use. Choosing a folder sent nothing: staging and uploading still need the user's approval as usual. To look elsewhere in the allowed folders, pass the full path.\n")
 	return b.String()
 }
 
