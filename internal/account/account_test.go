@@ -521,37 +521,40 @@ func TestBuildReportRunFacts(t *testing.T) {
 }
 
 func TestBuildReportFailureClass(t *testing.T) {
-	out := func(stderr string) []store.Event {
-		b, _ := json.Marshal(Output{RemoteID: "9", Stderr: []string{stderr}})
+	out := func(remote, stderr string) []store.Event {
+		b, _ := json.Marshal(Output{RemoteID: remote, Stderr: []string{stderr}})
 		return []store.Event{{Kind: EventOutput, Text: string(b)}}
 	}
 	failed := func(code int) store.Job {
 		return store.Job{State: store.StateFailed, RemoteID: "9", Facts: store.Facts{RemoteID: "9", ExitCode: code}}
 	}
 	tests := []struct {
-		name string
-		j    store.Job
-		evs  []store.Event
-		want string
+		name         string
+		j            store.Job
+		evs          []store.Event
+		plain, wider string // category without and with the details of the output
 	}{
-		{"exit 1", failed(1), nil, "exit_nonzero"},
-		{"no facts", store.Job{State: store.StateFailed, RemoteID: "9"}, nil, "exit_nonzero"},
-		{"missing file", failed(2), out("cat: in.csv: No such file or directory"), "data_missing"},
-		{"missing tool in output", failed(1), out("run.sh: line 2: nosuchtool: command not found"), "missing_software"},
-		{"output of an earlier run", failed(1), func() []store.Event {
-			b, _ := json.Marshal(Output{RemoteID: "8", Stderr: []string{"No such file or directory"}})
-			return []store.Event{{Kind: EventOutput, Text: string(b)}}
-		}(), "exit_nonzero"},
-		{"completed", store.Job{State: store.StateCompleted, RemoteID: "9"}, nil, ""},
+		{"exit 1", failed(1), nil, "exit_nonzero", "exit_nonzero"},
+		{"exit 127", failed(127), nil, "missing_software", "missing_software"},
+		{"signal, exit 0", failed(0), nil, "", ""},
+		{"no facts", store.Job{State: store.StateFailed, RemoteID: "9"}, nil, "exit_nonzero", "exit_nonzero"},
+		{"missing file", failed(2), out("9", "cat: in.csv: No such file or directory"), "exit_nonzero", "data_missing"},
+		{"missing tool", failed(1), out("9", "run.sh: line 2: nosuchtool: command not found"), "exit_nonzero", "missing_software"},
+		{"output of an earlier run", failed(1), out("8", "No such file or directory"), "exit_nonzero", "exit_nonzero"},
+		{"completed", store.Job{State: store.StateCompleted, RemoteID: "9"}, nil, "", ""},
 	}
 	for _, tt := range tests {
 		in, _ := BuildReport(tt.j, tt.evs, "r")
-		if in.FailureCategory != tt.want {
-			t.Errorf("%s: category %q, want %q", tt.name, in.FailureCategory, tt.want)
+		if in.FailureCategory != tt.plain {
+			t.Errorf("%s: category %q, want %q", tt.name, in.FailureCategory, tt.plain)
+		}
+		AddDetails(&in, tt.j, tt.evs, NewRedactor())
+		if in.FailureCategory != tt.wider {
+			t.Errorf("%s with details: category %q, want %q", tt.name, in.FailureCategory, tt.wider)
 		}
 	}
 	// A private job sends no class, even when its output was collected.
-	evs := append(out("No such file or directory"), store.Event{Kind: EventPrivate})
+	evs := append(out("9", "No such file or directory"), store.Event{Kind: EventPrivate})
 	if in, _ := BuildReport(failed(2), evs, "r"); in.FailureCategory != "" {
 		t.Errorf("private job category %q", in.FailureCategory)
 	}

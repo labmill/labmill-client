@@ -8,7 +8,7 @@ You can connect Labmill to your account at [app.labmill.org](https://app.labmill
 
 For each job, when the scheduler accepts it, when it starts and when it ends, Labmill sends one record. A later record of the same job replaces the earlier one. The record holds:
 
-- the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category (time-out, out of memory, node failure, preempted, missing software, missing input file, other non-zero exit), the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from `sacct`: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example `samtools/1.21`);
+- the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category (time-out, out of memory, node failure, preempted, missing software when the exit code is 127, other non-zero exit), the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from `sacct`: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example `samtools/1.21`);
 - the sbatch script, redacted;
 - when the job has ended: the last 500 lines of its output and of its error output, redacted; for a failed job also the first 100 lines.
 

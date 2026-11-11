@@ -1,6 +1,6 @@
 // Package failclass names why a job did not complete. The job report to the
-// Labmill account (internal/account) and the test runner (internal/testrun)
-// use the same names, so the server counts one vocabulary.
+// Labmill account (internal/account) and the server (internal/api/testruns.go
+// in the platform repository) use the same names, so the server counts one vocabulary.
 package failclass
 
 import (
@@ -29,7 +29,7 @@ type Input struct {
 
 var (
 	oomRE     = regexp.MustCompile(`(?i)oom-kill|out of memory|MemoryError|Cannot allocate memory`)
-	missingRE = regexp.MustCompile(`(?i)command not found|No module named|ModuleNotFoundError|module: command|Lmod has detected`)
+	missingRE = regexp.MustCompile(`(?i)command not found|env: .[^ ]*.: No such file|No module named|ModuleNotFoundError|module: command|Lmod has detected`)
 	dataRE    = regexp.MustCompile(`(?i)No such file or directory|FileNotFoundError`)
 )
 
@@ -51,7 +51,7 @@ func Of(in Input) string {
 		return MissingSoftware
 	case dataRE.MatchString(in.Output):
 		return DataMissing
-	case state != "" && in.ExitCode != 0, state == "FAILED":
+	case state != "" && state != "FAILED" && in.ExitCode != 0, state == "FAILED" && in.ExitCode != 0:
 		return ExitNonzero
 	}
 	return ""

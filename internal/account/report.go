@@ -197,11 +197,9 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 		case in.State == "PREEMPTED":
 			in.FailureCategory = "preempted"
 		case in.State == "FAILED":
-			code := -1 // unknown: an ended job without an exit code is a plain failure
-			if f.RemoteID != "" {
-				code = f.ExitCode
-			}
-			in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: code, Output: outputText(evs, j.RemoteID)})
+			// From the exit code only; AddDetails refines it from the output
+			// for an account that contributes details.
+			in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: exitCode(j)})
 		}
 	}
 	return in, true
@@ -329,6 +327,10 @@ func AddDetails(in *JobIn, j store.Job, evs []store.Event, red Redactor) {
 			break
 		}
 	}
+	// The output tells more about a plain failure; only a contributing account gets here.
+	if in.State == "FAILED" && (in.FailureCategory == "" || in.FailureCategory == failclass.ExitNonzero) {
+		in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: failedExit(j), Output: outputText(evs, j.RemoteID)})
+	}
 }
 
 // tresTextRE is what the API accepts in a text of alloc or usage.
@@ -415,13 +417,33 @@ var (
 )
 
 // outputText is the collected output (stderr first, then stdout) of the
-// current run of a job, or "" when none was collected.
+// current run of a job (stderr and the last 20 lines of stdout), or "" when none was collected.
 func outputText(evs []store.Event, remoteID string) string {
 	for i := len(evs) - 1; i >= 0; i-- {
 		var o Output
 		if evs[i].Kind == EventOutput && json.Unmarshal([]byte(evs[i].Text), &o) == nil && o.RemoteID == remoteID {
-			return strings.Join(append(o.Stderr, o.Stdout...), "\n")
+			out := o.Stdout
+			if len(out) > 20 {
+				out = out[len(out)-20:]
+			}
+			return strings.Join(append(append([]string{}, o.Stderr...), out...), "\n")
 		}
 	}
 	return ""
+}
+
+// exitCode is the exit code of the current run of j, or -1 when unknown.
+func exitCode(j store.Job) int {
+	if j.Facts.RemoteID != "" && j.Facts.RemoteID == j.RemoteID {
+		return j.Facts.ExitCode
+	}
+	return -1
+}
+
+// failedExit is the exit code of a failed job for the class: 1 when unknown.
+func failedExit(j store.Job) int {
+	if c := exitCode(j); c >= 0 {
+		return c
+	}
+	return 1
 }
