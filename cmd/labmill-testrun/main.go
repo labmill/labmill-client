@@ -105,8 +105,7 @@ func play(cases []testcase.Case, dir, cluster, have string, capUSD float64, repo
 		home = abs // a relative XDG folder would be ignored by the job store
 	}
 	if os.Getenv("ANTHROPIC_API_KEY") == "" && os.Getenv("LABMILL_BROKER_URL") == "" {
-		fmt.Fprintln(stderr, "set ANTHROPIC_API_KEY (the corpus run needs its own model key)")
-		return 2
+		fmt.Fprintln(stderr, "warning: no ANTHROPIC_API_KEY or broker set; the run only works with a site broker")
 	}
 	started := time.Now().UTC()
 	ref := "run-" + started.Format("20060102T150405Z")

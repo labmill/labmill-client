@@ -1697,7 +1697,7 @@ func (t *toolset) submitJob() agent.Tool {
 			}
 			id, err := be.Submit(ctx, script, spec)
 			if err != nil {
-				return "", fmt.Errorf("%s didn't accept the job: %w", c.Name, err)
+				return "", fmt.Errorf("%s %s: %w", c.Name, SubmitRefused, err)
 			}
 			// Record even if the user quit right after the submit.
 			err = t.env.Store.UpdateJob(context.WithoutCancel(ctx), j.ID, func(j *store.Job) error {
@@ -2097,3 +2097,7 @@ func normEndpoint(e string) string {
 	u.Scheme, u.Host = strings.ToLower(u.Scheme), strings.ToLower(u.Host)
 	return u.String()
 }
+
+// SubmitRefused is the phrase in the error of submit_job when the scheduler refuses the job.
+// The corpus runner matches it.
+const SubmitRefused = "didn't accept the job"

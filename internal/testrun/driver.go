@@ -16,6 +16,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 
 	"labmill-client/internal/agent"
+	"labmill-client/internal/app"
 	"labmill-client/internal/launch"
 	"labmill-client/internal/site"
 	"labmill-client/internal/sshx"
@@ -85,7 +86,7 @@ func (u *scriptedUI) Event(e agent.Event) {
 		u.final.WriteString(e.Text)
 	case agent.EventToolResult:
 		// Only the first refusal by the scheduler counts, and only while no job was accepted.
-		if e.Tool == "submit_job" && e.IsError && u.submitErr == "" && !u.accepted && strings.Contains(e.Text, "didn't accept the job") {
+		if e.Tool == "submit_job" && e.IsError && u.submitErr == "" && !u.accepted && strings.Contains(e.Text, app.SubmitRefused) {
 			u.submitErr = e.Text
 		}
 		if e.Tool == "submit_job" && !e.IsError {
@@ -140,7 +141,11 @@ func (d *Driver) Run(ctx context.Context, c testcase.Case, caseDir string) (Obse
 	if err := os.MkdirAll(work, 0o755); err != nil {
 		return obs, 0, err
 	}
-	if out, err := exec.CommandContext(scriptCtx(ctx), "sh", filepath.Join(d.caseSrc(c), "gen.sh"), work).CombinedOutput(); err != nil {
+	gctx, gcancel := scriptCtx(ctx)
+	defer gcancel()
+	gen := exec.CommandContext(gctx, "sh", filepath.Join(d.caseSrc(c), "gen.sh"), work)
+	gen.WaitDelay = 5 * time.Second
+	if out, err := gen.CombinedOutput(); err != nil {
 		return obs, 0, fmt.Errorf("gen.sh: %v: %s", err, tail(string(out), 200))
 	}
 	if err := d.isolate(caseDir); err != nil {
@@ -374,7 +379,10 @@ func slurmState(j store.Job, tailText string) string {
 }
 
 func (d *Driver) runCheck(ctx context.Context, c testcase.Case, resultDir, work string) int {
-	cmd := exec.CommandContext(scriptCtx(ctx), "sh", filepath.Join(d.caseSrc(c), "check.sh"), resultDir, work)
+	cctx, ccancel := scriptCtx(ctx)
+	defer ccancel()
+	cmd := exec.CommandContext(cctx, "sh", filepath.Join(d.caseSrc(c), "check.sh"), resultDir, work)
+	cmd.WaitDelay = 5 * time.Second
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {
@@ -393,10 +401,8 @@ func tail(s string, n int) string {
 }
 
 // scriptCtx bounds gen.sh and check.sh so a hung script cannot stop the run.
-func scriptCtx(ctx context.Context) context.Context {
-	c, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	go func() { <-c.Done(); cancel() }()
-	return c
+func scriptCtx(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, 2*time.Minute)
 }
 
 // waitDownload waits, up to two minutes, until the first accepted job has its
