@@ -499,3 +499,18 @@ func TestBuildReportBackend(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildReportResubmissions(t *testing.T) {
+	evs := []store.Event{{Kind: "resubmitted", Text: `{"grow":"time"}`}}
+	got, ok := BuildReport(store.Job{State: store.StateFailed, RemoteID: "2", Message: "TIMEOUT"}, evs, "r")
+	if !ok || got.Resubmissions != 1 {
+		t.Errorf("resubmissions = %d", got.Resubmissions)
+	}
+	if b, _ := json.Marshal(got); !strings.Contains(string(b), `"resubmissions":1`) {
+		t.Errorf("json %s", b)
+	}
+	got, _ = BuildReport(store.Job{State: store.StateCompleted, RemoteID: "2"}, nil, "r")
+	if b, _ := json.Marshal(got); strings.Contains(string(b), "resubmissions") {
+		t.Errorf("zero must be left out: %s", b)
+	}
+}

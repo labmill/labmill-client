@@ -43,6 +43,8 @@ type resubmitEvent struct {
 	// submitted, Slurm's own requeues included.
 	Used int    `json:"used"`
 	Why  string `json:"why,omitempty"`
+	// Grow is "time" or "memory" when this submit gave the job more of it after TIMEOUT or OUT_OF_MEMORY.
+	Grow string `json:"grow,omitempty"`
 }
 
 // claimPayload is stored with the claim so that a crashed resubmission can
@@ -209,6 +211,7 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 	var spec backend.JobSpec
 	havePlan, haveSpec := false, false
 	prior := 0
+	grown := false
 	for _, e := range evs {
 		switch e.Kind {
 		case eventPlan:
@@ -220,6 +223,10 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 		case eventResubmitted:
 			var re resubmitEvent
 			if json.Unmarshal([]byte(e.Text), &re) == nil {
+				if usedGrow(re) {
+					grown = true
+					continue // not a preemptible attempt
+				}
 				if re.Fallback {
 					return false // the one fallback submit is done
 				}
@@ -227,7 +234,12 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 			}
 		}
 	}
-	if !havePlan || !plan.Preemptible {
+	growWhy := ""
+	if failedEnd && !grown {
+		growWhy = growCause(st)
+	}
+	preempt := havePlan && plan.Preemptible
+	if !preempt && growWhy == "" {
 		return false
 	}
 	if !haveSpec {
@@ -262,11 +274,11 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 	used, forceFallback := 0, false
 	if failedEnd {
 		readRestarts()
-		if cause = preemptionCause(st, restarts); cause == "" {
+		if cause = preemptionCause(st, restarts); cause == "" && growWhy == "" {
 			return false
 		}
 		used = prior + 1 + restarts
-	} else {
+	} else if preempt {
 		r.mu.Lock()
 		if r.lastLive == nil {
 			r.lastLive = map[int64]time.Time{}
@@ -286,6 +298,8 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 		}
 		cause = fmt.Sprintf("was requeued %d time(s) by Slurm", restarts)
 		used, forceFallback = limit, true
+	} else {
+		return false
 	}
 	if ctx.Err() != nil {
 		return true // closing: decided at the next start
@@ -296,8 +310,21 @@ func (r *Resubmitter) Handle(ctx context.Context, j store.Job, be backend.Backen
 	p := claimPayload{Event: resubmitEvent{Old: j.RemoteID, Partition: plan.Partition, Used: used, Why: cause}}
 	script := j.Script
 	var announce string
-	fallback := forceFallback || used >= limit
-	if !fallback {
+	fallback := (forceFallback || used >= limit) && growWhy == ""
+	if growWhy != "" {
+		var changes []string
+		var ok bool
+		script, changes, ok = growScript(j.Script, growWhy)
+		if !ok {
+			r.sayOnce(fmt.Sprintf("nogrow:%d:%s", j.ID, j.RemoteID), fmt.Sprintf("Job #%d (%s) ran out of %s, but its script has no readable %s line to raise, so I did not resubmit it. Tell me the new value and I submit it again.", j.ID, sanitize(j.Name), growWhy, map[string]string{"time": "--time", "memory": "--mem"}[growWhy]))
+			return false
+		}
+		cause = "ran out of " + growWhy
+		what = fmt.Sprintf("Job #%d (%s) %s on %s", j.ID, j.Name, cause, where)
+		p.Script, p.Event.Grow, p.Event.Why = script, growWhy, cause
+		announce = fmt.Sprintf("%s; resubmitted once with more %s (%s)", what, growWhy, strings.Join(changes, "; "))
+		p.Msg = "resubmitted once with more " + growWhy
+	} else if !fallback {
 		p.Event.Attempt = used + 1
 		announce = fmt.Sprintf("%s; resubmitted (attempt %d of %d)", what, p.Event.Attempt, limit)
 		p.Msg = fmt.Sprintf("resubmitted (attempt %d of %d)", p.Event.Attempt, limit)

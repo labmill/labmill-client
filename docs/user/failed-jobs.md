@@ -32,3 +32,7 @@ If a job runs on a preemptible partition, Labmill can submit it again after a pr
 ## When the job never starts
 
 Before you submit, the job review says whether Slurm accepts the script and when it expects the job to start. If Slurm refuses the script, the box shows Slurm's error. You can fix the script first.
+
+## Out of time or out of memory
+
+If a job ends because it ran out of time or out of memory, Labmill submits it again once by itself, with double the time or double the memory in the same script. It tells you in the chat what it changed. A second failure of this kind stays failed, and the assistant helps you fix it. If the new value is above a limit of the site, the cluster refuses the job and Labmill tells you. A job whose script has no time or memory line to raise is not submitted again. The number of automatic resubmissions is part of the job record if you linked your Labmill account.
