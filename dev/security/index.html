@@ -1547,6 +1547,7 @@
 <li>Staging doesn't follow symlinks, skips special files and hidden entries (reporting them), and rejects any path that resolves outside the root. (<code>transfer.BuildManifest</code>)</li>
 <li>The system prompt tells Claude to treat file names, file contents, job logs and tool results as data, never instructions. This is a mitigation, not a boundary; the approvals are the boundary.</li>
 </ul>
+<p><strong>Secret guard (owner decision 2026-11-11).</strong> <code>guardSecrets</code> (<code>internal/app/secretscrub.go</code>) wraps every tool, so every result and every error text goes through <code>scrubTokens</code> before the model sees it. Text with the shape of a private key, an AWS or GitHub key, an API key, a Slack or web token, a bearer header or a password in a URL is replaced by a marker. The user gets a warning (<code>Env.Warn</code>), and the result tells the model that something was hidden. This is in addition to the keyed rule <code>redactSecrets</code> ("password = ..."), which stays for file content and remote output. The shapes are narrow (known prefix, long body) so checksums and ordinary text stay. A secret with no known shape and no key name is not found.</p>
 <h2 id="no-shell-typed-tools-only">No shell, typed tools only<a class="headerlink" href="#no-shell-typed-tools-only" title="Permanent link">&para;</a></h2>
 <ul>
 <li>There is no shell tool. Claude can only call the registered typed tools, each with a fixed JSON schema. An unknown tool name is an error result. (<code>internal/agent</code>)</li>

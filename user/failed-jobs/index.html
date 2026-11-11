@@ -594,6 +594,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#out-of-time-or-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Out of time or out of memory
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1378,6 +1389,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#out-of-time-or-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Out of time or out of memory
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1416,6 +1438,8 @@
 <p>If a job runs on a preemptible partition, Labmill can submit it again after a preemption, at most twice, then once on a regular partition. You see this plan before you approve the job.</p>
 <h2 id="when-the-job-never-starts">When the job never starts<a class="headerlink" href="#when-the-job-never-starts" title="Permanent link">&para;</a></h2>
 <p>Before you submit, the job review says whether Slurm accepts the script and when it expects the job to start. If Slurm refuses the script, the box shows Slurm's error. You can fix the script first.</p>
+<h2 id="out-of-time-or-out-of-memory">Out of time or out of memory<a class="headerlink" href="#out-of-time-or-out-of-memory" title="Permanent link">&para;</a></h2>
+<p>If a job ends because it ran out of time or out of memory, Labmill submits it again once by itself, with double the time or double the memory in the same script. It tells you in the chat what it changed. A second failure of this kind stays failed, and the assistant helps you fix it. If the new value is above a limit of the site, the cluster refuses the job and Labmill tells you. A job whose script has no time or memory line to raise is not submitted again. The number of automatic resubmissions is part of the job record if you linked your Labmill account.</p>
 
 
 
