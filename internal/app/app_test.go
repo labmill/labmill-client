@@ -325,7 +325,7 @@ func TestCancelAndErrors(t *testing.T) {
 func TestSystemPrompt(t *testing.T) {
 	h := newHarness(t)
 	sp := SystemPrompt(h.env)
-	for _, want := range []string{"hpcone", "second", "approve", "login node", "find_local_data", "ask_user"} {
+	for _, want := range []string{"hpcone", "second", "approve", "login node", "find_local_data", "ask_user", "the docs say"} {
 		if !strings.Contains(sp, want) {
 			t.Errorf("system prompt missing %q", want)
 		}

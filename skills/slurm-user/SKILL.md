@@ -29,6 +29,11 @@ skill**, named `site-<institution domain>` with dots as dashes (for example
 If no site skill is installed, ask the cluster (`sinfo`, `sacctmgr`, `module
 avail`) or the site's own documentation rather than guessing.
 
+**Live beats documented.** If a command on the cluster (`sinfo`, `sacctmgr`,
+`scontrol`, `module avail`) shows a value that differs from a documented one
+(a site skill or web page), use the live value and tell the user what the
+docs say.
+
 ## Fast facts
 
 - **Log in:** `ssh <user>@<login-host>`. Some sites put the login host behind a
