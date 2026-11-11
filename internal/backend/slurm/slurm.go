@@ -431,7 +431,7 @@ func (s *Slurm) Submit(ctx context.Context, script string, spec backend.JobSpec)
 // `squeue -h -j <id> -o "%T|%r|%N|%i"`. If squeue knows the job, its state maps
 // as PENDING/CONFIGURING → pending; RUNNING/COMPLETING → running; others via
 // the sacct mapping. If squeue prints nothing (job finished), it runs
-// `env TZ=UTC sacct -n -P -X -j <id> --format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES`
+// `env TZ=UTC sacct -n -P -X -j <id> --format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES,Partition,QOS,Restarts`
 // (TZ=UTC makes sacct's zone-less times UTC whatever the cluster's zone) and maps
 // COMPLETED → completed; CANCELLED* → canceled; FAILED, TIMEOUT, OUT_OF_MEMORY,
 // NODE_FAIL, PREEMPTED, BOOT_FAIL, DEADLINE → failed (Reason = the Slurm
@@ -498,7 +498,7 @@ func (s *Slurm) Status(ctx context.Context, remoteID string) (backend.Status, er
 	}
 	r := rows[0]
 	st := backend.Status{RemoteID: remoteID, State: r.State, Node: r.Node, StartTime: r.Start, EndTime: r.End, ExitCode: r.Exit, Signal: r.Sig,
-		ElapsedSec: r.Elapsed, GPUs: r.GPUs, AllocTRES: r.TRES}
+		ElapsedSec: r.Elapsed, GPUs: r.GPUs, AllocTRES: r.TRES, Partition: r.Partition, QOS: r.QOS, Restarts: r.Restarts}
 	if !r.End.IsZero() {
 		st.CPUSec, st.MaxRSSBytes = s.stepUse(ctx, remoteID)
 	}
@@ -520,7 +520,7 @@ var errNoRows = errors.New("sacct: no rows")
 // sacctRows runs sacct for remoteID and parses every row. It returns
 // errNoRows if there are none, and a command error on a non-zero exit.
 func (s *Slurm) sacctRows(ctx context.Context, remoteID string) ([]taskRow, error) {
-	res, err := s.Runner.Run(ctx, []string{"env", "TZ=UTC", "sacct", "-n", "-P", "-X", "-j", remoteID, "--format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES"}, nil)
+	res, err := s.Runner.Run(ctx, []string{"env", "TZ=UTC", "sacct", "-n", "-P", "-X", "-j", remoteID, "--format=State,ExitCode,Start,End,NodeList,JobID,ElapsedRaw,AllocTRES,Partition,QOS,Restarts"}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("sacct: %w", err)
 	}
@@ -642,6 +642,9 @@ type taskRow struct {
 	Elapsed int64
 	GPUs    int
 	TRES    string // sacct only: AllocTRES as printed, e.g. "billing=8,cpu=8,gres/gpu=1,mem=32G,node=1"
+	// sacct only: the partition and QOS the job ran in, and how often Slurm requeued it
+	Partition, QOS string
+	Restarts       int
 }
 
 // parseSqueueRow parses "%T|%r|%N|%i" (the last field is optional).
@@ -674,7 +677,7 @@ func parseSqueueRow(line string) taskRow {
 // false if the line has no state.
 func (s *Slurm) parseSacctRow(line string) (taskRow, bool) {
 	f := strings.Split(line, "|")
-	f = append(f, "", "", "", "", "", "", "", "")
+	f = append(f, "", "", "", "", "", "", "", "", "", "", "")
 	state := strings.Fields(f[0])
 	if len(state) == 0 {
 		return taskRow{}, false
@@ -688,6 +691,8 @@ func (s *Slurm) parseSacctRow(line string) (taskRow, bool) {
 	r.Exit, _ = strconv.Atoi(code)
 	r.Elapsed, _ = strconv.ParseInt(strings.TrimSpace(f[6]), 10, 64)
 	r.TRES = strings.TrimSpace(f[7])
+	r.Partition, r.QOS = strings.TrimSpace(f[8]), strings.TrimSpace(f[9])
+	r.Restarts, _ = strconv.Atoi(strings.TrimSpace(f[10]))
 	for _, t := range strings.Split(f[7], ",") {
 		if v, ok := strings.CutPrefix(strings.TrimSpace(t), "gres/gpu="); ok {
 			r.GPUs, _ = strconv.Atoi(v)

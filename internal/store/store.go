@@ -102,6 +102,9 @@ type Facts struct {
 	MaxRSSBytes int64     `json:"max_rss_bytes,omitempty"`
 	GPUs        int       `json:"gpus,omitempty"`
 	AllocTRES   string    `json:"alloc_tres,omitempty"` // Slurm AllocTRES, e.g. "cpu=8,mem=32G,node=1"
+	Partition   string    `json:"partition,omitempty"`  // sacct Partition and QOS of the run
+	QOS         string    `json:"qos,omitempty"`
+	Restarts    int       `json:"restarts,omitempty"` // requeues by the scheduler
 }
 
 // ManifestEntry is one staged file.

@@ -277,6 +277,8 @@ type Status struct {
 	ElapsedSec, CPUSec, MaxRSSBytes int64
 	GPUs                            int    // allocated GPUs
 	AllocTRES                       string // what the job got, as the scheduler prints it (Slurm AllocTRES); "" when not reported
+	Partition, QOS                  string // sacct Partition and QOS of the run; "" when not reported
+	Restarts                        int    // how often the scheduler requeued the job (sacct Restarts)
 }
 
 // Facts are the scheduler facts of st to save with the job, for a status
@@ -286,7 +288,7 @@ func (st Status) Facts() (f store.Facts, ok bool) {
 		return store.Facts{}, false
 	}
 	return store.Facts{RemoteID: st.RemoteID, ExitCode: st.ExitCode, Signal: st.Signal, Start: st.StartTime.UTC(), End: st.EndTime.UTC(),
-		ElapsedSec: st.ElapsedSec, CPUSec: st.CPUSec, MaxRSSBytes: st.MaxRSSBytes, GPUs: st.GPUs, AllocTRES: st.AllocTRES}, true
+		ElapsedSec: st.ElapsedSec, CPUSec: st.CPUSec, MaxRSSBytes: st.MaxRSSBytes, GPUs: st.GPUs, AllocTRES: st.AllocTRES, Partition: st.Partition, QOS: st.QOS, Restarts: st.Restarts}, true
 }
 
 // StartEstimate is the scheduler's expected start of a job that is not

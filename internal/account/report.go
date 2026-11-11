@@ -31,6 +31,8 @@ type JobIn struct {
 	Req             json.RawMessage `json:"req,omitempty"`
 	Used            json.RawMessage `json:"used,omitempty"`
 	Partition       string          `json:"partition,omitempty"`
+	QOS             string          `json:"qos,omitempty"`
+	Resubmissions   int             `json:"resubmissions,omitempty"` // client resubmits plus scheduler requeues
 	QueueWaitSec    *int64          `json:"queue_wait_sec,omitempty"`
 	Software        []Software      `json:"software,omitempty"`
 	Alloc           json.RawMessage `json:"alloc,omitempty"`  // what the job got (sacct AllocTRES)
@@ -112,6 +114,7 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	in.State, in.FailureCategory = apiState(j)
 	var spec backend.JobSpec
 	var haveSpec bool
+	var submits int
 	var submitted, started, ended time.Time
 	for _, e := range evs {
 		switch e.Kind {
@@ -124,6 +127,7 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 			to := e.Text[strings.LastIndex(e.Text, " ")+1:]
 			switch store.JobState(to) {
 			case store.StateSubmitted:
+				submits++
 				submitted, started, ended = e.Time, time.Time{}, time.Time{} // a resubmission starts over
 			case store.StateRunning:
 				if started.IsZero() {
@@ -171,6 +175,29 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 			in.Partition = spec.Partition
 		}
 		in.Software = modules(spec)
+	}
+	// Run facts from the scheduler; a private job sends none of them.
+	if in.Shared == nil {
+		f := j.Facts
+		if f.RemoteID != j.RemoteID {
+			f = store.Facts{} // an earlier run
+		}
+		if in.Partition == "" && partitionRE.MatchString(f.Partition) {
+			in.Partition = f.Partition
+		}
+		if partitionRE.MatchString(f.QOS) {
+			in.QOS = f.QOS
+		}
+		in.Resubmissions = f.Restarts + max(submits-1, 0)
+		switch {
+		case in.FailureCategory != "":
+		case in.State == "NODE_FAIL":
+			in.FailureCategory = "node_failure"
+		case in.State == "PREEMPTED":
+			in.FailureCategory = "preempted"
+		case f.RemoteID != "" && f.ExitCode == 127 && in.State != "COMPLETED":
+			in.FailureCategory = "command_not_found"
+		}
 	}
 	return in, true
 }

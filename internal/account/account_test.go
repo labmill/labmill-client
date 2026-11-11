@@ -405,7 +405,7 @@ func TestBuildReportStates(t *testing.T) {
 	}{
 		{store.StateFetched, "", "COMPLETED", ""},
 		{store.StateFailed, "TIMEOUT", "TIMEOUT", "timeout"},
-		{store.StateFailed, "NODE_FAIL", "NODE_FAIL", ""},
+		{store.StateFailed, "NODE_FAIL", "NODE_FAIL", "node_failure"},
 		{store.StateFailed, "exit 1 in /home/x/run.sh", "FAILED", ""},
 		{store.StateCanceled, "", "CANCELLED", ""},
 	} {
@@ -497,5 +497,25 @@ func TestBuildReportBackend(t *testing.T) {
 		if !ok || got.Backend != want {
 			t.Errorf("backend %q: got %q", in, got.Backend)
 		}
+	}
+}
+
+func TestBuildReportRunFacts(t *testing.T) {
+	j := store.Job{State: store.StateFailed, RemoteID: "7", Facts: store.Facts{RemoteID: "7", ExitCode: 127, Partition: "gpu", QOS: "normal", Restarts: 1}}
+	evs := []store.Event{
+		{Kind: "state", Text: "pending -> submitted"},
+		{Kind: "state", Text: "running -> submitted"},
+	}
+	in, _ := BuildReport(j, evs, "r")
+	if in.Partition != "gpu" || in.QOS != "normal" || in.Resubmissions != 2 || in.FailureCategory != "command_not_found" {
+		t.Errorf("report = %+v", in)
+	}
+	j.Message = "PREEMPTED"
+	if in, _ = BuildReport(j, nil, "r"); in.FailureCategory != "preempted" {
+		t.Errorf("category = %q", in.FailureCategory)
+	}
+	in, _ = BuildReport(j, []store.Event{{Kind: EventPrivate}}, "r")
+	if in.Partition != "" || in.QOS != "" || in.Resubmissions != 0 || in.FailureCategory != "" {
+		t.Errorf("private job report = %+v", in)
 	}
 }
