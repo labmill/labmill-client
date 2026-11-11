@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"labmill-client/internal/agent"
 	"labmill-client/internal/store"
 	"labmill-client/internal/testcase"
 )
@@ -72,5 +73,28 @@ func TestObserve(t *testing.T) {
 	o, _ = d.observe(ctx, st4, ok, t.TempDir(), "", nil, &Observation{CheckExit: -1})
 	if o.JobState != "COMPLETED" || o.CheckExit != 1 {
 		t.Errorf("not downloaded: %+v", o)
+	}
+}
+
+func TestScriptedUIEvents(t *testing.T) {
+	ev := func(u *scriptedUI, k agent.EventKind, tool, text string, isErr bool) {
+		u.Event(agent.Event{Kind: k, Tool: tool, Text: text, IsError: isErr})
+	}
+	u := &scriptedUI{}
+	ev(u, agent.EventToolResult, "submit_job", "bigcluster didn't accept the job: bad", true)
+	ev(u, agent.EventToolResult, "submit_job", "already submitted", true) // not a refusal
+	ev(u, agent.EventToolResult, "submit_job", "ok", false)
+	ev(u, agent.EventToolResult, "submit_job", "bigcluster didn't accept the job: later", true) // after an accepted job
+	ev(u, agent.EventToolCall, "ask_user", "", false)
+	ev(u, agent.EventText, "", "done", false)
+	final, asked, _, sub, _ := u.snapshot()
+	if sub != "bigcluster didn't accept the job: bad" || asked != 1 || final != "done" {
+		t.Errorf("final %q asked %d sub %q", final, asked, sub)
+	}
+	if _, err := u.Choose(context.Background(), agent.Choice{}); err != nil {
+		t.Fatal(err)
+	}
+	if _, a, _, _, _ := u.snapshot(); a != 1 {
+		t.Error("dialogs other than the agent's questions must not count")
 	}
 }

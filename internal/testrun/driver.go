@@ -50,6 +50,7 @@ type scriptedUI struct {
 	final     strings.Builder
 	asked     int
 	login     bool
+	accepted  bool
 	submitErr string // text of the last failed submit_job
 	turnErr   error
 	cancel    context.CancelFunc
@@ -63,9 +64,6 @@ func (u *scriptedUI) Approve(_ context.Context, p agent.Proposal) (agent.Decisio
 }
 
 func (u *scriptedUI) Choose(_ context.Context, _ agent.Choice) (agent.ChoiceAnswer, error) {
-	u.mu.Lock()
-	u.asked++
-	u.mu.Unlock()
 	return agent.ChoiceAnswer{Skipped: true}, nil
 }
 
@@ -86,10 +84,17 @@ func (u *scriptedUI) Event(e agent.Event) {
 	case agent.EventText:
 		u.final.WriteString(e.Text)
 	case agent.EventToolResult:
-		if e.Tool == "submit_job" && e.IsError {
+		// Only the first refusal by the scheduler counts, and only while no job was accepted.
+		if e.Tool == "submit_job" && e.IsError && u.submitErr == "" && !u.accepted && strings.Contains(e.Text, "didn't accept the job") {
 			u.submitErr = e.Text
 		}
+		if e.Tool == "submit_job" && !e.IsError {
+			u.accepted = true
+		}
 	case agent.EventToolCall:
+		if e.Tool == "ask_user" {
+			u.asked++
+		}
 		u.final.Reset() // only the text after the last tool call is the final message
 	}
 }
@@ -128,11 +133,14 @@ type Driver struct {
 // error when the runner failed (as opposed to the case failing).
 func (d *Driver) Run(ctx context.Context, c testcase.Case, caseDir string) (Observation, float64, error) {
 	obs := Observation{CheckExit: -1}
+	if d.spent >= d.Opt.CapUSD {
+		return obs, 0, ErrCap
+	}
 	work := filepath.Join(caseDir, "work")
 	if err := os.MkdirAll(work, 0o755); err != nil {
 		return obs, 0, err
 	}
-	if out, err := exec.CommandContext(ctx, "sh", filepath.Join(d.caseSrc(c), "gen.sh"), work).CombinedOutput(); err != nil {
+	if out, err := exec.CommandContext(scriptCtx(ctx), "sh", filepath.Join(d.caseSrc(c), "gen.sh"), work).CombinedOutput(); err != nil {
 		return obs, 0, fmt.Errorf("gen.sh: %v: %s", err, tail(string(out), 200))
 	}
 	if err := d.isolate(caseDir); err != nil {
@@ -181,6 +189,9 @@ func (d *Driver) Run(ctx context.Context, c testcase.Case, caseDir string) (Obse
 		}
 		seen = n
 		rt.Session.Send(runCtx, "The job has ended. Check how it went and tell me. If it failed and you can fix it, fix it and submit again.")
+	}
+	if waitErr == nil && c.Expect.Outcome == "completed" {
+		waitDownload(runCtx, rt.Store)
 	}
 	final, asked, login, submitErr, turnErr := ui.snapshot()
 	obs.FinalText, obs.AskedUser = final, asked > 0
@@ -363,7 +374,7 @@ func slurmState(j store.Job, tailText string) string {
 }
 
 func (d *Driver) runCheck(ctx context.Context, c testcase.Case, resultDir, work string) int {
-	cmd := exec.CommandContext(ctx, "sh", filepath.Join(d.caseSrc(c), "check.sh"), resultDir, work)
+	cmd := exec.CommandContext(scriptCtx(ctx), "sh", filepath.Join(d.caseSrc(c), "check.sh"), resultDir, work)
 	if err := cmd.Run(); err != nil {
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {
@@ -379,4 +390,27 @@ func tail(s string, n int) string {
 		return s
 	}
 	return s[len(s)-n:]
+}
+
+// scriptCtx bounds gen.sh and check.sh so a hung script cannot stop the run.
+func scriptCtx(ctx context.Context) context.Context {
+	c, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	go func() { <-c.Done(); cancel() }()
+	return c
+}
+
+// waitDownload waits, up to two minutes, until the first accepted job has its
+// results on the laptop (the monitor downloads in the background).
+func waitDownload(ctx context.Context, st *store.Store) {
+	for end := time.Now().Add(2 * time.Minute); time.Now().Before(end); {
+		jobs := submittedJobs(ctx, st)
+		if len(jobs) == 0 || jobs[0].Downloaded || jobs[0].State != store.StateCompleted && jobs[0].State != store.StateFetched {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(3 * time.Second):
+		}
+	}
 }

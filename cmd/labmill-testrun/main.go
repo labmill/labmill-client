@@ -25,7 +25,16 @@ import (
 	"labmill-client/internal/testcase"
 )
 
-func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
+func main() {
+	// sshx and rclone re-run this executable as the SSH helper and transport.
+	if launch.HelperSubcommand(os.Args[1:]) {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		code := launch.RunSubcommand(ctx, os.Args[1:], os.Stdin, os.Stdout, os.Stderr)
+		stop()
+		os.Exit(code)
+	}
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+}
 
 // run returns 0 on success, 1 on a failed case (later steps), 2 on a usage
 // error or an invalid case.
@@ -91,6 +100,13 @@ func play(cases []testcase.Case, dir, cluster, have string, capUSD float64, repo
 			return 2
 		}
 		home = filepath.Join(h, "labmill-testrun")
+	}
+	if abs, err := filepath.Abs(home); err == nil {
+		home = abs // a relative XDG folder would be ignored by the job store
+	}
+	if os.Getenv("ANTHROPIC_API_KEY") == "" && os.Getenv("LABMILL_BROKER_URL") == "" {
+		fmt.Fprintln(stderr, "set ANTHROPIC_API_KEY (the corpus run needs its own model key)")
+		return 2
 	}
 	started := time.Now().UTC()
 	ref := "run-" + started.Format("20060102T150405Z")
