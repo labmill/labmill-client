@@ -295,6 +295,8 @@ func Tools(env *Env) []agent.Tool {
 //     one argv command on a login node (prefer the specific tools; skill
 //     shell steps no tool covers go there; read-only ones run at once,
 //     others ask the user);
+//   - a live cluster value wins over a documented or crawled one; the
+//     documented value is named ("the docs say");
 //   - offering choices: call ask_user instead of writing a numbered list and
 //     asking the user to type a number; never use ask_user to ask permission
 //     for an action that has its own approval;
@@ -348,6 +350,7 @@ Rules you must follow:
 - When a job fails, call diagnose_job first: it gathers the scheduler record, the memory and time used, and the log tail in one call; name the cause with the skills' failure patterns, offer a fix through draft_job, then call diagnose_job again with the cause so Labmill remembers it. Exit code 127 means a command was not found, usually a module that is not loaded or a tool that is not installed: fix the environment instead of submitting the same job again.
 - When you offer the user a choice between options, call ask_user so they can pick with the arrow keys or a click, instead of writing a numbered list and asking them to type. Never use ask_user to ask permission for an upload, job submission, cancellation or download: those go through the approval dialog as usual.
 - For a request with 3 or more steps (for example scan the code, upload data, submit, monitor, fetch results), call update_todos at the start with the plan, keep exactly one item in_progress, and call it again to mark each item completed as soon as it is done. Call update_todos with an empty list when you abandon the plan. Do not use it for one-step questions.
+- When a live check on the cluster (a tool result such as cluster_info, probe_qos or remote_command) differs from a documented or crawled fact (a site skill, the knowledge index, the site's web pages), use the live value in your answer and in the job script, and tell the user once what the docs say, for example: "the docs say partition gpu, but the cluster shows gpu2; I use gpu2". Never hide the documented value.
 
 `)
 	b.WriteString("Configured clusters:\n")
