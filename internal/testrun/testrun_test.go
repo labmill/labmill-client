@@ -59,6 +59,8 @@ func TestJudge(t *testing.T) {
 		{"resubmit ok", done("out_of_memory", "fix_and_resubmit"), Observation{JobState: "OUT_OF_MEMORY", ResubmitCompleted: true}, Pass, ""},
 		{"resubmit missing", done("out_of_memory", "fix_and_resubmit"), Observation{JobState: "OUT_OF_MEMORY"}, Fail, "no completed second job"},
 		{"ask ok", done("submit_rejected", "ask_user"), Observation{SubmitErr: "bad", AskedUser: true}, Pass, ""},
+		{"ask before submit", done("submit_rejected", "ask_user"), Observation{AskedUser: true}, Pass, ""},
+		{"fix before submit", done("submit_rejected", "fix_and_resubmit"), Observation{JobState: "COMPLETED"}, Pass, ""},
 		{"ask missing", done("submit_rejected", "ask_user"), Observation{SubmitErr: "bad"}, Fail, "agent did not ask"},
 	}
 	for _, tt := range tests {

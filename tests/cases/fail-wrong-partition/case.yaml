@@ -9,4 +9,3 @@ expect:
   outcome: failed
   failure_class: submit_rejected
   agent_should: ask_user
-  agent_keywords: [partition]

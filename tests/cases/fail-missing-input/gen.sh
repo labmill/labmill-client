@@ -1,3 +1,3 @@
 #!/bin/sh
 set -eu
-printf '#!/bin/sh\ncat /data/mygroup/nosuchfile.csv | wc -l\n' > "$1/count.sh"
+printf '#!/bin/sh\nwc -l < /data/mygroup/nosuchfile.csv\n' > "$1/count.sh"

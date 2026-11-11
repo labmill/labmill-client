@@ -82,6 +82,16 @@ func Judge(c testcase.Case, o Observation) Verdict {
 		}
 		return Verdict{Outcome: Pass}
 	}
+	if c.Expect.FailureClass == "submit_rejected" {
+		// An agent that checks first never sees the rejection: asking, or
+		// sending a corrected job at once, is as good as asking or fixing after it.
+		switch {
+		case c.Expect.AgentShould == "ask_user" && o.AskedUser && o.JobState == "" && o.SubmitErr == "":
+			return Verdict{Outcome: Pass, FailureClass: "submit_rejected"}
+		case c.Expect.AgentShould == "fix_and_resubmit" && completed:
+			return Verdict{Outcome: Pass, FailureClass: "submit_rejected"}
+		}
+	}
 	if completed {
 		return Verdict{Outcome: Fail, Reason: "job_completed"}
 	}
