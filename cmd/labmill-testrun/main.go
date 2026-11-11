@@ -7,22 +7,21 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"net/http"
-	"path/filepath"
-	"time"
-
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"labmill-client/internal/account"
 	"labmill-client/internal/config"
 	"labmill-client/internal/launch"
-	"labmill-client/internal/testrun"
-	"os"
-	"os/signal"
-	"strings"
-
 	"labmill-client/internal/testcase"
+	"labmill-client/internal/testrun"
 )
 
 func main() {

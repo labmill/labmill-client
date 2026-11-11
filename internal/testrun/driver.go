@@ -117,7 +117,6 @@ func (u *scriptedUI) snapshot() (final string, asked int, login bool, submitErr 
 
 // Options configure one Driver.
 type Options struct {
-	Home     string  // run folder: <home>/<run id>
 	Cluster  string  // alias of the cluster to use
 	CapUSD   float64 // cost cap per run
 	ConfigIn string  // clusters.yaml to copy into each isolated session
