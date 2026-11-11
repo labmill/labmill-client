@@ -266,7 +266,7 @@ func Tools(env *Env) []agent.Tool {
 	return []agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
-		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
+		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
 	}
 }
 
