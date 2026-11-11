@@ -38,6 +38,9 @@ var toolSkills = map[string][]skillSection{
 	"browse_remote": {
 		{"slurm-user", "references/placement-and-preemption.md", "where-a-jobs-working-data-goes-in-this-order"},
 	},
+	"check_quota": {
+		{"slurm-user", "references/placement-and-preemption.md", "where-a-jobs-working-data-goes-in-this-order"},
+	},
 	"find_local_data": {
 		{"slurm-user", "references/from-your-laptop.md", "two-folders-data-and-code"},
 		{"slurm-user", "references/from-your-laptop.md", "what-claude-may-read"},

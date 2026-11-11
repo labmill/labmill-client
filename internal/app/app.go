@@ -271,7 +271,7 @@ func Tools(env *Env) []agent.Tool {
 	return guardSecrets([]agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
-		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
+		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.checkQuota(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
 	}, env.Warn)
 }
 
@@ -449,6 +449,7 @@ func othersSection(others []OtherSite) string {
 // set serves Claude Code and Labmill).
 const skillToolMap = `How skill steps map to Labmill's tools (the skills were written for Claude Code with a shell; follow their guidance, but act only through these tools):
 - sinfo, quota or GPU questions: list_clusters and cluster_info.
+- Before you install software or write large files in the user's folders: check_quota (free space and quota lines); if it says LOW, ask the user for another location (browse_remote).
 - squeue, sacct: cluster_jobs (all of the user's jobs) or list_jobs (jobs started in Labmill).
 - scontrol show job: job_status; current state: job_status; for output and errors, job_logs (slurm-*.out).
 - sbatch, a submission helper script: draft_job, then submit_job (the user reviews and may edit the script).
