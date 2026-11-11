@@ -1505,3 +1505,11 @@ func autostartOn() bool {
 // window. That is Windows, where the loop's test would otherwise pop up on
 // the owner's desktop and take focus; Linux runs on a hidden X server.
 func selftestHidden(selftestOn bool) bool { return selftestOn && runtime.GOOS == "windows" }
+
+// ClusterNames returns the configured cluster names (the Cluster tab's first choice).
+func (p *PageAPI) ClusterNames() ([]string, error) { return p.app.ClusterNames() }
+
+// BrowseCluster lists the sub-folders of a folder on a cluster over the open SSH session ("" is the home folder).
+func (p *PageAPI) BrowseCluster(cluster, path string) (gui.ClusterFolder, error) {
+	return p.app.BrowseCluster(cluster, path)
+}

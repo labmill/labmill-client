@@ -29,16 +29,16 @@ printf '@@WRITE\n'; if [ -w . ]; then echo yes; else echo no; fi
 printf '@@DIRS\n'; ls -1Ap 2>/dev/null | grep '/$' | head -n 201
 exit 0`
 
-// browseResult is the parsed probe output.
-type browseResult struct {
+// BrowseResult is the parsed probe output: one folder of a cluster.
+type BrowseResult struct {
 	Path     string
 	FreeKiB  string
 	Writable bool
 	Dirs     []string // names without the trailing slash
 }
 
-func parseBrowse(out string) browseResult {
-	var r browseResult
+func parseBrowse(out string) BrowseResult {
+	var r BrowseResult
 	sec := ""
 	for _, line := range strings.Split(out, "\n") {
 		if strings.HasPrefix(line, "@@") {
@@ -66,7 +66,7 @@ func parseBrowse(out string) browseResult {
 }
 
 // renderBrowse is the text the model reads. Names from the cluster are data, so they go through sanitize.
-func renderBrowse(cluster string, r browseResult) string {
+func renderBrowse(cluster string, r BrowseResult) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "Folder %s on %s (login node, read only).", sanitize(r.Path), sanitize(cluster))
 	if r.Writable {
@@ -114,31 +114,48 @@ func (t *toolset) browseRemote() agent.Tool {
 			if err := decode(input, &in); err != nil {
 				return "", err
 			}
-			if in.Path != "" && !strings.HasPrefix(in.Path, "/") {
-				return "", errors.New("path must be an absolute folder (starting with /), or empty for the home folder")
-			}
-			if len(in.Path) > maxBrowsePath || strings.ContainsAny(in.Path, "\x00\n\r") {
-				return "", errors.New("path is not valid")
-			}
-			c, err := t.cluster(in.Cluster)
+			r, err := t.env.BrowseRemote(ctx, in.Cluster, in.Path)
 			if err != nil {
 				return "", err
 			}
-			if t.env.LoginRunner == nil {
-				return "", errors.New("Looking at the folders of a cluster isn't available right now.")
-			}
-			r, err := t.env.LoginRunner(ctx, c)
-			if err != nil {
-				return "", fmt.Errorf("I couldn't connect to %s: %w", c.Name, err)
-			}
-			res, err := r.Run(ctx, []string{"sh", "-c", browseScript, "sh", in.Path}, nil)
-			if err != nil {
-				return "", fmt.Errorf("I couldn't look at the folder on %s: %w", c.Name, err)
-			}
-			if res.ExitCode == 3 || !strings.Contains(res.Stdout, "@@PWD") {
-				return "", fmt.Errorf("the folder %s can't be opened on %s (it does not exist or the user may not enter it)", sanitize(in.Path), c.Name)
-			}
-			return renderBrowse(c.Name, parseBrowse(res.Stdout)), nil
+			return renderBrowse(in.Cluster, r), nil
 		},
 	}
+}
+
+// BrowseRemote lists the sub-folders of path (empty: the home folder) on the named cluster over the open SSH
+// session. It is the one lazy folder source for every picker: the tool above, the TUI and the desktop app call it
+// (a tree opens one level at a time). Read only; a path that can't be entered is an error.
+func (e *Env) BrowseRemote(ctx context.Context, cluster, path string) (BrowseResult, error) {
+	if path != "" && !strings.HasPrefix(path, "/") {
+		return BrowseResult{}, errors.New("path must be an absolute folder (starting with /), or empty for the home folder")
+	}
+	if len(path) > maxBrowsePath || strings.ContainsAny(path, "\x00\n\r") {
+		return BrowseResult{}, errors.New("path is not valid")
+	}
+	t := &toolset{env: e}
+	c, err := t.cluster(cluster)
+	if err != nil {
+		return BrowseResult{}, err
+	}
+	if e.LoginRunner == nil {
+		return BrowseResult{}, errors.New("Looking at the folders of a cluster isn't available right now.")
+	}
+	r, err := e.LoginRunner(ctx, c)
+	if err != nil {
+		return BrowseResult{}, fmt.Errorf("I couldn't connect to %s: %w", c.Name, err)
+	}
+	res, err := r.Run(ctx, []string{"sh", "-c", browseScript, "sh", path}, nil)
+	if err != nil {
+		return BrowseResult{}, fmt.Errorf("I couldn't look at the folder on %s: %w", c.Name, err)
+	}
+	if res.ExitCode == 3 || !strings.Contains(res.Stdout, "@@PWD") {
+		return BrowseResult{}, fmt.Errorf("the folder %s can't be opened on %s (it does not exist or the user may not enter it)", sanitize(path), c.Name)
+	}
+	out := parseBrowse(res.Stdout)
+	for i, d := range out.Dirs {
+		out.Dirs[i] = sanitize(d)
+	}
+	out.Path = sanitize(out.Path)
+	return out, nil
 }

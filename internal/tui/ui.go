@@ -139,6 +139,7 @@ func (md *modal) replyPrompt(a PromptAnswer) {
 
 type model struct {
 	o      Options
+	browse browseState
 	bridge *Bridge
 
 	width, height int
@@ -389,6 +390,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addEntry(roleNotice, "Back from the shell on "+msg.cluster+".")
 		}
 		m.refresh()
+		return m, nil
+
+	case browseResultMsg:
+		m.browseResult(msg)
+		m.refresh()
+		m.vp.GotoBottom()
 		return m, nil
 
 	case jobsMsg:
@@ -849,6 +856,14 @@ func (m *model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.refresh()
 			m.vp.GotoBottom()
 			return m, nil
+		}
+		if arg, ok := browseCmd(text); ok {
+			m.input.Reset()
+			m.notice = ""
+			cmd := m.browseCommand(arg)
+			m.refresh()
+			m.vp.GotoBottom()
+			return m, cmd
 		}
 		if kind, arg, ok := folderCmd(text); ok {
 			m.input.Reset()

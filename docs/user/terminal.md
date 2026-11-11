@@ -27,3 +27,7 @@ The terminal is yours: what you type and see there is not sent to the assistant 
 ## If file transfers fail
 
 If uploads or downloads fail with odd errors, check your login files on the cluster (for example `~/.bashrc`, `~/.bash_profile` or `~/.cshrc`). A file that prints text every time you log in, such as a greeting, `echo` lines or a module list, breaks file transfers. Move such lines so they only run for interactive logins, or remove them, and try again.
+
+## Browse cluster folders
+
+In the terminal app, type `/browse` (or `/browse <cluster>` with several clusters) to list the folders in your home folder on the cluster. Then `/browse 3` opens the third folder, `/browse ..` goes up, and `/browse use` puts "Use the folder ... on ..." in your message line. Nothing is sent until you press Enter. In the chat, Labmill walks this tree itself and offers you the folders as choices, so you never type a cluster path.
