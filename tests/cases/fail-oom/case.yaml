@@ -1,0 +1,11 @@
+id: fail-oom
+title: A job that needs more memory than it asks for
+tags: [failure, memory]
+prompt: |
+  Run oom.py as a batch job with 256 MB of memory.
+needs: {cpus: 1, mem_mb: 4096, modules: [python3]}
+time_budget: 120
+expect:
+  outcome: failed
+  failure_class: out_of_memory
+  agent_should: fix_and_resubmit

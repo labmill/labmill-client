@@ -1,0 +1,9 @@
+id: py-numpy-sum
+title: Sum a column with numpy
+tags: [python, numpy]
+prompt: |
+  Sum the third column of data.csv with Python and numpy, and write the total to result.txt.
+needs: {cpus: 1, mem_mb: 512, modules: [python3, numpy]}
+time_budget: 120
+expect:
+  outcome: completed

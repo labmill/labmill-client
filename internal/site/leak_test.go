@@ -126,7 +126,7 @@ func classifyLeak(p string) leakKind {
 		return leakGo
 	case p == "internal/rules/images.yaml", strings.HasPrefix(p, "cmd/labmill-gui/frontend/"):
 		return leakText
-	case p == "README.md", p == "docs/index.md", strings.HasPrefix(p, "docs/user/"):
+	case p == "README.md", p == "docs/index.md", strings.HasPrefix(p, "docs/user/"), strings.HasPrefix(p, "tests/cases/"):
 		return leakText
 	}
 	return leakNone
@@ -194,7 +194,7 @@ func scanLeaks(terms []leakTerm, files map[string]string, comments bool) []strin
 func readRepoFiles(t *testing.T, root string) map[string]string {
 	t.Helper()
 	files := map[string]string{}
-	for _, r := range []string{"skills", "sites", "cmd", "internal", "docs/user", "README.md", "docs/index.md"} {
+	for _, r := range []string{"skills", "sites", "cmd", "internal", "docs/user", "tests/cases", "README.md", "docs/index.md"} {
 		err := filepath.WalkDir(filepath.Join(root, filepath.FromSlash(r)), func(p string, d fs.DirEntry, err error) error {
 			if err != nil || d.IsDir() {
 				return err
@@ -319,6 +319,7 @@ func TestLeakScannerCoverage(t *testing.T) {
 		{"README", "README.md", "zqplant", false, true},
 		{"docs index", "docs/index.md", "zqplant", false, true},
 		{"user doc", "docs/user/nested/a.md", "zqplant", false, true},
+		{"test case", "tests/cases/py-numpy-sum/case.yaml", "zqplant", false, true},
 		{"dev doc", "docs/dev/done.md", "zqplant", false, false},
 		{"CLAUDE.md", "CLAUDE.md", "zqplant", false, false},
 		{"whole word only", "README.md", "zqplanted", false, false},

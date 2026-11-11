@@ -1,0 +1,9 @@
+id: py-stdin-stdout
+title: Count lines from standard input
+tags: [python, io]
+prompt: |
+  Write a Python script that reads lines.txt on standard input and prints the number of lines. Run it as a job and save the number to count.txt.
+needs: {cpus: 1, mem_mb: 256, modules: [python3]}
+time_budget: 60
+expect:
+  outcome: completed

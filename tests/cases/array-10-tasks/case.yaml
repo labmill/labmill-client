@@ -1,0 +1,9 @@
+id: array-10-tasks
+title: A job array of 10 tasks
+tags: [parallel, array]
+prompt: |
+  Submit one Slurm job array with 10 tasks, numbered 1 to 10. Task N writes the number N times N to the file out-N.txt.
+needs: {cpus: 1, mem_mb: 128}
+time_budget: 180
+expect:
+  outcome: completed
