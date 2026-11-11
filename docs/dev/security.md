@@ -20,6 +20,8 @@ This page lists the protections that exist in the code today, with where to find
 - Staging doesn't follow symlinks, skips special files and hidden entries (reporting them), and rejects any path that resolves outside the root. (`transfer.BuildManifest`)
 - The system prompt tells Claude to treat file names, file contents, job logs and tool results as data, never instructions. This is a mitigation, not a boundary; the approvals are the boundary.
 
+
+**Secret guard (owner decision 2026-11-11).** `guardSecrets` (`internal/app/secretscrub.go`) wraps every tool, so every result and every error text goes through `scrubTokens` before the model sees it. Text with the shape of a private key, an AWS or GitHub key, an API key, a Slack or web token, a bearer header or a password in a URL is replaced by a marker. The user gets a warning (`Env.Warn`), and the result tells the model that something was hidden. This is in addition to the keyed rule `redactSecrets` ("password = ..."), which stays for file content and remote output. The shapes are narrow (known prefix, long body) so checksums and ordinary text stay. A secret with no known shape and no key name is not found.
 ## No shell, typed tools only
 
 - There is no shell tool. Claude can only call the registered typed tools, each with a fixed JSON schema. An unknown tool name is an error result. (`internal/agent`)

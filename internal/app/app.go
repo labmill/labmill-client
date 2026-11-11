@@ -68,6 +68,11 @@ type Env struct {
 	ListRemote   func(ctx context.Context, src transfer.Remote) ([]transfer.RemoteFile, error)
 	ListRemoteS3 func(ctx context.Context, src transfer.S3Remote) ([]transfer.RemoteFile, error)
 	FreeSpace    func(dir string) (int64, error)
+	// MaxAutoDownloadBytes is the most an automatic download brings (clusters.yaml max_auto_download_gb); 0 means
+	// AutoFetchMaxBytes.
+	MaxAutoDownloadBytes int64
+	// Warn tells the user something in the chat (a secret was hidden from the model); nil: no warning.
+	Warn func(text string)
 	// OnJobEnded, if set, is called when job_status saw a job of yours reach
 	// completed or failed before the background job monitor did (M60.1); the
 	// front end starts the automatic download from it. It must not block.
@@ -135,7 +140,10 @@ type Env struct {
 	// writes the SSH settings and the cluster to clusters.yaml (with
 	// `site:` set) and returns the cluster as configured (final aliases).
 	// add_cluster then makes it visible to the other tools in this session.
-	AddCluster func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
+	// RememberAccount saves the Slurm account the user chose on a cluster in
+	// clusters.yaml (account:). Nil: it is not remembered.
+	RememberAccount func(ctx context.Context, c config.Cluster, account string) error
+	AddCluster      func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
 	// LocalRoots are the directories find_local_data and preview_file may
 	// look into (default: the user's home directory). Nothing outside them
 	// is ever listed or read.
@@ -260,11 +268,11 @@ func (s SiteInfo) SlurmFor(cluster string) rules.SlurmHints {
 // approval is displayed.
 func Tools(env *Env) []agent.Tool {
 	t := &toolset{env: env}
-	return []agent.Tool{
+	return guardSecrets([]agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
-		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
-	}
+		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
+	}, env.Warn)
 }
 
 // SystemPrompt builds the agent's system prompt:

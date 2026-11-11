@@ -326,3 +326,14 @@ func TestParsePBS(t *testing.T) {
 		t.Fatalf("%v %+v", err, cfg)
 	}
 }
+
+func TestMaxAutoDownloadGB(t *testing.T) {
+	c, err := Parse([]byte("max_auto_download_gb: 12.5\nclusters: []\n"))
+	if err != nil || c.MaxAutoDownloadGB != 12.5 {
+		t.Fatalf("got %v, %v", c, err)
+	}
+	c.MaxAutoDownloadGB = -1
+	if err := c.Validate(); err == nil || !strings.Contains(err.Error(), "max_auto_download_gb") {
+		t.Errorf("negative must be refused: %v", err)
+	}
+}

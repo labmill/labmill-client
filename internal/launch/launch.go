@@ -437,7 +437,8 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	}
 	env := &app.Env{
 		Config: cfg, Store: db, Skills: set,
-		Site: siteInfo(st, cfg.Clusters, others...),
+		MaxAutoDownloadBytes: int64(cfg.MaxAutoDownloadGB * (1 << 30)),
+		Site:                 siteInfo(st, cfg.Clusters, others...),
 		Backend: func(ctx context.Context, c config.Cluster) (backend.Backend, error) {
 			return conns.backendFor(ctx, c)
 		},
@@ -521,6 +522,9 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		return planAddCluster(paths, cfgPath, withHome, domain, cluster)
 	}
 	wireAccounts(env, conns, cfg, st.Domain, sshconfig.DefaultPaths, goruntime.GOOS)
+	env.RememberAccount = func(_ context.Context, c config.Cluster, account string) error {
+		return rememberAccount(cfgPath, cfg, c, account, time.Now())
+	}
 	env.AddCluster = func(ctx context.Context, plan app.AddClusterPlan, username string) (config.Cluster, error) {
 		paths, err := sshconfig.DefaultPaths()
 		if err != nil {
@@ -636,6 +640,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}}
 	mon.resubmit = rs.Handle
 	env.Resubmitter = rs
+	env.Warn = ui.JobNotice
 	// job_status may see a job end before the monitor does.
 	env.OnJobEnded = mon.jobEnded
 	// A downloaded job's sentence carries its ID so the GUI can offer "Open

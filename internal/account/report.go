@@ -39,6 +39,7 @@ type JobIn struct {
 	Script          string          `json:"script,omitempty"`
 	StdoutLines     []string        `json:"stdout_lines,omitempty"`
 	StderrLines     []string        `json:"stderr_lines,omitempty"`
+	Resubmissions   int             `json:"resubmissions,omitempty"` // automatic resubmissions of this job
 }
 
 // Software is one module the job loaded.
@@ -115,6 +116,8 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	var submitted, started, ended time.Time
 	for _, e := range evs {
 		switch e.Kind {
+		case "resubmitted":
+			in.Resubmissions++
 		case "spec":
 			var s backend.JobSpec
 			if json.Unmarshal([]byte(e.Text), &s) == nil {

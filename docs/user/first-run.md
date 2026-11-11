@@ -34,6 +34,7 @@ You only do this once. Your cluster list is kept in `~/.config/labmill/clusters.
 
 Labmill reads job times in UTC, so you normally don't need to set anything. Only if a Slurm cluster's job start and end times still look wrong (its Slurm ignores the time zone request), add a `timezone:` line to its entry, for example `timezone: Europe/Berlin`.
 
+If your user name has several Slurm accounts on a cluster, Labmill asks you once which one to charge and saves it as an `account:` line in that cluster's entry (for example `account: mygroup`). Change or remove the line to choose again. With one account, Labmill uses it without asking.
 ## The first login
 
 Labmill signs in to the cluster the first time it needs it, for example when you ask about queues or when you approve an upload. A small box pops up in the window.

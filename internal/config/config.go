@@ -76,6 +76,9 @@ type Cluster struct {
 	// another institution is added on the user's explicit request; its
 	// hosts, 2FA text and site skill come from that institution's profile.
 	Site string `yaml:"site,omitempty"`
+	// Account is the Slurm account the user chose for this cluster when they
+	// have several; draft_job uses it (--account) and does not ask again.
+	Account string `yaml:"account,omitempty"`
 }
 
 // S3 configures the S3 staging path (Transfer == TransferS3). Credentials
@@ -221,6 +224,9 @@ type Config struct {
 	// and the site skill.
 	Site     string    `yaml:"site,omitempty"`
 	Clusters []Cluster `yaml:"clusters"`
+	// MaxAutoDownloadGB is the most results an automatic download brings, in GB; larger results are only listed and
+	// downloaded when the user asks. 0 means the default (5).
+	MaxAutoDownloadGB float64 `yaml:"max_auto_download_gb,omitempty"`
 
 	// mu guards Clusters once a session shares the Config: add_cluster
 	// (AddCluster) appends while the job monitor and the front ends read
@@ -417,6 +423,9 @@ func (c *Config) Validate() error {
 // tied to its cluster and field.
 func (c *Config) FieldErrors() []FieldError {
 	var errs []FieldError
+	if c.MaxAutoDownloadGB < 0 || c.MaxAutoDownloadGB > 1e6 {
+		errs = append(errs, FieldError{Cluster: -1, Field: "max_auto_download_gb", Message: "max_auto_download_gb must be a number of GB from 0 to 1000000 (0 = the default, 5)"})
+	}
 	if c.Site != "" && !siteRE.MatchString(c.Site) {
 		errs = append(errs, FieldError{Cluster: -1, Field: "site", Message: fmt.Sprintf("site %q must be an institution domain like example.edu (or generic)", c.Site)})
 	}
@@ -461,6 +470,9 @@ func (c *Config) FieldErrors() []FieldError {
 				bad("files_host", "files_host: %v", err)
 			}
 		}
+		if cl.Account != "" && !accountRE.MatchString(cl.Account) {
+			bad("account", "account %q must match [A-Za-z0-9._-]+", cl.Account)
+		}
 		if cl.Site != "" && !siteRE.MatchString(cl.Site) {
 			bad("site", "site %q must be an institution domain like example.edu (or generic)", cl.Site)
 		}
@@ -491,4 +503,20 @@ func (c *Config) Cluster(name string) (Cluster, bool) {
 		}
 	}
 	return Cluster{}, false
+}
+
+var accountRE = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+
+// SetAccount sets the remembered Slurm account of the named cluster in
+// memory; it reports whether the cluster exists.
+func (c *Config) SetAccount(name, account string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i := range c.Clusters {
+		if c.Clusters[i].Name == name {
+			c.Clusters[i].Account = account
+			return true
+		}
+	}
+	return false
 }
