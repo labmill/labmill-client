@@ -68,6 +68,9 @@ type Env struct {
 	ListRemote   func(ctx context.Context, src transfer.Remote) ([]transfer.RemoteFile, error)
 	ListRemoteS3 func(ctx context.Context, src transfer.S3Remote) ([]transfer.RemoteFile, error)
 	FreeSpace    func(dir string) (int64, error)
+	// MaxAutoDownloadBytes is the most an automatic download brings (clusters.yaml max_auto_download_gb); 0 means
+	// AutoFetchMaxBytes.
+	MaxAutoDownloadBytes int64
 	// OnJobEnded, if set, is called when job_status saw a job of yours reach
 	// completed or failed before the background job monitor did (M60.1); the
 	// front end starts the automatic download from it. It must not block.

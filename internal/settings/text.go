@@ -56,7 +56,7 @@ func (v View) Text() string {
 		b.WriteString("- approve everything automatically: off. Turn it on with /autoapprove on, or in the desktop app's main window or Settings.\n")
 	}
 	if v.App.AutoDownload {
-		b.WriteString("- download results automatically: ON (when a job you submitted finishes, Labmill brings its results to your results folder by itself, up to 2 GB and never more than fits on your disk). Turn it off with /autodownload off, or in the desktop app's main window or Settings.\n")
+		b.WriteString("- download results automatically: ON (when a job you submitted finishes, Labmill brings its results to your results folder by itself, up to 5 GB by default (max_auto_download_gb in clusters.yaml) and never more than fits on your disk). Turn it off with /autodownload off, or in the desktop app's main window or Settings.\n")
 	} else {
 		b.WriteString("- download results automatically: off. Turn it on with /autodownload on, or in the desktop app's main window or Settings.\n")
 	}
