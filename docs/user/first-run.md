@@ -40,7 +40,7 @@ Labmill signs in to the cluster the first time it needs it, for example when you
 
 1. **Password.** Type your cluster password. The characters are hidden and the password is not saved anywhere.
 2. **Two-factor sign-in.** If your institution uses a push to your phone, Labmill chooses that option for you. Look at your phone and **approve the push notification**. Labmill waits up to about a minute.
-3. That's it. Labmill keeps the login open while you work, so you aren't asked again for every upload or job. A small background helper holds the login and closes it by itself about 10 minutes after you stop using Labmill.
+3. That's it. Labmill keeps the login open while you work, so you aren't asked again for every upload or job. A small background helper holds the login and closes it by itself about 12 hours after you stop using Labmill.
 
 ### If no push arrives
 

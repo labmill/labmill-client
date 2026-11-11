@@ -8,7 +8,7 @@ ssh bigcluster-login
 
 The alias for each cluster is in `~/.config/labmill/clusters.yaml` (the `ssh_host` entry) and in the file `~/.ssh/config.d/labmill`. It carries your user name, the host, and any jump host, so you don't have to type them. If you already had your own SSH name for the same cluster, Labmill reused it and you keep using that.
 
-On macOS and Linux, the settings also tell `ssh` to keep the login open for 10 minutes after you disconnect, so a second terminal window doesn't ask for your password and two-factor approval again. (These lines are left out on Windows, where the built-in OpenSSH doesn't support them.) The terminal's login is separate from Labmill's own, so you may be asked once more the first time.
+On macOS and Linux, the settings also tell `ssh` to keep the login open for 12 hours after you disconnect, so a second terminal window doesn't ask for your password and two-factor approval again. (These lines are left out on Windows, where the built-in OpenSSH doesn't support them.) The terminal's login is separate from Labmill's own, so you may be asked once more the first time.
 
 Your password and two-factor approvals work exactly as they do for any cluster login. Labmill doesn't store them.
 

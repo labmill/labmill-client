@@ -41,7 +41,7 @@ Match Host * Exec "! nc -z localhost 1080 2> /dev/null"
 
 Host *
     ControlPath ~/.ssh/controlmasters/%r@%h:%p
-    ControlPersist 10m
+    ControlPersist 12h
     User otheruser
 
 # Jump Host
@@ -69,7 +69,7 @@ func TestRender(t *testing.T) {
 	for _, want := range []string{
 		"Host hpcone\n", "HostName login.example.edu", "User alice",
 		"Host inner\n", "Port 2222", "ProxyJump hpcone", "IdentityFile ~/.ssh/id_ed25519",
-		"ServerAliveInterval 30", "ControlMaster auto", "ControlPath ~/.ssh/controlmasters/%r@%h:%p", "ControlPersist 10m",
+		"ServerAliveInterval 30", "ControlMaster auto", "ControlPath ~/.ssh/controlmasters/%r@%h:%p", "ControlPersist 12h",
 	} {
 		if !strings.Contains(unix, want) {
 			t.Errorf("linux render missing %q:\n%s", want, unix)

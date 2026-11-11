@@ -41,7 +41,7 @@ Both modes share the same core, so a job started in one can be watched from the 
 - **Results are checked.** Downloads are compared with checksums computed on the cluster. A file that doesn't match is kept under a `.mismatch` name, never overwritten.
 - **Your accounts, your login.** Labmill needs no account of its own. You sign in with your existing cluster account, including any two-factor step. Passwords and two-factor codes are never written to disk.
 - **Optional Labmill account.** `labmill login` (or Settings > Labmill account) connects the client to app.labmill.org with a program token. Then a record of each finished job (state, times, resources, partition, modules) goes to your account; never scripts, data, code, names or logs.
-- **One binary.** Nothing to install on the cluster and nothing left running when you're done, except a small SSH helper that holds your login and exits about 10 minutes after you stop.
+- **One binary.** Nothing to install on the cluster and nothing left running when you're done, except a small SSH helper that holds your login and exits about 12 hours after you stop.
 
 ## Build from source
 
