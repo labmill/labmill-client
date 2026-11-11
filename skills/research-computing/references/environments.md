@@ -316,3 +316,15 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available())"   
 
 Test in a short interactive job on the node type you will use before
 submitting a long one.
+
+## Install into your own folder: check the space first
+
+When steps 1 and 2 of [Finding software](#finding-software-on-a-cluster-modules-first) found nothing, an environment (conda, venv) or an Apptainer image goes into a folder you own. Check the space before you start:
+
+```bash
+df -Pk "$HOME"        # free space of the filesystem that holds the folder
+quota -s              # NFS or ext4 user quota, if the tool exists
+lfs quota -h -u "$USER" "$HOME"   # Lustre
+```
+
+A conda environment is often 2 to 10 GB, a container image 1 to 5 GB, and the package cache doubles that while it builds. If the free space or the quota is lower than that, ask the user for another folder (a project or lab folder) and check it the same way. Point the caches there too (`CONDA_PKGS_DIRS`, `APPTAINER_CACHEDIR`). In Labmill, `check_quota` does this check and `browse_remote` helps to pick the other folder.

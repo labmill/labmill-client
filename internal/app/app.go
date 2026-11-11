@@ -450,6 +450,7 @@ func othersSection(others []OtherSite) string {
 const skillToolMap = `How skill steps map to Labmill's tools (the skills were written for Claude Code with a shell; follow their guidance, but act only through these tools):
 - sinfo, quota or GPU questions: list_clusters and cluster_info.
 - Before you install software or write large files in the user's folders: check_quota (free space and quota lines); if it says LOW, ask the user for another location (browse_remote).
+- Installing software for a job: first modules and the site's own installs (module spider, ls of the site's software folder); only when nothing fits (or the version is more than a year old), a conda environment or an Apptainer image in the user's home. Before the install call check_quota with the size you expect (conda 2 to 10 GB, image 1 to 5 GB); if it says LOW, ask the user for another folder (browse_remote) and check again. The install itself is a remote_command, which asks first; say what it installs and where.
 - squeue, sacct: cluster_jobs (all of the user's jobs) or list_jobs (jobs started in Labmill).
 - scontrol show job: job_status; current state: job_status; for output and errors, job_logs (slurm-*.out).
 - sbatch, a submission helper script: draft_job, then submit_job (the user reviews and may edit the script).
