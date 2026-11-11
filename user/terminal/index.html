@@ -739,6 +739,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#browse-cluster-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Browse cluster folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1290,6 +1301,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#browse-cluster-folders" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Browse cluster folders
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1322,6 +1344,8 @@
 <p>The terminal is yours: what you type and see there is not sent to the assistant or saved in the chat, and the assistant never uses it. Labmill only records in its log that a terminal was opened and closed on the cluster. Labmill keeps the sign-in open while the terminal is open.</p>
 <h2 id="if-file-transfers-fail">If file transfers fail<a class="headerlink" href="#if-file-transfers-fail" title="Permanent link">&para;</a></h2>
 <p>If uploads or downloads fail with odd errors, check your login files on the cluster (for example <code>~/.bashrc</code>, <code>~/.bash_profile</code> or <code>~/.cshrc</code>). A file that prints text every time you log in, such as a greeting, <code>echo</code> lines or a module list, breaks file transfers. Move such lines so they only run for interactive logins, or remove them, and try again.</p>
+<h2 id="browse-cluster-folders">Browse cluster folders<a class="headerlink" href="#browse-cluster-folders" title="Permanent link">&para;</a></h2>
+<p>In the terminal app, type <code>/browse</code> (or <code>/browse &lt;cluster&gt;</code> with several clusters) to list the folders in your home folder on the cluster. Then <code>/browse 3</code> opens the third folder, <code>/browse ..</code> goes up, and <code>/browse use</code> puts "Use the folder ... on ..." in your message line. Nothing is sent until you press Enter. In the chat, Labmill walks this tree itself and offers you the folders as choices, so you never type a cluster path.</p>
 
 
 

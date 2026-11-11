@@ -1116,6 +1116,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dependency direction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#folder-picker-local-and-cluster-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folder picker: Local and Cluster sources
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1588,6 +1605,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dependency direction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#folder-picker-local-and-cluster-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Folder picker: Local and Cluster sources
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1739,7 +1773,7 @@
 <h3 id="the-typed-tools">The typed tools<a class="headerlink" href="#the-typed-tools" title="Permanent link">&para;</a></h3>
 <p>Defined in <code>internal/app/tools.go</code> (the doc comment on <code>app.Tools</code> is the reference).</p>
 <ul>
-<li><strong>Read-only:</strong> <code>list_clusters</code>, <code>cluster_info</code>, <code>find_local_data</code>, <code>preview_file</code>, <code>stage_data</code>, <code>draft_job</code>, <code>job_status</code>, <code>list_jobs</code>, <code>cluster_jobs</code> (the user's own jobs on the scheduler via the optional <code>backend.Lister</code>; includes jobs not started through Labmill), <code>job_logs</code>, <code>diagnose_job</code> (collects the facts of a failed job and keeps a local failure memory), <code>browse_remote</code> (the sub-folders of one cluster folder, the free space and whether the user can write there; one read-only login-node call; the remote folder picker works through it and <code>ask_user</code>), <code>update_todos</code> (the to-do list shown above the input), <code>ask_user</code> (a question with 2 to 8 options shown as a selection dialog; see below).</li>
+<li><strong>Read-only:</strong> <code>list_clusters</code>, <code>cluster_info</code>, <code>find_local_data</code>, <code>preview_file</code>, <code>stage_data</code>, <code>draft_job</code>, <code>job_status</code>, <code>list_jobs</code>, <code>cluster_jobs</code> (the user's own jobs on the scheduler via the optional <code>backend.Lister</code>; includes jobs not started through Labmill), <code>job_logs</code>, <code>diagnose_job</code> (collects the facts of a failed job and keeps a local failure memory), <code>browse_remote</code> (calls <code>Env.BrowseRemote</code>, the one lazy folder source for every picker; the sub-folders of one cluster folder, the free space and whether the user can write there; one read-only login-node call; the remote folder picker works through it and <code>ask_user</code>), <code>check_quota</code> (free space by df and the quota lines of lfs quota and quota for one folder, with a fits or LOW verdict against the size needed; read only, before an install; a LOW answer leads to another location through <code>browse_remote</code>), <code>update_todos</code> (the to-do list shown above the input), <code>ask_user</code> (a question with 2 to 8 options shown as a selection dialog; see below).</li>
 <li><strong>Approval-gated:</strong> <code>upload_data</code>, <code>submit_job</code> (editable script), <code>cancel_job</code>, <code>fetch_results</code>, <code>cleanup_job</code> (after a verified download, removes the ended Slurm job's own working files in its Labmill job folder in the global scratch: exact files only, each re-checked by SHA-256 on the cluster, then the folders that held them; never environments, never a tree-wide delete; see <code>internal/app/cleanup.go</code>), <code>s3_credentials_to_cluster</code> (copies one AWS profile to the login node's <code>~/.aws/credentials</code> as its own section; always asks, the values never reach the model), <code>set_cluster_account</code> (changes the <code>User</code> of a cluster's login and files hosts in Labmill's own SSH file after a sign-in rejected the reused name; refuses entries of the user's own SSH config and entries another cluster shares; makes the SSH helper forget its logins for those aliases first, then clears the cached connections and user ID of the cluster), <code>add_cluster</code> (sets up a cluster of another institution this build has a profile for, only on the user's explicit request; writes <code>clusters.yaml</code> and the SSH settings, never runs anything on a cluster, and always asks, also under "Approve everything automatically"; the cluster is usable in the same session). Its scope also covers a cluster of the user's own institution that the install lacks (the profile gained it after setup; <code>SiteInfo.HomeMissing</code>, computed by <code>launch.homeMissing</code> from the home profile and <code>clusters.yaml</code>, is named in the prompt; <code>site</code> is then the home domain and <code>username</code> may be left empty for any institution: <code>Env.KnownUsername(site)</code> supplies the account already used there, from the login host of a configured cluster of that institution; the proposal names the cluster it came from, and an existing SSH entry's own <code>User</code> wins over it). It goes through the same plan/apply code (<code>planAddCluster</code>, <code>addSiteCluster</code> over the home profile plus the others), appends to <code>clusters.yaml</code> without <code>site:</code> (Cluster.yaml's <code>order</code> only orders the first-run list) and reuses an alias that already points at the host (<code>AddClusterHost.ReusedAlias/ReusedUser</code>, shown in the proposal and the preview; the entry's own User wins at sign-in, so <code>AddClusterPlan.AccountConflict</code> and a guard in <code>addSiteCluster</code> refuse a different account). "Missing" is <code>site.Site.MissingClusters</code>: not configured by name, nor by the same Slurm login HostName under another name; the settings page and the prompt share it. The settings path reads only the locked <code>Config</code> and the files (<code>Runtime.CheckHomeCluster</code> before the add starts), never <code>Env.Site</code>; a home add keeps the home key hosts non-foreign (<code>connCache.noteAddedCluster</code>). The GUI settings page lists these clusters (<code>settings.View.MoreClusters</code>) with an Add button: <code>SettingsAPI.MoreClusterPlan</code> previews, <code>AddMoreCluster</code> runs <code>Runtime.AddHomeCluster</code> as a turn of its own (the click is the approval); the TUI's <code>/settings</code> text lists them.</li>
 <li><strong>Gated except read-only commands:</strong> <code>remote_command</code> (one command on a cluster's login node; see "Commands on the login node" below).</li>
 </ul>
@@ -1823,6 +1857,8 @@
 </ul>
 <h2 id="dependency-direction">Dependency direction<a class="headerlink" href="#dependency-direction" title="Permanent link">&para;</a></h2>
 <p><code>cmd/labmill</code> → (<code>tui</code>, <code>app</code>, <code>site</code>) → <code>agent</code> → (<code>skill</code>, <code>broker</code>, <code>backend</code>, <code>transfer</code>, <code>store</code>, <code>knowledge</code>, <code>rules</code>) → (<code>sshx</code>, <code>config</code>, <code>sshconfig</code>). <code>cmd/labmill</code> and <code>cmd/labmill-gui</code> wire the pieces together through <code>launch</code>; <code>app</code> takes everything through the <code>app.Env</code> function fields. <code>rules</code> has no internal dependencies on the heavy packages. Every backend, transfer target and the model client has an interface, so tests use in-process fakes and need no network.</p>
+<h3 id="folder-picker-local-and-cluster-sources">Folder picker: Local and Cluster sources<a class="headerlink" href="#folder-picker-local-and-cluster-sources" title="Permanent link">&para;</a></h3>
+<p><code>Env.BrowseRemote(ctx, cluster, path)</code> (<code>internal/app/browseremote.go</code>) is the one lazy source of cluster folders: one read-only login-node call per level over the open SSH session. Callers: the <code>browse_remote</code> tool (chat: the model walks the tree with <code>ask_user</code>, the prompt says users never type a path), the desktop app's Cluster tab (<code>gui.App.BrowseCluster</code>, <code>ClusterNames</code>, <code>frontend/clusterbrowse.js</code>, reached from the + menu) and the terminal's <code>/browse</code> (<code>internal/tui/browse.go</code>). The Local source is the native folder dialog in the desktop app and <code>/data</code>, <code>/code</code> with Tab completion in the terminal. Choosing a cluster folder only puts its path into the message; nothing is read or sent.</p>
 
 
 
