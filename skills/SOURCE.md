@@ -1,12 +1,12 @@
 # Generic skills
 
-These skills come from **yeetl** (copied on 2026-10-22; only the Slurm and
+These skills come from an earlier client (copied on 2026-10-22; only the Slurm and
 research-computing skills). From then on Labmill is the master copy of the generic Slurm skills;
 nothing is synced back automatically.
 
-- `slurm-user/` started in yeetl as a sync of an upstream Claude Code skill
-  set, under the MIT license in `LICENSE.upstream`, and was extended in yeetl.
-- `research-computing/` was written in yeetl.
+- `slurm-user/` started in the earlier client as a sync of an upstream Claude Code skill
+  set, under the MIT license in `LICENSE.upstream`, and was extended there.
+- `research-computing/` was written in the earlier client.
 
 They are **generic**: every site-specific fact (host names, domains, cluster
 names, partitions, GPU and driver versions, storage paths, proxy addresses,
