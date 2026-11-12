@@ -9,16 +9,16 @@ Labmill has two programs. Both do the same work and share the same settings and 
 
 ## Download
 
-Go to the [Labmill releases page](https://github.com/labmill/labmill-client/releases). Open the newest release. Download the files for your computer from the **Assets** list.
+Download the file for your computer. The links are for the newest test build, v0.1.0-test.2. All builds are on the [Labmill releases page](https://github.com/labmill/labmill-client/releases): test builds show as **Pre-release**, and their files are in the **Assets** list of each release.
 
 | Your computer | Desktop app | Terminal app |
 |---|---|---|
-| macOS (Apple silicon) | `labmill-gui-darwin-arm64` | `labmill-darwin-arm64` |
-| macOS (Intel) | not built | `labmill-darwin-amd64` |
-| Windows (64 bit, Intel or AMD) | `labmill-gui-windows-amd64.exe` | `labmill-windows-amd64.exe` |
-| Windows on Arm | not built | `labmill-windows-arm64.exe` |
-| Linux (64 bit, Intel or AMD) | `labmill-gui-linux-amd64` | `labmill-linux-amd64` |
-| Linux on Arm | `labmill-gui-linux-arm64` | `labmill-linux-arm64` |
+| macOS (Apple silicon) | [`labmill-gui-darwin-arm64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-gui-darwin-arm64) | [`labmill-darwin-arm64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-darwin-arm64) |
+| macOS (Intel) | [`labmill-gui-darwin-amd64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-gui-darwin-amd64) | [`labmill-darwin-amd64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-darwin-amd64) |
+| Windows (64 bit, Intel or AMD) | [`labmill-gui-windows-amd64.exe`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-gui-windows-amd64.exe) | [`labmill-windows-amd64.exe`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-windows-amd64.exe) |
+| Windows on Arm | not built | [`labmill-windows-arm64.exe`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-windows-arm64.exe) |
+| Linux (64 bit, Intel or AMD) | [`labmill-gui-linux-amd64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-gui-linux-amd64) | [`labmill-linux-amd64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-linux-amd64) |
+| Linux on Arm | not built | [`labmill-linux-arm64`](https://github.com/labmill/labmill-client/releases/download/v0.1.0-test.2/labmill-linux-arm64) |
 
 The release also has a file `SHA256SUMS`. It is the only checksum file: there is no `.sha256` file for each download. To check a download, compute its SHA-256 checksum and compare it with the line for your file.
 
