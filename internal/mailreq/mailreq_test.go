@@ -68,3 +68,10 @@ func TestOpenStarts(t *testing.T) {
 		t.Errorf("%v %v", got, err)
 	}
 }
+
+func TestFill(t *testing.T) {
+	got := Fill("Hi {name} at {institution}: {reason} {other}", "Ann", "{reason}", "need GPUs")
+	if got != "Hi Ann at {reason}: need GPUs {other}" {
+		t.Errorf("Fill = %q", got)
+	}
+}

@@ -92,3 +92,9 @@ func Open(target string) error {
 	}
 	return nil
 }
+
+// Fill puts name, institution and reason into the three placeholders of a site template. Any other brace text stays
+// as it is, and a value that holds a placeholder is not filled again (one pass).
+func Fill(tmpl, name, institution, reason string) string {
+	return strings.NewReplacer("{name}", name, "{institution}", institution, "{reason}", reason).Replace(tmpl)
+}
