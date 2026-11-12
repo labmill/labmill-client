@@ -564,7 +564,7 @@ func (t *toolset) clusterInfo() agent.Tool {
 				if p.DefaultTime > 0 {
 					fmt.Fprintf(&b, ", default time %s", p.DefaultTime)
 				}
-				if p.CPUsPerNode > 0 {
+				if p.CPUsPerNode > 0 && p.MemPerNodeMB > 0 {
 					fmt.Fprintf(&b, ", %d cores and %d MB per node", p.CPUsPerNode, p.MemPerNodeMB)
 				}
 				if p.DefMemMB > 0 {
@@ -929,6 +929,11 @@ func (t *toolset) draftJob() agent.Tool {
 				spec.WorkDir = j.RemoteDir
 			}
 			defaulted := false
+			if strings.TrimSpace(spec.WorkDir) == "" && !noData {
+				if men, err := t.env.Store.Manifest(ctx, j.ID); err != nil || len(men) > 0 {
+					return "", errors.New("I don't know where to run the job. Upload the data first, or give a work_dir on the cluster.")
+				}
+			}
 			if strings.TrimSpace(spec.WorkDir) == "" {
 				wd, err := t.defaultWorkDir(ctx, c, spec.Name)
 				if err != nil {
@@ -958,7 +963,7 @@ func (t *toolset) draftJob() agent.Tool {
 			if err != nil {
 				return "", fmt.Errorf("That job setup isn't valid: %w", err)
 			}
-			defaultsNote := resolvedDefaults(ctx, be, spec)
+			defaultsNote := resolvedDefaults(ctx, be, spec, plan.info)
 			plan.Estimate = estimateStart(ctx, be, script)
 			specJSON, err := json.Marshal(spec)
 			if err != nil {
@@ -2178,12 +2183,16 @@ func defaultMemText(p backend.Partition) string {
 
 // resolvedDefaults is the draft_job note on the time and memory a job gets
 // from the partition because the spec leaves them open. "" when nothing is open.
-func resolvedDefaults(ctx context.Context, be backend.Backend, spec backend.JobSpec) string {
+func resolvedDefaults(ctx context.Context, be backend.Backend, spec backend.JobSpec, known *backend.ClusterInfo) string {
 	if spec.Time != 0 && spec.MemoryGB != 0 {
 		return ""
 	}
-	info, err := be.Info(ctx)
-	if err != nil {
+	info := backend.ClusterInfo{}
+	if known != nil {
+		info = *known
+	} else if got, err := be.Info(ctx); err == nil {
+		info = got
+	} else {
 		return ""
 	}
 	i := slices.IndexFunc(info.Partitions, func(p backend.Partition) bool {

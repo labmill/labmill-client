@@ -219,7 +219,7 @@ func TestLogs(t *testing.T) {
 
 func TestInfoPartitionDefaults(t *testing.T) {
 	r := &fakeRunner{replies: map[string]backend.Result{
-		"sinfo": {Stdout: "gpu*|up|2-00:00:00|gpu:a100:4|3|idle|64|512000\ncpu|up|infinite|(null)|10|idle|32+|128000\n"},
+		"sinfo": {Stdout: "gpu*|up|2-00:00:00|gpu:a100:4|3|idle|64|512000\ncpu|up|infinite|(null)|10|idle|32+|128000\ngpu*|up|2-00:00:00|gpu:a100:4|1|mix|64|256000\n"},
 		"scontrol show": {Stdout: "PartitionName=gpu AllowGroups=ALL AllowAccounts=lab1,lab2 DefaultTime=04:00:00 MaxTime=2-00:00:00 DefMemPerCPU=4000 TRES=cpu=64\n" +
 			"PartitionName=cpu AllowAccounts=ALL DefaultTime=NONE DefMemPerNode=8000\n"},
 	}}
@@ -228,10 +228,10 @@ func TestInfoPartitionDefaults(t *testing.T) {
 		t.Fatal(err)
 	}
 	g, c := info.Partitions[0], info.Partitions[1]
-	if g.CPUsPerNode != 64 || g.MemPerNodeMB != 512000 || g.DefaultTime != 4*time.Hour || g.DefMemMB != 4000 || !g.DefMemPerCPU || strings.Join(g.AllowAccounts, ",") != "lab1,lab2" {
+	if g.CPUsPerNode != 0 || g.MemPerNodeMB != 0 || g.DefaultTime != 4*time.Hour || g.DefMemMB != 4000 || !g.DefMemPerCPU || strings.Join(g.AllowAccounts, ",") != "lab1,lab2" {
 		t.Errorf("gpu = %+v", g)
 	}
-	if c.CPUsPerNode != 32 || c.DefaultTime != 0 || c.DefMemMB != 8000 || c.DefMemPerCPU || len(c.AllowAccounts) != 0 {
+	if c.CPUsPerNode != 0 || c.DefaultTime != 0 || c.DefMemMB != 8000 || c.DefMemPerCPU || len(c.AllowAccounts) != 0 {
 		t.Errorf("cpu = %+v", c)
 	}
 }

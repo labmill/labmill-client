@@ -58,6 +58,8 @@ type placementPlan struct {
 	// Estimate is the scheduler's expected start (sbatch --test-only); ""
 	// when it could not be estimated.
 	Estimate string `json:"estimate,omitempty"`
+	// info is the cluster info planSlurm read, kept so draft_job asks the cluster once.
+	info *backend.ClusterInfo
 }
 
 // review is the plan in plain words for the review and for draft_job's
@@ -220,6 +222,7 @@ func (t *toolset) planSlurm(ctx context.Context, c config.Cluster, be backend.Ba
 	var info backend.ClusterInfo
 	if p != nil {
 		info, _ = be.Info(ctx) // best effort: limits and the default partition
+		plan.info = &info
 	}
 	switch {
 	case ask.Preemptible != nil && *ask.Preemptible && p == nil:

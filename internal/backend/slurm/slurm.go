@@ -52,6 +52,7 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 	}
 	var info backend.ClusterInfo
 	idx := map[string]int{}
+	seen, vary := map[string]string{}, map[string]bool{} // per partition: node size of the first row; sizes differ
 	for _, line := range strings.Split(res.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -89,9 +90,24 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 		if isIdleAvailable(f[5]) {
 			p.IdleNodes += n
 		}
-		if len(f) >= 8 && p.CPUsPerNode == 0 {
-			p.CPUsPerNode, _ = strconv.Atoi(strings.TrimRight(strings.TrimSpace(f[6]), "+"))
-			p.MemPerNodeMB, _ = strconv.Atoi(strings.TrimRight(strings.TrimSpace(f[7]), "+"))
+		if len(f) >= 8 {
+			cpus, memMB := strings.TrimSpace(f[6]), strings.TrimSpace(f[7])
+			switch {
+			case strings.HasSuffix(cpus, "+") || strings.HasSuffix(memMB, "+"):
+				vary[name] = true
+			case seen[name] == "":
+				seen[name] = cpus + "/" + memMB
+				p.CPUsPerNode, _ = strconv.Atoi(cpus)
+				p.MemPerNodeMB, _ = strconv.Atoi(memMB)
+			case seen[name] != cpus+"/"+memMB:
+				vary[name] = true
+			}
+		}
+	}
+	// Mixed node types: no single figure is true, so give none.
+	for i := range info.Partitions {
+		if vary[info.Partitions[i].Name] {
+			info.Partitions[i].CPUsPerNode, info.Partitions[i].MemPerNodeMB = 0, 0
 		}
 	}
 	s.partitionDefaults(ctx, &info)
