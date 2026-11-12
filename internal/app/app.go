@@ -145,10 +145,10 @@ type Env struct {
 	RememberAccount func(ctx context.Context, c config.Cluster, account string) error
 	// Worked records the user's yes or no for an ended job (job_worked). Nil: nothing is sent.
 	Worked func(ctx context.Context, jobID int64, yes bool) error
-	// RSEPrepare names the team and builds the report for ask_rse; RSESend sends the request and returns its id.
+	// RSEPrepare names the team and builds the report for ask_rse; RSESend sends exactly what RSEPrepare returned, with the body, and returns the request id.
 	// The report is rebuilt at send time and must equal the approved one. Nil: ask_rse is not available.
 	RSEPrepare func(ctx context.Context, jobID int64, team string, details bool) (RSEHelp, error)
-	RSESend    func(ctx context.Context, jobID int64, team, body string, details bool) (string, error)
+	RSESend    func(ctx context.Context, h RSEHelp, body string) (string, error)
 	AddCluster func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
 	// LocalRoots are the directories find_local_data and preview_file may
 	// look into (default: the user's home directory). Nothing outside them

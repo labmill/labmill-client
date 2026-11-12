@@ -10,18 +10,11 @@ import (
 	"labmill-client/internal/store"
 )
 
-// Tenant is one entry of GET /api/tenants: a team the person belongs to,
+// Tenant is one entry of the tenants of GET /api/me: a team the person belongs to,
 // for example the research computing team of an institution.
 type Tenant struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-}
-
-// Tenants calls GET /api/tenants.
-func (c *Client) Tenants(ctx context.Context) ([]Tenant, error) {
-	var out []Tenant
-	err := c.do(ctx, http.MethodGet, "/api/tenants", nil, &out)
-	return out, err
 }
 
 // MaxHelpReport is the largest report POST /api/help takes.
@@ -46,7 +39,7 @@ func (c *Client) Help(ctx context.Context, in HelpIn) (string, error) {
 
 // HelpReport makes the report that goes with a request for help about job
 // j: the scheduler's facts, and with details also the redacted script and
-// output lines. The output lines are cut until the JSON fits MaxHelpReport.
+// output lines. The script, then the output lines, are cut until the JSON fits MaxHelpReport.
 // It returns the report as indented JSON, the form the user approves.
 func HelpReport(j store.Job, evs []store.Event, ref string, red Redactor, details bool) (json.RawMessage, error) {
 	in, ok := BuildReport(j, evs, ref)
@@ -65,10 +58,12 @@ func HelpReport(j store.Job, evs []store.Event, ref string, red Redactor, detail
 			return b, nil
 		}
 		switch {
-		case len(in.StdoutLines) > 0 || len(in.StderrLines) > 0:
-			in.StdoutLines, in.StderrLines = in.StdoutLines[len(in.StdoutLines)/2:], in.StderrLines[len(in.StderrLines)/2:]
 		case in.Script != "":
 			in.Script = ""
+		case len(in.StdoutLines) > 1 || len(in.StderrLines) > 1:
+			in.StdoutLines, in.StderrLines = in.StdoutLines[len(in.StdoutLines)/2:], in.StderrLines[len(in.StderrLines)/2:]
+		case len(in.StdoutLines) > 0 || len(in.StderrLines) > 0:
+			in.StdoutLines, in.StderrLines = nil, nil
 		default:
 			return nil, errors.New("the report is too large")
 		}

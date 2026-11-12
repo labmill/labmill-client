@@ -2,7 +2,6 @@ package launch
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -36,53 +35,51 @@ func wireHelp(env *app.Env, db *store.Store, cfg *config.Config, probs *problemT
 		}
 		return &account.Client{URL: l.URL, Token: l.Token, HTTP: &http.Client{Timeout: 20 * time.Second}}, nil
 	}
-	prepare := func(ctx context.Context, jobID int64, team string, details bool) (*account.Client, account.Tenant, []byte, error) {
+	env.RSEPrepare = func(ctx context.Context, jobID int64, team string, details bool) (app.RSEHelp, error) {
 		c, err := client()
 		if err != nil {
-			return nil, account.Tenant{}, nil, err
+			return app.RSEHelp{}, err
 		}
-		ts, err := c.Tenants(ctx)
+		me, err := c.Whoami(ctx) // the teams and whether the account contributes
 		if err != nil {
-			return nil, account.Tenant{}, nil, err
+			return app.RSEHelp{}, err
 		}
-		t, err := account.PickTenant(ts, team)
+		t, err := account.PickTenant(me.Tenants, team)
 		if err != nil {
-			return nil, account.Tenant{}, nil, err
+			return app.RSEHelp{}, err
 		}
+		h := app.RSEHelp{Tenant: t.ID, Team: t.Name}
 		if jobID == 0 {
-			return c, t, nil, nil
+			return h, nil
 		}
 		j, err := db.Job(ctx, jobID)
 		if err != nil {
-			return nil, account.Tenant{}, nil, err
+			return h, err
 		}
 		evs, err := db.Events(ctx, jobID, 0)
 		if err != nil {
-			return nil, account.Tenant{}, nil, err
+			return h, err
 		}
 		ref := ""
 		if up, ok, _ := db.UploadOf(ctx, j.ID, j.RemoteID); ok {
 			ref = up.Ref
 		}
+		// A private job or a fully private account sends scheduler facts only.
+		full := details && !account.Private(evs) && me.Contributes != nil && *me.Contributes
 		red := account.NewRedactor(append(reportWords(cfg, j), j.Name)...)
-		rep, err := account.HelpReport(j, evs, ref, red, details && !account.Private(evs))
-		if err != nil {
-			return nil, account.Tenant{}, nil, err
-		}
-		return c, t, rep, nil
+		rep, err := account.HelpReport(j, evs, ref, red, full)
+		h.Report = string(rep)
+		return h, err
 	}
-	env.RSEPrepare = func(ctx context.Context, jobID int64, team string, details bool) (app.RSEHelp, error) {
-		_, t, rep, err := prepare(ctx, jobID, team, details)
-		return app.RSEHelp{Team: t.Name, Report: string(rep)}, err
-	}
-	env.RSESend = func(ctx context.Context, jobID int64, team, body string, details bool) (string, error) {
-		c, t, rep, err := prepare(ctx, jobID, team, details)
+	env.RSESend = func(ctx context.Context, h app.RSEHelp, body string) (string, error) {
+		c, err := client()
 		if err != nil {
 			return "", err
 		}
-		if t.ID == "" {
-			return "", errors.New("no team")
+		in := account.HelpIn{Tenant: h.Tenant, Body: body}
+		if h.Report != "" {
+			in.Report = []byte(h.Report)
 		}
-		return c.Help(ctx, account.HelpIn{Tenant: t.ID, Body: body, Report: rep})
+		return c.Help(ctx, in)
 	}
 }

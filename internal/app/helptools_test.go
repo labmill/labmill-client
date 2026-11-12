@@ -46,8 +46,8 @@ func TestAskRSE(t *testing.T) {
 	h.env.RSEPrepare = func(context.Context, int64, string, bool) (RSEHelp, error) {
 		return RSEHelp{Team: "Example RCI", Report: report}, nil
 	}
-	h.env.RSESend = func(_ context.Context, _ int64, team, body string, _ bool) (string, error) {
-		sent = body
+	h.env.RSESend = func(_ context.Context, rh RSEHelp, body string) (string, error) {
+		sent = body + "|" + rh.Report
 		return "h1", nil
 	}
 	tool := h.tools["ask_rse"]
@@ -57,7 +57,7 @@ func TestAskRSE(t *testing.T) {
 		t.Fatalf("proposal: %+v %v", p, err)
 	}
 	out, err := h.run(t, "ask_rse", in)
-	if err != nil || sent != in["body"] || !strings.Contains(out, "h1") {
+	if err != nil || sent != in["body"].(string)+"|"+report || !strings.Contains(out, "h1") {
 		t.Errorf("send: %q %q %v", out, sent, err)
 	}
 	// The report changed after approval: refused, nothing sent.

@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -66,12 +67,10 @@ func TestWorkedEventWithoutRefOrFullPrivacyIsDropped(t *testing.T) {
 	}
 }
 
-func TestTenantsAndHelp(t *testing.T) {
+func TestHelp(t *testing.T) {
 	var got HelpIn
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method + " " + r.URL.Path {
-		case "GET /api/tenants":
-			io.WriteString(w, `[{"id":"t1","name":"Example RCI"}]`)
 		case "POST /api/help":
 			b, _ := io.ReadAll(r.Body)
 			json.Unmarshal(b, &got)
@@ -83,10 +82,6 @@ func TestTenantsAndHelp(t *testing.T) {
 	}))
 	defer srv.Close()
 	c := &Client{URL: srv.URL, Token: goodToken}
-	ts, err := c.Tenants(context.Background())
-	if err != nil || len(ts) != 1 || ts[0].ID != "t1" {
-		t.Fatalf("tenants = %v, %v", ts, err)
-	}
 	id, err := c.Help(context.Background(), HelpIn{Tenant: "t1", Body: "my job fails", Report: json.RawMessage(`{"a":1}`)})
 	if err != nil || id != "h1" || got.Tenant != "t1" || got.Body != "my job fails" || string(got.Report) != `{"a":1}` {
 		t.Errorf("help = %q, %v, %+v", id, err, got)
@@ -118,5 +113,40 @@ func TestHelpReportFitsTheLimit(t *testing.T) {
 	b, err := HelpReport(j, evs, "ref1", NewRedactor(), true)
 	if err != nil || len(b) > MaxHelpReport || !json.Valid(b) {
 		t.Fatalf("report: %d bytes, %v", len(b), err)
+	}
+}
+
+func TestMeTenants(t *testing.T) {
+	var me Me
+	if err := json.Unmarshal([]byte(`{"person_id":"p","tenants":[{"id":"t1","name":"Example RCI"}]}`), &me); err != nil || len(me.Tenants) != 1 || me.Tenants[0].ID != "t1" {
+		t.Errorf("me = %+v, %v", me, err)
+	}
+}
+
+// A large script with one output line must shrink, not loop.
+func TestHelpReportShrinksBigScript(t *testing.T) {
+	st := newStore(t)
+	id := addJob(t, st, store.StateFailed, "")
+	ctx := context.Background()
+	j, _ := st.Job(ctx, id)
+	j.Script = strings.Repeat("echo hello\n", 3000)
+	out, _ := json.Marshal(Output{RemoteID: j.RemoteID, Stdout: []string{"one line"}})
+	st.AddEvent(ctx, id, EventOutput, string(out))
+	evs, _ := st.Events(ctx, id, 0)
+	done := make(chan error, 1)
+	go func() {
+		b, err := HelpReport(j, evs, "r", NewRedactor(), true)
+		if err == nil && (len(b) > MaxHelpReport || !json.Valid(b)) {
+			err = errors.New("report too large or not JSON")
+		}
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("HelpReport did not stop")
 	}
 }

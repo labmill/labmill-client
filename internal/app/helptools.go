@@ -62,7 +62,8 @@ func (t *toolset) jobWorked() agent.Tool {
 // RSEHelp is what Env.RSEPrepare returns: the team that gets the request and
 // the report text the user approves.
 type RSEHelp struct {
-	Team   string
+	Tenant string // the team's id, sent as is
+	Team   string // its name, shown
 	Report string // JSON, "" when no job is attached
 }
 
@@ -81,8 +82,8 @@ func (t *toolset) rseHelp(ctx context.Context, input json.RawMessage) (askRSEInp
 		return in, RSEHelp{}, err
 	}
 	in.Body = strings.TrimSpace(in.Body)
-	if in.Body == "" || len([]rune(in.Body)) > maxHelpBody {
-		return in, RSEHelp{}, fmt.Errorf("body must say in plain words what the user needs (up to %d characters); ask the user", maxHelpBody)
+	if in.Body == "" || len(in.Body) > maxHelpBody {
+		return in, RSEHelp{}, fmt.Errorf("body must say in plain words what the user needs (up to %d bytes); ask the user", maxHelpBody)
 	}
 	if t.env.RSEPrepare == nil || t.env.RSESend == nil {
 		return in, RSEHelp{}, errors.New("Asking the research computing team isn't available: no Labmill account is connected. Tell the user to run labmill login, or to contact their team directly.")
@@ -123,7 +124,7 @@ func (t *toolset) askRSE() agent.Tool {
 	return agent.Tool{
 		Name: "ask_rse",
 		Description: "Ask the user's research computing team (the RSEs of their institution, through the Labmill account) for help, in one tap. Use it when the user asks for a person, or when a job keeps failing and you cannot fix it. " +
-			"body: what the user needs, in plain words, up to 2000 characters; no secrets. job_id: the failed job, to attach its scheduler facts (even a private job; the team reads the facts, not the job). " +
+			"body: what the user needs, in plain words, up to 2000 bytes; no secrets. job_id: the failed job, to attach its scheduler facts (even a private job; the team reads the facts, not the job). " +
 			"details: true also attaches the redacted script and last output lines (not for a private job). The user sees the whole message and report and approves. The reply arrives in the Labmill account.",
 		Schema: objSchema(map[string]any{
 			"body":    strProp("what the user needs, plain words"),
@@ -147,7 +148,7 @@ func (t *toolset) askRSE() agent.Tool {
 			if err := sameAsApproved(askRSEProposal(in, h), dec.Proposal); err != nil {
 				return "", err
 			}
-			id, err := t.env.RSESend(ctx, in.JobID, in.Team, in.Body, in.Details)
+			id, err := t.env.RSESend(ctx, h, in.Body)
 			if err != nil {
 				return "", errors.New(sanitize(err.Error()))
 			}
