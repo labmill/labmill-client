@@ -125,6 +125,9 @@ var toolSkills = map[string][]skillSection{
 	"set_cluster_account": {
 		{"research-computing", "references/ssh.md", "the-account-name-on-a-new-cluster"},
 	},
+	"request_account": {
+		{"research-computing", "references/ssh.md", "no-account-on-the-cluster-yet"},
+	},
 
 	// Pending (pendingTools): tools other milestones are adding.
 	"prepare_job": {

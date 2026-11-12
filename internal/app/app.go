@@ -143,7 +143,12 @@ type Env struct {
 	// RememberAccount saves the Slurm account the user chose on a cluster in
 	// clusters.yaml (account:). Nil: it is not remembered.
 	RememberAccount func(ctx context.Context, c config.Cluster, account string) error
-	AddCluster      func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
+	// AccountRequest returns the site's account request path for c (mail draft or web form), filled with the
+	// user's name and reason. Nil: request_account is not available.
+	AccountRequest func(ctx context.Context, c config.Cluster, reason string) (AccountRequestDraft, error)
+	// OpenLink opens a mailto: or https: link in the user's mail program or browser (mailreq.Open).
+	OpenLink   func(target string) error
+	AddCluster func(ctx context.Context, p AddClusterPlan, username string) (config.Cluster, error)
 	// LocalRoots are the directories find_local_data and preview_file may
 	// look into (default: the user's home directory). Nothing outside them
 	// is ever listed or read.
@@ -271,7 +276,7 @@ func Tools(env *Env) []agent.Tool {
 	return guardSecrets([]agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
-		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.checkQuota(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(),
+		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.checkQuota(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(), t.requestAccount(),
 	}, env.Warn)
 }
 
@@ -463,6 +468,7 @@ const skillToolMap = `How skill steps map to Labmill's tools (the skills were wr
 - Copying code or data to the cluster or S3 (rclone copy, scp, sftp, aws s3 cp): stage_data, then upload_data. Pulling results back: fetch_results. Removing a job's own working files in the shared scratch after a verified download (rm -f -- <files>, rmdir of the folders that held them): cleanup_job (the user sees the exact list first; never environments).
 - A sample without a build or run script: the steps come from its README and build files; write them as draft_job files (labmill-build.sh, labmill-run.sh) so Labmill creates them in the job folder on the cluster, never on this computer; the job command calls them. Follow the skills' "The code has no run script" sections; the shell steps there (an ssh heredoc, chmod +x) are done by draft_job and submit_job.
 - AskUserQuestion: ask_user (up to 8 options), with the recommended option first and the reason in each option's description; one question per call, so a two-question AskUserQuestion becomes two ask_user calls.
+- The user has no account on a cluster: request_account (reason in one or two sentences). It opens the site's mail draft or form after the user approves; the user presses send. Pass on the eligibility, approver and wait it returns. Do not try other names or passwords.
 - Using a cluster of another institution (adding a Host block to ~/.ssh/config, a new cluster in clusters.yaml): add_cluster, only when the user explicitly asks for that institution or one of its clusters; leave the account name empty (Labmill reuses the one the user has at that institution) and ask for one only if none is known or a sign-in rejected the reused one (then set_cluster_account).
 - aws configure, installing a CLI or rclone, editing ~/.bashrc, proxy or no_proxy fixes, keychain: Labmill handles routes and transfers itself. Never install anything. When a step truly needs the user, say so plainly.
 - srun --pty, port-forward, nvidia-smi or other commands inside a running job: not available; put the command into the job script when its output helps, or show it for the user to run.
@@ -480,6 +486,6 @@ const skillToolMap = `How skill steps map to Labmill's tools (the skills were wr
 // tools, or show commands to the user to run themselves, and never install
 // software.
 const SkillPreamble = "Note: this skill was written for an environment with a shell. In Labmill you cannot run shell commands on this computer. " +
-	"Carry out its steps with Labmill's tools as listed under \"How skill steps map to Labmill's tools\" in your instructions (list_clusters, cluster_info, cluster_jobs, find_local_data, preview_file, stage_data, upload_data, draft_job, submit_job, job_status, job_logs, diagnose_job, cancel_job, fetch_results, cleanup_job, s3_credentials_to_cluster, ask_user, add_cluster, set_cluster_account), " +
+	"Carry out its steps with Labmill's tools as listed under \"How skill steps map to Labmill's tools\" in your instructions (list_clusters, cluster_info, cluster_jobs, find_local_data, preview_file, stage_data, upload_data, draft_job, submit_job, job_status, job_logs, diagnose_job, cancel_job, fetch_results, cleanup_job, s3_credentials_to_cluster, ask_user, add_cluster, set_cluster_account, request_account), " +
 	"run a login-node step that no tool covers with remote_command (it asks the user before anything that isn't read-only), " +
 	"or show a command to the user so they can run it themselves. Never install software. Site-specific values come from the site skill."
