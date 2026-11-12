@@ -29,7 +29,8 @@ type AccountRequestDraft struct {
 	Body        string
 	WebForm     string // https form the user fills in
 	OpenURL     string // what Open opens: the mailto: link, else WebForm
-	Clipboard   string // the full body when it was too long for the link
+	Clipboard   string // the full body when it was too long for the link; the mail body is then only a note
+	Warning     string // a plain-words warning for the card, e.g. an address outside the institution
 }
 
 type requestAccountInput struct {
@@ -58,21 +59,31 @@ func (t *toolset) requestAccountDraft(ctx context.Context, input json.RawMessage
 	cctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	d, err := t.env.AccountRequest(cctx, c, in.Reason)
-	return in, d, err
+	if err != nil {
+		return in, d, errors.New(sanitize(err.Error()))
+	}
+	return in, d, nil
 }
 
 func requestAccountProposal(in requestAccountInput, d AccountRequestDraft) agent.Proposal {
 	var b strings.Builder
-	if d.To != "" {
+	if d.To != "" && d.Clipboard != "" {
+		fmt.Fprintf(&b, "Your mail program opens with To: %s, Subject: %s and only this note as the text: %s\nThe full text is too long for the link. It is shown here and in the chat; you copy it into the mail:\n\n%s\n", sanitize(d.To), sanitize(d.Subject), sanitizeLines(d.Body), sanitizeLines(d.Clipboard))
+	} else if d.To != "" {
 		fmt.Fprintf(&b, "Your mail program opens with this draft. You press send.\nTo: %s\nSubject: %s\n\n%s\n", sanitize(d.To), sanitize(d.Subject), sanitizeLines(d.Body))
 	} else {
 		fmt.Fprintf(&b, "Your browser opens the request form: %s\nReason to type in: %s\n", sanitize(d.WebForm), sanitize(in.Reason))
+	}
+	if d.Warning != "" {
+		fmt.Fprintf(&b, "WARNING: %s\n", sanitize(d.Warning))
 	}
 	b.WriteString("Labmill sends nothing itself.")
 	return agent.Proposal{
 		Tool:    "request_account",
 		Summary: fmt.Sprintf("Open the account request for %s", sanitize(in.Cluster)),
 		Details: b.String(),
+		// Outside text opens in the user's programs: always asks, also under "Approve everything automatically".
+		Secret: true,
 	}
 }
 

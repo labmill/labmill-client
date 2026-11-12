@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -38,5 +39,27 @@ func TestRequestAccountNoPathOrReason(t *testing.T) {
 	}
 	if _, err := h.run(t, "request_account", map[string]any{"cluster": "hpcone", "reason": " "}); err == nil {
 		t.Error("empty reason accepted")
+	}
+}
+
+func TestRequestAccountLongTextCard(t *testing.T) {
+	h := newHarness(t)
+	h.env.AccountRequest = func(context.Context, config.Cluster, string) (AccountRequestDraft, error) {
+		return AccountRequestDraft{To: "help@example.edu", Subject: "S", Body: "(note)", Clipboard: "FULL TEXT OF THE MAIL", OpenURL: "mailto:help@example.edu", Warning: "The mail address is at other.org"}, nil
+	}
+	p, err := h.tools["request_account"].Propose([]byte(`{"cluster":"hpcone","reason":"x"}`))
+	if err != nil || !p.Secret || !strings.Contains(p.Details, "only this note as the text: (note)") || !strings.Contains(p.Details, "FULL TEXT OF THE MAIL") || !strings.Contains(p.Details, "WARNING: The mail address is at other.org") {
+		t.Errorf("card %+v %v", p, err)
+	}
+}
+
+func TestRequestAccountErrorIsCleaned(t *testing.T) {
+	h := newHarness(t)
+	h.env.AccountRequest = func(context.Context, config.Cluster, string) (AccountRequestDraft, error) {
+		return AccountRequestDraft{}, errors.New("server said\x1b[31m red")
+	}
+	_, err := h.run(t, "request_account", map[string]any{"cluster": "hpcone", "reason": "x"})
+	if err == nil || strings.ContainsRune(err.Error(), 0x1b) {
+		t.Errorf("error %q", err)
 	}
 }

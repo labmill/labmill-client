@@ -19,10 +19,13 @@ import (
 // the clipboard (Draft.Clipboard) and the body only points at it.
 const MaxBody = 1500
 
+// LongBodyNote is the whole body of a mail whose text is longer than MaxBody; the full text is shown to the user to copy.
+const LongBodyNote = "(The text was too long for the link. Paste it here from the Labmill window.)"
+
 // Draft is what to show and open for one request.
 type Draft struct {
 	URL       string // mailto: link to open; "" when only the clipboard text is usable
-	Clipboard string // full body when it was too long for the link, else ""
+	Clipboard string // full body when it was too long for the link (the link then holds LongBodyNote), else ""
 }
 
 // Mailto builds the draft. to must be one plain address; subject and body are
@@ -33,12 +36,12 @@ func Mailto(to, subject, body string) (Draft, error) {
 	if err != nil || a.Address != to || strings.ContainsAny(to, ",;?&#%") {
 		return Draft{}, fmt.Errorf("%q isn't a usable mail address", textsafe.Clean(to))
 	}
-	subject = oneLine(subject)
+	subject = OneLine(subject)
 	body = textsafe.Clean(body)
 	var d Draft
 	if len([]rune(body)) > MaxBody {
 		d.Clipboard = body
-		body = "(The full text is on your clipboard: paste it here.)"
+		body = LongBodyNote
 	}
 	q := url.Values{}
 	q.Set("subject", subject)
@@ -49,7 +52,8 @@ func Mailto(to, subject, body string) (Draft, error) {
 	return d, nil
 }
 
-func oneLine(s string) string {
+// OneLine is s cleaned of control characters and folded to one line.
+func OneLine(s string) string {
 	return strings.Join(strings.Fields(textsafe.Clean(s)), " ")
 }
 
