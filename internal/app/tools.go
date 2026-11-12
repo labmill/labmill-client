@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -560,6 +561,18 @@ func (t *toolset) clusterInfo() agent.Tool {
 				if p.MaxTime > 0 {
 					fmt.Fprintf(&b, ", max time %s", p.MaxTime)
 				}
+				if p.DefaultTime > 0 {
+					fmt.Fprintf(&b, ", default time %s", p.DefaultTime)
+				}
+				if p.CPUsPerNode > 0 {
+					fmt.Fprintf(&b, ", %d cores and %d MB per node", p.CPUsPerNode, p.MemPerNodeMB)
+				}
+				if p.DefMemMB > 0 {
+					fmt.Fprintf(&b, ", default memory %s", defaultMemText(p))
+				}
+				if len(p.AllowAccounts) > 0 {
+					fmt.Fprintf(&b, ", only accounts: %s", sanitize(strings.Join(p.AllowAccounts, ", ")))
+				}
 				if len(p.GPUTypes) > 0 {
 					fmt.Fprintf(&b, ", GPUs: %s", strings.Join(p.GPUTypes, ", "))
 				}
@@ -743,7 +756,7 @@ func (t *toolset) stagePaths(root string, in []string) (paths, skipped []string,
 func (t *toolset) draftJob() agent.Tool {
 	return agent.Tool{
 		Name:        "draft_job",
-		Description: "Write the job script for a staged job on a cluster and save it on the job (nothing is submitted). work_dir defaults to the folder the data was uploaded to. When the uploaded code has no build or run script, read its README and build files (all pages) and pass the steps you derive as files (for example labmill-build.sh and labmill-run.sh): Labmill writes them into the job's folder on the cluster, never on this computer, after the user approved the review; make the command call them (bash labmill-run.sh). Only small text scripts, shown to the user with the job script. For a job that needs no files from this computer (for example one that only runs a program already on the cluster), leave out job_id: a new job is created from spec.name, and spec.work_dir is required. To redraft such a job, pass the job_id returned.",
+		Description: "Write the job script for a staged job on a cluster and save it on the job (nothing is submitted). work_dir defaults to the folder the data was uploaded to. When the uploaded code has no build or run script, read its README and build files (all pages) and pass the steps you derive as files (for example labmill-build.sh and labmill-run.sh): Labmill writes them into the job's folder on the cluster, never on this computer, after the user approved the review; make the command call them (bash labmill-run.sh). Only small text scripts, shown to the user with the job script. For a job that needs no files from this computer (for example one that only runs a program already on the cluster), leave out job_id: a new job is created from spec.name; without spec.work_dir it runs in labmill/<name> in the login home folder. To redraft such a job, pass the job_id returned.",
 		Schema: objSchema(map[string]any{
 			"job_id":  intProp("job id from stage_data; leave out (or 0) for a job that needs no files from this computer"),
 			"cluster": strProp("cluster name"),
@@ -813,7 +826,7 @@ func (t *toolset) draftJob() agent.Tool {
 					"memory_gb":    intProp("memory in GB; 0 for the default"),
 					"time_minutes": intProp("time limit in minutes; 0 for the partition default"),
 					"command":      strProp("what to run, e.g. python train.py --epochs 10"),
-					"work_dir":     strProp("absolute folder on the cluster to run in (defaults to the uploaded data folder); it must be on shared storage, not /tmp, /var/tmp or /dev/shm"),
+					"work_dir":     strProp("absolute folder on the cluster to run in (defaults to the uploaded data folder, else labmill/<job name> in the login home folder); it must be on shared storage, not /tmp, /var/tmp or /dev/shm"),
 					"env":          map[string]any{"type": "object", "additionalProperties": map[string]any{"type": "string"}, "description": "extra environment variables"},
 				},
 				"required": []string{"command"},
@@ -855,9 +868,6 @@ func (t *toolset) draftJob() agent.Tool {
 			if noData {
 				if !jobNameRe.MatchString(in.Spec.Name) {
 					return "", fmt.Errorf("Give the new job a name (spec.name) such as gpu-check: start with a letter or digit, then up to 63 letters, digits, dots, dashes or underscores, without spaces (got %q).", sanitize(in.Spec.Name))
-				}
-				if strings.TrimSpace(in.Spec.WorkDir) == "" {
-					return "", errors.New("A job without uploaded data needs a work_dir: an absolute folder on a shared filesystem, such as under your home or a storage folder, never /tmp, /var/tmp or /dev/shm (node-local, the output would be lost).")
 				}
 				j.Name = in.Spec.Name
 				// The same name again: refuse if that job holds data, else
@@ -918,8 +928,13 @@ func (t *toolset) draftJob() agent.Tool {
 			if spec.WorkDir == "" {
 				spec.WorkDir = j.RemoteDir
 			}
-			if spec.WorkDir == "" {
-				return "", errors.New("I don't know where to run the job. Upload the data first, or give a work_dir on the cluster.")
+			defaulted := false
+			if strings.TrimSpace(spec.WorkDir) == "" {
+				wd, err := t.defaultWorkDir(ctx, c, spec.Name)
+				if err != nil {
+					return "", err
+				}
+				spec.WorkDir, defaulted = wd, true
 			}
 			be, err := t.backendFor(ctx, c)
 			if err != nil {
@@ -927,6 +942,9 @@ func (t *toolset) draftJob() agent.Tool {
 			}
 			plan, err := t.planSlurm(ctx, c, be, j, &spec, slurmAsk{Scratch: in.Scratch, Preemptible: in.Preemptible, Queue: in.Queue, Checkpoint: in.Checkpoint})
 			if err != nil {
+				if defaulted {
+					err = fmt.Errorf("%w No work_dir was given, so the default in the home folder was tried: this job needs a work_dir of its own that suits that.", err)
+				}
 				return "", err
 			}
 			rememberNote := ""
@@ -940,6 +958,7 @@ func (t *toolset) draftJob() agent.Tool {
 			if err != nil {
 				return "", fmt.Errorf("That job setup isn't valid: %w", err)
 			}
+			defaultsNote := resolvedDefaults(ctx, be, spec)
 			plan.Estimate = estimateStart(ctx, be, script)
 			specJSON, err := json.Marshal(spec)
 			if err != nil {
@@ -995,6 +1014,12 @@ func (t *toolset) draftJob() agent.Tool {
 			out := fmt.Sprintf("Drafted the script for job %d on %s (not submitted yet):\n%s", j.ID, c.Name, script)
 			if rememberNote != "" {
 				out += "\n\n" + rememberNote
+			}
+			if defaultsNote != "" {
+				out += "\n\n" + defaultsNote
+			}
+			if defaulted {
+				out += "\n\nWork folder: " + sanitize(spec.WorkDir) + " (the default, in the home folder; Labmill creates it when the job is submitted). Tell the user, and use another folder only when they want one."
 			}
 			out += "\n\n" + plan.answer() + "\nTell the user this plan: they approve it, including the resubmissions, when they approve the submit."
 			if note := t.failureNote(ctx, j.ID, c); note != "" {
@@ -2110,3 +2135,73 @@ func normEndpoint(e string) string {
 // SubmitRefused is the phrase in the error of submit_job when the scheduler refuses the job.
 // The corpus runner matches it.
 const SubmitRefused = "didn't accept the job"
+
+// defaultWorkDir is where a job without data and without a work_dir runs: <login home>/labmill/<job name>. The
+// folder is made at submit time (the script's --chdir folders are created first).
+func (t *toolset) defaultWorkDir(ctx context.Context, c config.Cluster, name string) (string, error) {
+	if t.env.RemoteHome == nil {
+		return "", errors.New("I don't know where to run the job and can't look up the home folder. Upload the data first, or give a work_dir on the cluster.")
+	}
+	home, err := t.env.RemoteHome(ctx, c)
+	if err != nil || !strings.HasPrefix(home, "/") {
+		return "", fmt.Errorf("I don't know where to run the job and couldn't find the home folder on %s. Give a work_dir on the cluster.", c.Name)
+	}
+	if !jobNameRe.MatchString(name) {
+		name = "job"
+	}
+	return path.Join(home, "labmill", name), nil
+}
+
+// defaultTimeText says what time limit a job gets in p when it sets none:
+// the partition's default time, else its maximum (Slurm's rule), else
+// unlimited or unknown.
+func defaultTimeText(p backend.Partition) string {
+	switch {
+	case p.DefaultTime > 0:
+		return p.DefaultTime.String()
+	case p.MaxTime > 0:
+		return p.MaxTime.String() + " (the partition maximum)"
+	}
+	return "not reported by the scheduler"
+}
+
+// defaultMemText says what memory a job gets in p when it sets none.
+func defaultMemText(p backend.Partition) string {
+	switch {
+	case p.DefMemMB > 0 && p.DefMemPerCPU:
+		return fmt.Sprintf("%d MB per CPU", p.DefMemMB)
+	case p.DefMemMB > 0:
+		return fmt.Sprintf("%d MB per node", p.DefMemMB)
+	}
+	return "not reported by the scheduler"
+}
+
+// resolvedDefaults is the draft_job note on the time and memory a job gets
+// from the partition because the spec leaves them open. "" when nothing is open.
+func resolvedDefaults(ctx context.Context, be backend.Backend, spec backend.JobSpec) string {
+	if spec.Time != 0 && spec.MemoryGB != 0 {
+		return ""
+	}
+	info, err := be.Info(ctx)
+	if err != nil {
+		return ""
+	}
+	i := slices.IndexFunc(info.Partitions, func(p backend.Partition) bool {
+		if spec.Partition != "" {
+			return p.Name == spec.Partition
+		}
+		return p.Default
+	})
+	if i < 0 {
+		return ""
+	}
+	p := info.Partitions[i]
+	var parts []string
+	if spec.Time == 0 {
+		parts = append(parts, "time limit: "+defaultTimeText(p))
+	}
+	if spec.MemoryGB == 0 {
+		parts = append(parts, "memory: "+defaultMemText(p))
+	}
+	return "Defaults from partition " + sanitize(p.Name) + " (the job sets none): " + strings.Join(parts, "; ") + ". Tell the user, and set time_minutes or memory_gb when the job needs other values."
+}

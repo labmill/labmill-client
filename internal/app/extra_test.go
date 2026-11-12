@@ -50,8 +50,8 @@ func TestUploadAndDraftValidation(t *testing.T) {
 	if _, err := h.run(t, "upload_data", map[string]any{"job_id": 1, "cluster": "hpcone", "remote_dir": "../x"}); err == nil {
 		t.Error("remote_dir with .. accepted")
 	}
-	if _, err := h.run(t, "draft_job", map[string]any{"job_id": 1, "cluster": "hpcone", "spec": map[string]any{"command": "echo hi"}}); err == nil || !strings.Contains(err.Error(), "where to run") {
-		t.Errorf("draft without work dir: %v", err)
+	if out, err := h.run(t, "draft_job", map[string]any{"job_id": 1, "cluster": "hpcone", "spec": map[string]any{"command": "echo hi"}}); err != nil || !strings.Contains(out, "--chdir=/home/alice/labmill/") {
+		t.Errorf("draft without work dir: %v %q", err, out)
 	}
 }
 
