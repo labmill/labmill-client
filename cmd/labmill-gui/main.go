@@ -185,11 +185,13 @@ import (
 	wr "github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"labmill-client/assets/icon"
+	"labmill-client/internal/account"
 	"labmill-client/internal/app"
 	"labmill-client/internal/autostart"
 	"labmill-client/internal/config"
 	"labmill-client/internal/gui"
 	"labmill-client/internal/launch"
+	"labmill-client/internal/mailreq"
 	"labmill-client/internal/settings"
 	"labmill-client/internal/site"
 	"labmill-client/internal/sshx"
@@ -238,6 +240,9 @@ type State struct {
 	// account name and hosts are hidden): clusters.yaml has clusters and
 	// just lacks a known `site:`.
 	OnlyInstitution bool `json:"onlyInstitution"`
+	// SignedIn: a Labmill account is connected (account.json). The setup form asks for the sign-in first, since the
+	// institution list is for signed-in users only (owner, 2026-11-12).
+	SignedIn bool `json:"signedIn"`
 }
 
 // Setup is bound to the page for the first-run form (window.go.main.Setup).
@@ -248,6 +253,7 @@ type Setup struct {
 	answers   chan launch.SetupAnswers
 	state     State
 	stateSeen atomic.Bool // the page called State (proves app.js ran)
+	signingIn bool        // SignIn waits for the browser
 	// liveStatus, when set, gives the latest status text once ready.
 	liveStatus func() string
 }
@@ -315,6 +321,82 @@ func (s *Setup) SubmitUsername(name string) error {
 // host, which is required then: it names the home institution (M55). An
 // empty or unknown domain is refused.
 func (s *Setup) SubmitSetup(domain, name, loginHost string) error {
+	return s.submit(domain, name, loginHost, nil)
+}
+
+// SubmitHome answers the first-run form with an institution from the account's list (SearchInstitutions). An empty
+// id means "my institution isn't listed": the generic profile, which needs the login host.
+func (s *Setup) SubmitHome(id, instName, domain, country, name, loginHost string) error {
+	if id == "" {
+		return s.submit(site.GenericDomain, name, loginHost, nil)
+	}
+	if len(id) > 64 || len(instName) > 300 || len(domain) > 253 || len(country) > 2 {
+		return errors.New("please choose your institution from the list")
+	}
+	return s.submit(launch.SiteFor(domain), name, loginHost, &launch.Home{ID: id, Name: instName, Domain: domain, Country: country})
+}
+
+// SignIn signs in to the Labmill account in the browser (account.BrowserLogin) and returns the account's name.
+func (s *Setup) SignIn() (string, error) {
+	s.mu.Lock()
+	if s.signingIn {
+		s.mu.Unlock()
+		return "", errors.New("the sign-in is already open in your browser")
+	}
+	s.signingIn = true
+	s.mu.Unlock()
+	defer func() { s.mu.Lock(); s.signingIn = false; s.mu.Unlock() }()
+	path, err := account.Path()
+	if err != nil {
+		return "", err
+	}
+	base, err := account.BaseURL()
+	if err != nil {
+		return "", err
+	}
+	host, _ := os.Hostname()
+	me, err := account.BrowserLogin(context.Background(), path, base, host, mailreq.Open, nil, time.Now())
+	if err != nil {
+		return "", err
+	}
+	return accountName(me), nil
+}
+
+// InstChoice is one answer of SearchInstitutions: the institution and whether its profile needs the login host.
+type InstChoice struct {
+	account.Institution
+	NeedsHosts bool `json:"needsHosts"`
+}
+
+// SearchInstitutions searches the account's institution list (2 characters or more).
+func (s *Setup) SearchInstitutions(q string) ([]InstChoice, error) {
+	q = strings.TrimSpace(q)
+	if len([]rune(q)) < 2 {
+		return []InstChoice{}, nil
+	}
+	path, err := account.Path()
+	if err != nil {
+		return nil, err
+	}
+	l, ok, err := account.Load(path)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, errors.New("sign in to Labmill first")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	list, err := (&account.Client{URL: l.URL, Token: l.Token}).Institutions(ctx, q)
+	out := make([]InstChoice, 0, len(list))
+	for _, i := range list {
+		st, _ := site.Get(launch.SiteFor(i.Domain))
+		out = append(out, InstChoice{Institution: i, NeedsHosts: launch.NeedsHosts(st)})
+	}
+	return out, err
+}
+
+func (s *Setup) submit(domain, name, loginHost string, home *launch.Home) error {
 	name = strings.TrimSpace(name)
 	loginHost = strings.TrimSpace(loginHost)
 	s.mu.Lock()
@@ -350,7 +432,7 @@ func (s *Setup) SubmitSetup(domain, name, loginHost string) error {
 	}
 	s.submitted = true
 	s.state.Phase = "starting"
-	s.answers <- launch.SetupAnswers{Site: domain, Username: name, LoginHost: loginHost}
+	s.answers <- launch.SetupAnswers{Site: domain, Username: name, LoginHost: loginHost, Home: home}
 	return nil
 }
 
@@ -367,6 +449,9 @@ func (s *Setup) State() State {
 	}
 	if s.needs && !s.submitted {
 		st.Phase = "setup"
+		if p, err := account.Path(); err == nil {
+			_, st.SignedIn, _ = account.Load(p)
+		}
 	}
 	return st
 }

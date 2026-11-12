@@ -31,10 +31,10 @@ func TestLoginWhoamiLogoutCommands(t *testing.T) {
 	if code, out, _ := call("", "whoami"); code != 1 || !strings.Contains(out, "Not connected") {
 		t.Fatalf("whoami before login: %d %q", code, out)
 	}
-	if code, _, errs := call("lmt_wrongwrongwrongwrongwrong\n", "login"); code != 1 || !strings.Contains(errs, "did not accept") {
+	if code, _, errs := call("lmt_wrongwrongwrongwrongwrong\n", "login", "--token"); code != 1 || !strings.Contains(errs, "did not accept") {
 		t.Fatalf("bad login: %d %q", code, errs)
 	}
-	code, out, errs := call(tok+"\n", "login")
+	code, out, errs := call(tok+"\n", "login", "--token")
 	if code != 0 || !strings.Contains(out, "Test User") {
 		t.Fatalf("login: %d %q %q", code, out, errs)
 	}

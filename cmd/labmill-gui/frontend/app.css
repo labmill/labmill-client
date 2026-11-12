@@ -303,3 +303,10 @@ header .term-open[aria-expanded="true"] { border-color: var(--accent); backgroun
 #cluster-browser li button:hover, #cluster-browser li button:focus { background: var(--user); }
 #cb-path { font-size: 0.8125rem; margin: 4px 0; }
 #cb-error:empty { display: none; }
+
+/* First-run institution search (combobox) */
+.combo { position: relative; }
+.combo-list { position: absolute; z-index: 10; left: 0; right: 0; max-height: 16em; overflow-y: auto; margin: 2px 0 0; padding: 0;
+  list-style: none; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; }
+.combo-list li { padding: 6px 10px; cursor: pointer; }
+.combo-list li[aria-selected="true"] { background: var(--user); }

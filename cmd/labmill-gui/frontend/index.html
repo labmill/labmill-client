@@ -36,11 +36,20 @@
 
   <section id="setup" class="panel" hidden>
     <h2>Welcome to labmill</h2>
-    <p>Labmill needs your institution and your cluster account name to set up your logins. Nothing leaves this computer yet.</p>
     <p id="setup-note" class="muted" hidden></p>
-    <form id="setup-form" autocomplete="off">
-      <label for="setup-site">Your home institution</label>
-      <select id="setup-site" name="site"></select>
+    <div id="setup-signin" hidden>
+      <p>First sign in to your Labmill account. Your browser opens; sign in with Google, GitHub, LinkedIn or ORCID, then press "Connect this computer".</p>
+      <button type="button" class="primary" id="setup-signin-btn">Sign in with your browser</button>
+      <p id="setup-signin-status" class="muted" role="status"></p>
+    </div>
+    <form id="setup-form" autocomplete="off" hidden>
+      <p>Labmill needs your institution and your cluster account name to set up your logins.</p>
+      <label for="setup-inst">Your home institution</label>
+      <div class="combo">
+        <input id="setup-inst" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="setup-inst-list" spellcheck="false" autocapitalize="none" maxlength="100" placeholder="Type part of the name, for example oregon" aria-describedby="setup-inst-hint">
+        <ul id="setup-inst-list" role="listbox" class="combo-list" hidden></ul>
+      </div>
+      <p id="setup-inst-hint" class="muted">Pick your home institution, where your cluster account is.</p>
       <div id="setup-hosts" hidden>
         <label for="setup-login">Cluster login host</label>
         <input id="setup-login" name="login" type="text" spellcheck="false" autocapitalize="none" maxlength="253" placeholder="login.example.edu" aria-describedby="setup-login-hint">

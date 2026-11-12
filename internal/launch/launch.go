@@ -83,6 +83,9 @@ type SetupAnswers struct {
 	// (NeedsHosts, e.g. the generic profile); then it is required, since it
 	// names the home institution.
 	LoginHost string
+	// Home is the institution picked from the account's list (nil: "my institution isn't listed"); firstRun saves it
+	// in home.json.
+	Home *Home
 }
 
 // SetupFunc shows the first-run form; it is front-end specific. s is the
@@ -298,13 +301,35 @@ func firstRun(ctx context.Context, setup SetupFunc, cfgPath string, existing *co
 		if err := config.WriteFile(cfgPath, out); err != nil {
 			return nil, err
 		}
-		return config.Parse(out)
+		cfg, err := config.Parse(out)
+		if err != nil {
+			return nil, err
+		}
+		return cfg, saveHome(cfgPath, answers.Home)
 	}
 	paths, err := sshconfig.DefaultPaths()
 	if err != nil {
 		return nil, err
 	}
-	return WriteSetup(paths, cfgPath, chosen, answers, goruntime.GOOS)
+	cfg, err := WriteSetup(paths, cfgPath, chosen, answers, goruntime.GOOS)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, saveHome(cfgPath, answers.Home)
+}
+
+// saveHome records the picked institution (none for "my institution isn't listed").
+func saveHome(cfgPath string, h *Home) error {
+	if h == nil {
+		return nil
+	}
+	if h.ChosenAt.IsZero() {
+		h.ChosenAt = time.Now().UTC()
+	}
+	if err := SaveHome(cfgPath, *h); err != nil {
+		return fmt.Errorf("record your home institution: %w", err)
+	}
+	return nil
 }
 
 // BuildWithProgress is Build that reports its startup steps to progress

@@ -223,6 +223,22 @@ type System struct {
 	Institution string `json:"institution"`
 }
 
+// Institution is one answer of GET /api/institutions (universities and research centres first).
+type Institution struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	City    string `json:"city"`
+	Domain  string `json:"domain"`
+}
+
+// Institutions searches institutions by name (signed in only). q needs 2 characters or more.
+func (c *Client) Institutions(ctx context.Context, q string) ([]Institution, error) {
+	out := []Institution{}
+	err := c.do(ctx, http.MethodGet, "/api/institutions?limit=20&q="+url.QueryEscape(q), nil, &out)
+	return out, err
+}
+
 // Systems calls GET /api/systems?q= (a public route; the token is sent anyway).
 func (c *Client) Systems(ctx context.Context, q string) ([]System, error) {
 	var out []System

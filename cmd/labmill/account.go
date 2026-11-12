@@ -13,14 +13,16 @@ import (
 	"golang.org/x/term"
 
 	"labmill-client/internal/account"
+	"labmill-client/internal/mailreq"
 	"labmill-client/internal/store"
 )
 
 // runAccount handles "login", "logout" and "whoami" (the Labmill account
-// link, internal/account). The token is read from stdin (hidden on a
-// terminal), never from the command line, where other users and the shell
-// history could see it.
-func runAccount(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr io.Writer) int {
+// link, internal/account). "login" signs in through the browser; "login
+// --token" reads a program token from stdin (hidden on a terminal), never
+// from the command line, where other users and the shell history could see it.
+func runAccount(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	cmd := args[0]
 	path, err := account.Path()
 	if err != nil {
 		fmt.Fprintln(stderr, "Labmill:", err)
@@ -33,14 +35,24 @@ func runAccount(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr
 			fmt.Fprintln(stderr, "Labmill:", err)
 			return 1
 		}
-		fmt.Fprintf(stderr, "Make a program token at %s (Settings > Program tokens) and paste it here: ", base)
-		tok, err := readToken(stdin)
-		fmt.Fprintln(stderr)
-		if err != nil {
-			fmt.Fprintln(stderr, "Labmill: no token read:", err)
-			return 1
+		var me account.Me
+		if len(args) > 1 && args[1] == "--token" {
+			fmt.Fprintf(stderr, "Make a program token at %s (Settings > Program tokens) and paste it here: ", base)
+			tok, rerr := readToken(stdin)
+			fmt.Fprintln(stderr)
+			if rerr != nil {
+				fmt.Fprintln(stderr, "Labmill: no token read:", rerr)
+				return 1
+			}
+			me, err = account.Login(ctx, path, base, tok, nil, time.Now())
+		} else {
+			host, _ := os.Hostname()
+			me, err = account.BrowserLogin(ctx, path, base, host, func(u string) error {
+				fmt.Fprintf(stderr, "Sign in to Labmill in your browser. If no browser opens, open this address:\n  %s\n", u)
+				_ = mailreq.Open(u) // the printed address is the fallback (for example over SSH)
+				return nil
+			}, nil, time.Now())
 		}
-		me, err := account.Login(ctx, path, base, tok, nil, time.Now())
 		if err != nil {
 			fmt.Fprintln(stderr, "Labmill:", err)
 			return 1

@@ -1329,18 +1329,96 @@
     if (window.labmillSettings) window.labmillSettings.enable(); // Settings helps fix what failed
   }
 
-  var setupSites = [];
-  function siteNeedsHosts() {
-    var d = $('setup-site').value;
-    for (var i = 0; i < setupSites.length; i++) {
-      if (setupSites[i].domain === d) return !!setupSites[i].needsHosts;
-    }
-    return false;
+  // First run (owner, 2026-11-12): sign in first, then search the account's institution list.
+  // setupInst is the chosen entry: {id, name, domain, country}; id '' is "my institution isn't listed".
+  var setupInst = null, instResults = [], instActive = -1, instTimer = null, instSeq = 0;
+  var NOT_LISTED = { id: '', name: "My institution isn't listed", domain: '', country: '', needsHosts: true };
+  function siteNeedsHosts() { return !!setupInst && !!setupInst.needsHosts; }
+  function syncSetupHosts() { $('setup-hosts').hidden = setupOnly || !setupInst || !siteNeedsHosts(); }
+  function instLabel(c) {
+    if (!c.id) return c.name;
+    var where = [c.city, c.country].filter(Boolean).join(', ');
+    return c.name + (where ? ' (' + where + ')' : '');
   }
-  function syncSetupHosts() { $('setup-hosts').hidden = setupOnly || !siteNeedsHosts(); }
+  function closeInst() {
+    $('setup-inst-list').hidden = true;
+    $('setup-inst').setAttribute('aria-expanded', 'false');
+    $('setup-inst').removeAttribute('aria-activedescendant');
+    instActive = -1;
+  }
+  function renderInst(list) {
+    instResults = list.concat([NOT_LISTED]);
+    var ul = $('setup-inst-list');
+    ul.textContent = '';
+    instResults.forEach(function (c, i) {
+      var li = document.createElement('li');
+      li.id = 'setup-inst-opt-' + i;
+      li.setAttribute('role', 'option');
+      li.textContent = instLabel(c);
+      li.addEventListener('mousedown', function (e) { e.preventDefault(); pickInst(i); });
+      ul.appendChild(li);
+    });
+    ul.hidden = false;
+    $('setup-inst').setAttribute('aria-expanded', 'true');
+    moveInst(list.length ? 0 : instResults.length - 1);
+  }
+  function moveInst(i) {
+    var items = $('setup-inst-list').children;
+    if (!items.length) return;
+    instActive = (i + items.length) % items.length;
+    for (var k = 0; k < items.length; k++) items[k].setAttribute('aria-selected', k === instActive ? 'true' : 'false');
+    $('setup-inst').setAttribute('aria-activedescendant', items[instActive].id);
+    items[instActive].scrollIntoView({ block: 'nearest' });
+  }
+  function pickInst(i) {
+    setupInst = instResults[i];
+    $('setup-inst').value = setupInst.id ? instLabel(setupInst) : setupInst.name;
+    closeInst();
+    syncSetupHosts();
+  }
+  function searchInst() {
+    var q = $('setup-inst').value.trim();
+    setupInst = null;
+    syncSetupHosts();
+    if (q.length < 2) { closeInst(); return; }
+    var seq = ++instSeq;
+    goSetup().SearchInstitutions(q).then(function (list) {
+      if (seq !== instSeq) return; // an older answer
+      $('setup-error').textContent = '';
+      renderInst(list || []);
+    }, function (err) { if (seq === instSeq) $('setup-error').textContent = errText(err); });
+  }
+  $('setup-inst').addEventListener('input', function () { clearTimeout(instTimer); instTimer = setTimeout(searchInst, 250); });
+  $('setup-inst').addEventListener('keydown', function (e) {
+    var open = !$('setup-inst-list').hidden;
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (open) moveInst(instActive + 1); else searchInst(); }
+    else if (e.key === 'ArrowUp' && open) { e.preventDefault(); moveInst(instActive - 1); }
+    else if (e.key === 'Enter' && open && instActive >= 0) { e.preventDefault(); pickInst(instActive); }
+    else if (e.key === 'Escape' && open) { e.preventDefault(); closeInst(); }
+  });
+  $('setup-inst').addEventListener('blur', closeInst);
+
+  function showSetupForm() {
+    $('setup-signin').hidden = true;
+    $('setup-form').hidden = false;
+    $('setup-inst').focus();
+    syncSetupHosts();
+  }
+  $('setup-signin-btn').addEventListener('click', function () {
+    var btn = $('setup-signin-btn'), st = $('setup-signin-status');
+    btn.disabled = true;
+    st.textContent = 'Waiting for the sign-in in your browser…';
+    goSetup().SignIn().then(function (who) {
+      st.textContent = 'Signed in as ' + who + '.';
+      showSetupForm();
+    }, function (err) {
+      btn.disabled = false;
+      st.textContent = errText(err);
+    });
+  });
 
   var setupOnly = false;
-  function showSetup(note, only) {
+  function showSetup(note, only, signedIn) {
     show('setup');
     setupOnly = !!only; // only the institution is asked: clusters exist already
     $('setup-user-block').hidden = setupOnly;
@@ -1348,22 +1426,9 @@
     var noteEl = $('setup-note');
     noteEl.textContent = note || '';
     noteEl.hidden = !note;
-    $(setupOnly ? 'setup-site' : 'setup-user').focus();
-    goSetup().Sites().then(function (list) {
-      setupSites = list || [];
-      var sel = $('setup-site');
-      sel.textContent = '';
-      setupSites.forEach(function (c) {
-        var o = document.createElement('option');
-        o.value = c.domain;
-        o.textContent = c.domain === 'generic' ? c.name : c.name + ' (' + c.domain + ')';
-        if (c.default) o.selected = true;
-        sel.appendChild(o);
-      });
-      syncSetupHosts();
-    }, function (err) { $('setup-error').textContent = errText(err); });
+    if (signedIn) showSetupForm();
+    else { $('setup-form').hidden = true; $('setup-signin').hidden = false; $('setup-signin-btn').focus(); }
   }
-  $('setup-site').addEventListener('change', syncSetupHosts);
 
   $('setup-form').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1371,8 +1436,14 @@
     var errEl = $('setup-error');
     errEl.textContent = '';
     $('setup-submit').disabled = true;
+    if (!setupInst) {
+      errEl.textContent = 'Please choose your home institution from the list.';
+      $('setup-submit').disabled = false;
+      $('setup-inst').focus();
+      return;
+    }
     var hosts = siteNeedsHosts() && !setupOnly;
-    goSetup().SubmitSetup($('setup-site').value, name,
+    goSetup().SubmitHome(setupInst.id, setupInst.name, setupInst.domain || '', setupInst.country || '', name,
       hosts ? $('setup-login').value.trim() : '').then(function () {
       if (!settled) show('starting');
     }, function (err) {
@@ -1387,7 +1458,7 @@
     if (st.step && !startStep) setStartStep(st.step); // a live step event is newer than the State snapshot
     if (st.phase === 'ready') showReady(st.status);
     else if (st.phase === 'failed') showFatal(st.error);
-    else if (st.phase === 'setup') showSetup(st.note, st.onlyInstitution);
+    else if (st.phase === 'setup') showSetup(st.note, st.onlyInstitution, st.signedIn);
     else showChat();
   }
 
