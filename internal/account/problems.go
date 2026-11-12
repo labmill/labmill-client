@@ -75,6 +75,26 @@ func (p *Problems) Session() string {
 
 // Record queues one problem. tool, cluster and jobID may be empty or 0.
 func (p *Problems) Record(kind, tool, cluster string, jobID int64, msg string) {
+	p.record(kind, tool, cluster, jobID, msg)
+}
+
+// KindWorked is the user's one-tap answer to "did it work?" after a job that
+// ran new code. The message is exactly "yes" or "no", and the API needs the
+// job reference. It is not a problem: the API leaves it out of the problem list.
+const KindWorked = "worked"
+
+// Worked queues the answer for job jobID. Unlike a problem it is sent for a
+// private job too (a yes or no carries nothing of the job); a fully private
+// account still sends nothing, as for every client event.
+func (p *Problems) Worked(jobID int64, yes bool) {
+	msg := "no"
+	if yes {
+		msg = "yes"
+	}
+	p.record(KindWorked, "", "", jobID, msg)
+}
+
+func (p *Problems) record(kind, tool, cluster string, jobID int64, msg string) {
 	if p == nil || p.Store == nil || strings.TrimSpace(msg) == "" {
 		return
 	}
@@ -95,7 +115,7 @@ func (p *Problems) Record(kind, tool, cluster string, jobID int64, msg string) {
 		var err error
 		if j, err = p.Store.Job(ctx, jobID); err != nil {
 			jobID = 0
-		} else if evs, err := p.Store.Events(ctx, jobID, 0); err != nil || Private(evs) {
+		} else if evs, err := p.Store.Events(ctx, jobID, 0); err != nil || (Private(evs) && kind != KindWorked) {
 			return
 		}
 	}
@@ -111,7 +131,10 @@ func (p *Problems) Record(kind, tool, cluster string, jobID int64, msg string) {
 		tool = ""
 	}
 	e := ClientEvent{At: now().UTC(), ClientVersion: clientVersion(p.Version), OS: p.OS, SessionID: p.Session(),
-		Kind: kind, Tool: tool, Message: NewRedactor(words...).Message(msg)}
+		Kind: kind, Tool: tool, Message: msg}
+	if kind != KindWorked {
+		e.Message = NewRedactor(words...).Message(msg)
+	}
 	b, err := json.Marshal(e)
 	if err != nil {
 		return
