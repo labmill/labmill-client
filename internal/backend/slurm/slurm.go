@@ -33,8 +33,9 @@ type Slurm struct {
 // Type returns "slurm".
 func (s *Slurm) Type() string { return "slurm" }
 
-// Info runs `sinfo -h -o "%P|%a|%l|%G|%D|%t"` (partition with "*" marking the
-// default, availability, time limit, GRES, node count, node state), one line
+// Info runs `sinfo -h -o "%P|%a|%l|%G|%D|%t|%c|%m"` (partition with "*" marking the
+// default, availability, time limit, GRES, node count, node state, cores and
+// memory in MB per node; the last two are optional), one line
 // per partition/state group, and aggregates per partition: Nodes sums %D,
 // IdleNodes sums %D where %t is exactly "idle" (see isIdleAvailable: "idle*", "idle~" etc. are excluded), GPU types come from GRES entries like
 // "gpu:a100:4" or "gpu:h100:8(S:0-1)" (type "a100"/"h100"; untyped "gpu:4"
@@ -42,7 +43,7 @@ func (s *Slurm) Type() string { return "slurm" }
 // "1-00:00:00", "2:00:00", "30:00"). A non-zero exit is an error including
 // stderr.
 func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
-	res, err := s.Runner.Run(ctx, []string{"sinfo", "-h", "-o", "%P|%a|%l|%G|%D|%t"}, nil)
+	res, err := s.Runner.Run(ctx, []string{"sinfo", "-h", "-o", "%P|%a|%l|%G|%D|%t|%c|%m"}, nil)
 	if err != nil {
 		return backend.ClusterInfo{}, fmt.Errorf("sinfo: %w", err)
 	}
@@ -51,6 +52,7 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 	}
 	var info backend.ClusterInfo
 	idx := map[string]int{}
+	seen, vary := map[string]string{}, map[string]bool{} // per partition: node size of the first row; sizes differ
 	for _, line := range strings.Split(res.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -88,8 +90,62 @@ func (s *Slurm) Info(ctx context.Context) (backend.ClusterInfo, error) {
 		if isIdleAvailable(f[5]) {
 			p.IdleNodes += n
 		}
+		if len(f) >= 8 {
+			cpus, memMB := strings.TrimSpace(f[6]), strings.TrimSpace(f[7])
+			switch {
+			case strings.HasSuffix(cpus, "+") || strings.HasSuffix(memMB, "+"):
+				vary[name] = true
+			case seen[name] == "":
+				seen[name] = cpus + "/" + memMB
+				p.CPUsPerNode, _ = strconv.Atoi(cpus)
+				p.MemPerNodeMB, _ = strconv.Atoi(memMB)
+			case seen[name] != cpus+"/"+memMB:
+				vary[name] = true
+			}
+		}
 	}
+	// Mixed node types: no single figure is true, so give none.
+	for i := range info.Partitions {
+		if vary[info.Partitions[i].Name] {
+			info.Partitions[i].CPUsPerNode, info.Partitions[i].MemPerNodeMB = 0, 0
+		}
+	}
+	s.partitionDefaults(ctx, &info)
 	return info, nil
+}
+
+// partitionDefaults adds the default time, default memory and allowed
+// accounts from `scontrol show partition -o`. It is best effort: a site that
+// refuses the command, or output that does not parse, leaves the fields empty.
+func (s *Slurm) partitionDefaults(ctx context.Context, info *backend.ClusterInfo) {
+	res, err := s.Runner.Run(ctx, []string{"scontrol", "show", "partition", "-o"}, nil)
+	if err != nil || res.ExitCode != 0 {
+		return
+	}
+	for _, line := range strings.Split(res.Stdout, "\n") {
+		kv := map[string]string{}
+		for _, w := range strings.Fields(line) {
+			if k, v, ok := strings.Cut(w, "="); ok {
+				kv[k] = v
+			}
+		}
+		i := slices.IndexFunc(info.Partitions, func(p backend.Partition) bool { return p.Name == kv["PartitionName"] })
+		if i < 0 {
+			continue
+		}
+		p := &info.Partitions[i]
+		if d, err := parseTimeLimit(kv["DefaultTime"]); err == nil && !strings.EqualFold(kv["DefaultTime"], "NONE") {
+			p.DefaultTime = d
+		}
+		if v, err := strconv.Atoi(kv["DefMemPerCPU"]); err == nil && v > 0 {
+			p.DefMemMB, p.DefMemPerCPU = v, true
+		} else if v, err := strconv.Atoi(kv["DefMemPerNode"]); err == nil && v > 0 {
+			p.DefMemMB = v
+		}
+		if a := kv["AllowAccounts"]; a != "" && !strings.EqualFold(a, "ALL") {
+			p.AllowAccounts = strings.Split(a, ",")
+		}
+	}
 }
 
 // isIdleAvailable reports whether a sinfo %t node state counts as an idle,

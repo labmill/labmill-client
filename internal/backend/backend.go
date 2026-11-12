@@ -87,6 +87,15 @@ type Partition struct {
 	GPUTypes  []string      // e.g. ["a100", "h100"], from GRES; empty if none
 	Nodes     int           // node count
 	IdleNodes int
+
+	// Defaults and limits a job gets when the script is silent. Zero or
+	// empty means the scheduler did not report it.
+	CPUsPerNode   int           // cores per node (sinfo %c)
+	MemPerNodeMB  int           // memory per node in MB (sinfo %m)
+	DefaultTime   time.Duration // time limit when the job sets none; 0 = unknown, then MaxTime applies
+	DefMemMB      int           // default memory in MB
+	DefMemPerCPU  bool          // DefMemMB counts per CPU, not per node
+	AllowAccounts []string      // empty means all accounts
 }
 
 // ClusterInfo summarizes what a cluster offers right now.
