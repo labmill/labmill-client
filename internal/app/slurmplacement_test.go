@@ -23,6 +23,7 @@ type placeRunner struct {
 	noDefault  bool   // sinfo shows no default partition
 	rejectMsg  string // sbatch --test-only fails with this message
 	reject     bool   // sbatch --test-only fails with a Slurm error
+	scontrol   string // reply to scontrol show partition
 }
 
 func (r *placeRunner) Run(_ context.Context, argv []string, _ io.Reader) (backend.Result, error) {
@@ -33,6 +34,8 @@ func (r *placeRunner) Run(_ context.Context, argv []string, _ io.Reader) (backen
 			return backend.Result{Stdout: "preempt|up|2:00:00|(null)|10|idle\ncompute|up|7-00:00:00|(null)|10|idle\n"}, nil
 		}
 		return backend.Result{Stdout: "preempt|up|2:00:00|(null)|10|idle\ncompute*|up|7-00:00:00|(null)|10|idle\n"}, nil
+	case argv[0] == "scontrol":
+		return backend.Result{Stdout: r.scontrol}, nil
 	case argv[0] == "sbatch" && len(argv) > 1 && argv[1] == "--test-only":
 		if r.rejectMsg != "" {
 			return backend.Result{ExitCode: 1, Stderr: r.rejectMsg}, nil
@@ -186,13 +189,13 @@ func TestDraftScratchGlobal(t *testing.T) {
 }
 
 // A job without data on the shared scratch needs a work_dir of the user's
-// own: Labmill does not invent a folder shared with other users.
+// own: the default folder in the home folder is refused, and Labmill does not invent a folder shared with other users.
 func TestDraftScratchGlobalNeedsWorkDir(t *testing.T) {
 	for _, g := range []*rules.GlobalScratch{{Path: "/storage/scratch"}, testGlobal} {
 		h, _ := slurmHarness(t, rules.SlurmHints{GlobalScratch: g})
 		in := draftSpec(map[string]any{"scratch": "global"}, nil)
 		delete(in["spec"].(map[string]any), "work_dir")
-		if _, err := h.run(t, "draft_job", in); err == nil || !strings.Contains(err.Error(), "needs a work_dir") {
+		if _, err := h.run(t, "draft_job", in); err == nil || !strings.Contains(err.Error(), "needs a work_dir of its own") {
 			t.Errorf("%s: err = %v", g.Path, err)
 		}
 	}

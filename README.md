@@ -6,7 +6,7 @@
 
 **Labmill client** is a conversational front end to your Slurm clusters. You tell it in plain language what you want to compute. It finds the data on your computer, stages it, sends it to the cluster, writes and submits the job script, watches the job and brings the results back.
 
-Labmill client started as a copy of an earlier client and supports **Slurm only**. Documentation and downloads: <https://client.labmill.org/>.
+Labmill client started as a copy of an earlier client and works with **Slurm** clusters first; PBS and LSF are also supported. Documentation and downloads: <https://client.labmill.org/>.
 
 Labmill is for researchers who already run their code on their own Mac, Windows or Linux computer, often on a single GPU, and now need more. You don't need to know the cluster or the terminal. You say what you want to run in a chat.
 

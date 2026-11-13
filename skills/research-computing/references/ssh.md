@@ -202,6 +202,17 @@ repeatedly: see "Failed password logins can lock you out". In Labmill,
 from) and `set_cluster_account` changes the name in Labmill's own SSH settings;
 it never rewrites the user's own `~/.ssh/config`.
 
+## No account on the cluster yet
+
+If the sign-in says there is no account (or the user says so), the user asks the
+institution for one; do not try other names or passwords. Read the institution's
+account page first. Many sites take a mail to a support address or a web form.
+Tell the user in plain words who may ask, who approves and how long it takes.
+Write a short mail with the user's name, institution and the reason (the work the
+account is for), and let the user read and send it themselves. In Labmill,
+`request_account` opens the mail program with the draft, or the site's form, after
+the user approves; Labmill never sends the mail.
+
 ## Another cluster at your own institution
 
 Institutions add clusters over time, so a setup made earlier may lack one that

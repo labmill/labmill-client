@@ -131,6 +131,9 @@ var toolSkills = map[string][]skillSection{
 	"job_worked": {
 		{"research-computing", "references/getting-help.md", "did-it-work"},
 	},
+	"request_account": {
+		{"research-computing", "references/ssh.md", "no-account-on-the-cluster-yet"},
+	},
 
 	// Pending (pendingTools): tools other milestones are adding.
 	"prepare_job": {

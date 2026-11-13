@@ -223,6 +223,8 @@ type System struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Institution string `json:"institution"`
+	// AccountRequest is how a person asks for an account there; nil when the server has none.
+	AccountRequest *AccountRequest `json:"account_request,omitempty"`
 }
 
 // Institution is one answer of GET /api/institutions (universities and research centres first).
@@ -306,4 +308,19 @@ func Whoami(ctx context.Context, path string, hc *http.Client) (Me, Link, error)
 	}
 	me, err := (&Client{URL: l.URL, Token: l.Token, HTTP: hc}).Whoami(ctx)
 	return me, l, err
+}
+
+// AccountRequest is the "account_request" object of GET /api/systems/resolve: facts from the site's own pages.
+// Every field may be empty. The templates use only {name}, {institution} and {reason}.
+type AccountRequest struct {
+	URL             string `json:"url"`
+	Eligibility     string `json:"eligibility"`
+	Steps           string `json:"steps"`
+	Approver        string `json:"approver"`
+	WaitTime        string `json:"wait_time"`
+	Contact         string `json:"contact"`
+	To              string `json:"to"`
+	SubjectTemplate string `json:"subject_template"`
+	BodyTemplate    string `json:"body_template"`
+	WebFormURL      string `json:"web_form_url"`
 }

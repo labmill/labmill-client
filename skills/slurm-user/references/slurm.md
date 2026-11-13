@@ -131,6 +131,17 @@ scontrol show partition <partition> | grep -E 'AllowAccounts|AllowGroups|AllowQo
 Groups that bought their own nodes often have private partitions that only
 their members see. The default partition is marked with `*` in `sinfo`.
 
+What a job gets when the script leaves it out is set per partition: the default
+time (`DefaultTime`; when it is `NONE`, the partition `MaxTime`), the default
+memory (`DefMemPerCPU` or `DefMemPerNode`), and the cores and memory of a node
+(`sinfo -p <partition> -o '%c %m'`, memory in MB). Read them before you size a
+job, and say which values apply when the script sets no `--time` or `--mem`:
+
+```bash
+scontrol show partition -o | tr ' ' '\n' | grep -E '^(PartitionName|DefaultTime|MaxTime|DefMem|AllowAccounts)='
+sinfo -h -o '%P %c %m'
+```
+
 ## Requesting GPUs
 
 ```bash
@@ -316,6 +327,9 @@ sbatch job.sh
 A missing `--chdir` folder is worse: Slurm silently falls back to `/tmp`
 (node-local, see above). Create it in the same step:
 `mkdir -p /shared/path && sbatch job.sh`.
+
+A job with no data and no folder of its own runs in `$HOME/labmill/<job name>`
+(create it with `mkdir -p`, same step). Name that folder to the user.
 
 Relative paths are relative to the submit directory. In job arrays, create the
 folder once before `sbatch --array`, not inside the tasks.
