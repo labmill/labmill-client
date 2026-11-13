@@ -71,7 +71,8 @@ func HelpReport(j store.Job, evs []store.Event, ref string, red Redactor, detail
 }
 
 // PickTenant returns the tenant named by team (id or name, case-insensitive;
-// "" when there is only one). The error lists the names when the choice is open.
+// "" when there is only one). The error lists the names when the choice is open,
+// also when two teams share the name (then with their ids).
 func PickTenant(ts []Tenant, team string) (Tenant, error) {
 	team = strings.TrimSpace(team)
 	switch {
@@ -80,14 +81,27 @@ func PickTenant(ts []Tenant, team string) (Tenant, error) {
 	case team == "" && len(ts) == 1:
 		return ts[0], nil
 	}
+	var named []Tenant
 	for _, t := range ts {
-		if team != "" && (t.ID == team || strings.EqualFold(t.Name, team)) {
+		if team != "" && t.ID == team {
 			return t, nil
 		}
+		if team != "" && strings.EqualFold(t.Name, team) {
+			named = append(named, t)
+		}
+	}
+	if len(named) == 1 {
+		return named[0], nil
+	}
+	if len(named) > 1 {
+		ts = named // the same name twice: list them with their ids
 	}
 	names := make([]string, len(ts))
 	for i, t := range ts {
 		names[i] = t.Name
+		if len(named) > 1 {
+			names[i] += " (id " + t.ID + ")"
+		}
 	}
 	return Tenant{}, errors.New("which team? one of: " + strings.Join(names, ", "))
 }

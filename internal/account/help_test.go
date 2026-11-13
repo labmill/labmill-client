@@ -100,6 +100,13 @@ func TestPickTenant(t *testing.T) {
 	if _, err := PickTenant(two, ""); err == nil || !strings.Contains(err.Error(), "Alpha, Beta") {
 		t.Errorf("open choice: %v", err)
 	}
+	dup := append(two, Tenant{ID: "c", Name: "Beta"})
+	if _, err := PickTenant(dup, "beta"); err == nil || !strings.Contains(err.Error(), "(id b)") || !strings.Contains(err.Error(), "(id c)") {
+		t.Errorf("same name twice: %v", err)
+	}
+	if got, err := PickTenant(dup, "c"); err != nil || got.ID != "c" {
+		t.Errorf("by id: %v %v", got, err)
+	}
 	if _, err := PickTenant(nil, ""); err == nil {
 		t.Error("no tenants: no error")
 	}

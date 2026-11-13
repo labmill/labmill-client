@@ -104,7 +104,7 @@ func (t *toolset) rseHelp(ctx context.Context, input json.RawMessage) (askRSEInp
 
 func askRSEProposal(in askRSEInput, h RSEHelp) agent.Proposal {
 	var b strings.Builder
-	fmt.Fprintf(&b, "To: the research computing team %s (through your Labmill account).\n\nMessage:\n%s\n", sanitize(h.Team), sanitizeLines(in.Body))
+	fmt.Fprintf(&b, "To: the research computing team %s (team id %s, through your Labmill account).\n\nMessage:\n%s\n", sanitize(h.Team), sanitize(h.Tenant), sanitizeLines(in.Body))
 	if h.Report != "" {
 		fmt.Fprintf(&b, "\nReport attached (the team reads it, you can say no to the whole request):\n%s\n", sanitizeLines(h.Report))
 	} else {
