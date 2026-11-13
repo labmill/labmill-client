@@ -125,6 +125,12 @@ var toolSkills = map[string][]skillSection{
 	"set_cluster_account": {
 		{"research-computing", "references/ssh.md", "the-account-name-on-a-new-cluster"},
 	},
+	"ask_rse": {
+		{"research-computing", "references/getting-help.md", "ask-the-team-from-inside-labmill"},
+	},
+	"job_worked": {
+		{"research-computing", "references/getting-help.md", "did-it-work"},
+	},
 	"request_account": {
 		{"research-computing", "references/ssh.md", "no-account-on-the-cluster-yet"},
 	},

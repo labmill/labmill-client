@@ -368,7 +368,7 @@ func (u *Uploader) sendEvents(ctx context.Context, c *Client, full bool) error {
 			j, err := u.Store.Job(ctx, d.JobID)
 			if err == nil && j.RemoteID != "" {
 				evs, _ := u.Store.Events(ctx, j.ID, 0)
-				if Private(evs) {
+				if Private(evs) && e.Kind != KindWorked {
 					drop = append(drop, d.ID)
 					continue
 				}
@@ -376,6 +376,10 @@ func (u *Uploader) sendEvents(ctx context.Context, c *Client, full bool) error {
 					e.ClientJobRef = up.Ref
 				}
 			}
+		}
+		if e.Kind == KindWorked && e.ClientJobRef == "" {
+			drop = append(drop, d.ID) // the API needs the job reference
+			continue
 		}
 		batch = append(batch, e)
 		ids = append(ids, d.ID)

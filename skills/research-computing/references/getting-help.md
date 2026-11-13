@@ -91,3 +91,22 @@ Tried: same script with 1/10 of the data runs fine.
 
 Reply with what fixed it and note it in your project's README so the next
 person (and future you) doesn't need a ticket.
+
+## Ask the team from inside Labmill
+
+When the five-minute steps did not fix it, or the user asks for a person, send
+the ticket from Labmill (`ask_rse`). It goes to the research computing team
+the user's Labmill account belongs to; the user sees the whole text first and
+the answer comes back in the account. Write the message like a good ticket
+(above): what was tried, the job ID, the error in one or two lines. Attach the
+failed job so the team sees the scheduler's facts; the team never needs the
+user's data. Without a Labmill account, show the ticket text instead and say
+where the site takes tickets (site skill).
+
+## Did it work?
+
+After a job that ran new code, ask the user once whether it worked (Yes or No,
+one tap), then record it (`job_worked`). Ask for new code only, not for a
+re-run of code that worked before. A "no" is the moment to offer the team
+(above) if the cause is not clear. Without Labmill, ask in plain words and
+note the answer in your project's README.

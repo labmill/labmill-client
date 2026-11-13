@@ -52,6 +52,8 @@ type Me struct {
 	// then the client sends only the scheduler's facts. nil (an older
 	// server) counts as false.
 	Contributes *bool `json:"contributes,omitempty"`
+	// Tenants are the teams the person belongs to (ask_rse picks one).
+	Tenants []Tenant `json:"tenants,omitempty"`
 }
 
 // ErrNotLinked means no token is saved.

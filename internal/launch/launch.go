@@ -687,6 +687,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		}
 	}
 	env.MailOnEnd = func() bool { return settings.EmailOnJobEnd(prefsPath) }
+	wireHelp(env, db, cfg, probs)
 	// Job reporting (internal/account): the output of an ended job is read
 	// once, redacted, for its report, and checks that keep failing are
 	// reported as connection problems. Both only while an account is linked.
