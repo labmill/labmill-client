@@ -192,11 +192,8 @@ func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j s
 	if Private(evs) {
 		return nil
 	}
-	for _, e := range evs {
-		var o Output
-		if e.Kind == EventOutput && json.Unmarshal([]byte(e.Text), &o) == nil && o.RemoteID == j.RemoteID {
-			return nil
-		}
+	if HasOutput(evs, j.RemoteID) {
+		return nil
 	}
 	head := 0
 	if j.State == store.StateFailed {
@@ -211,4 +208,30 @@ func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j s
 		return err
 	}
 	return st.AddEvent(ctx, j.ID, EventOutput, string(b))
+}
+
+// HasOutput reports whether evs hold the output event of the run with remote ID remoteID.
+func HasOutput(evs []store.Event, remoteID string) bool {
+	for _, e := range evs {
+		var o Output
+		if e.Kind == EventOutput && json.Unmarshal([]byte(e.Text), &o) == nil && o.RemoteID == remoteID {
+			return true
+		}
+	}
+	return false
+}
+
+// EventOutputUnread marks that reading the output of one run failed for good
+// (the text is the remote ID); the monitor then stops trying, in this session
+// and in later ones.
+const EventOutputUnread = "output_unread"
+
+// OutputGaveUp reports whether evs hold an EventOutputUnread for remoteID.
+func OutputGaveUp(evs []store.Event, remoteID string) bool {
+	for _, e := range evs {
+		if e.Kind == EventOutputUnread && e.Text == remoteID {
+			return true
+		}
+	}
+	return false
 }

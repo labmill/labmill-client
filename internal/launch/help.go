@@ -2,6 +2,7 @@ package launch
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,6 +16,11 @@ import (
 // (queues the "worked" event) and ask_rse (POST /api/help). Both stay nil
 // without an account path.
 func wireHelp(env *app.Env, db *store.Store, cfg *config.Config, probs *problemTracker) {
+	if probs != nil && probs.p != nil {
+		env.CommandFailed = func(cluster, program string, code int) {
+			go probs.p.Record(account.KindTool, "remote_command", cluster, 0, commandFailedMessage(program, code))
+		}
+	}
 	path, err := account.Path()
 	if err != nil || db == nil {
 		return
@@ -82,4 +88,10 @@ func wireHelp(env *app.Env, db *store.Store, cfg *config.Config, probs *problemT
 		}
 		return c.Help(ctx, in)
 	}
+}
+
+// commandFailedMessage is the problem text for a failed cluster command:
+// the program name and the exit code, never arguments or output.
+func commandFailedMessage(program string, code int) string {
+	return fmt.Sprintf("%s exited with %d", program, code)
 }
