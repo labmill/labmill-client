@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
-	"unicode/utf8"
 
 	"labmill-client/internal/account"
 	"labmill-client/internal/app"
@@ -19,9 +17,8 @@ import (
 // without an account path.
 func wireHelp(env *app.Env, db *store.Store, cfg *config.Config, probs *problemTracker) {
 	if probs != nil && probs.p != nil {
-		env.CommandFailed = func(cluster, command string, code int, stderr string) {
-			go probs.p.Record(account.KindTool, "remote_command", cluster, 0,
-				fmt.Sprintf("%s exited with %d: %s", command, code, tailString(stderr, 500)))
+		env.CommandFailed = func(cluster, program string, code int) {
+			go probs.p.Record(account.KindTool, "remote_command", cluster, 0, commandFailedMessage(program, code))
 		}
 	}
 	path, err := account.Path()
@@ -93,15 +90,8 @@ func wireHelp(env *app.Env, db *store.Store, cfg *config.Config, probs *problemT
 	}
 }
 
-// tailString keeps at most n bytes from the end of s, cut at a rune start.
-func tailString(s string, n int) string {
-	s = strings.TrimSpace(s)
-	if len(s) <= n {
-		return s
-	}
-	s = s[len(s)-n:]
-	for len(s) > 0 && !utf8.RuneStart(s[0]) {
-		s = s[1:]
-	}
-	return s
+// commandFailedMessage is the problem text for a failed cluster command:
+// the program name and the exit code, never arguments or output.
+func commandFailedMessage(program string, code int) string {
+	return fmt.Sprintf("%s exited with %d", program, code)
 }

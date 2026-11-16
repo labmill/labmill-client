@@ -84,3 +84,30 @@ func sameJSON(a json.RawMessage, b string) bool {
 	var x, y bytes.Buffer
 	return json.Compact(&x, a) == nil && json.Compact(&y, []byte(b)) == nil && x.String() == y.String()
 }
+
+// The problem text of a failed command holds the program and the exit code
+// only; without a linked account nothing is queued.
+func TestCommandFailedRecord(t *testing.T) {
+	if got := commandFailedMessage("mkdir", 2); got != "mkdir exited with 2" {
+		t.Errorf("message %q", got)
+	}
+	dir := t.TempDir()
+	t.Setenv("HOME", dir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, "cfg"))
+	db, err := store.Open(filepath.Join(dir, "x.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	p, _ := account.Path()
+	probs := &problemTracker{p: &account.Problems{Store: db, LinkPath: p, Version: "t", OS: "linux"}}
+	env := &app.Env{}
+	wireHelp(env, db, &config.Config{}, probs)
+	if env.CommandFailed == nil {
+		t.Fatal("CommandFailed not wired")
+	}
+	probs.p.Record(account.KindTool, "remote_command", "bigcluster", 0, commandFailedMessage("mkdir", 2))
+	if evs, _ := db.DueClientEvents(context.Background(), time.Now().Add(time.Hour), 10); len(evs) != 0 {
+		t.Errorf("queued without an account: %v", evs)
+	}
+}

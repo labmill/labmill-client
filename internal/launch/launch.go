@@ -692,6 +692,14 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	// once, redacted, for its report, and checks that keep failing are
 	// reported as connection problems. Both only while an account is linked.
 	words := func(j store.Job) []string { return reportWords(cfg, j) }
+	mon.collectOn = func() bool {
+		p, err := account.Path()
+		if err != nil {
+			return false
+		}
+		_, ok, _ := account.Load(p)
+		return ok
+	}
 	mon.collect = func(ctx context.Context, j store.Job, be backend.Backend) error {
 		if p, err := account.Path(); err != nil {
 			return nil

@@ -476,9 +476,13 @@ func (t *toolset) runRemote(ctx context.Context, rc remoteCmd) (string, error) {
 		res.Stdout = redactSecrets(res.Stdout)
 	}
 	if res.ExitCode != 0 && rc.class == remoteGated && t.env.CommandFailed != nil {
+		program := "command"
+		if len(rc.argv) > 0 {
+			program = path.Base(rc.argv[0])
+		}
 		// A read-only command often fails on purpose (a probe); only a command
 		// that changes something is a problem worth recording.
-		t.env.CommandFailed(rc.cluster.Name, rc.display(), res.ExitCode, res.Stderr)
+		t.env.CommandFailed(rc.cluster.Name, program, res.ExitCode)
 	}
 	return formatRemote(rc, res), nil
 }

@@ -111,7 +111,9 @@ type jobMonitor struct {
 	// collectMaxTries tries. collectTries counts the tries per job (0 or
 	// absent: none yet; collectGaveUp: done). Only the monitor goroutine uses them.
 	outputProblem func(j store.Job, err error)
-	collectTries  map[int64]int
+	// collectOn, when set, tells whether an account is linked; without one nothing is retried.
+	collectOn    func() bool
+	collectTries map[int64]int
 
 	interval, timeout time.Duration // 0 means monitorInterval / monitorCallTimeout
 
@@ -595,7 +597,7 @@ const (
 // the job is left alone. Private jobs and jobs that already have an output
 // event are skipped.
 func (m *jobMonitor) retryCollect(ctx context.Context) {
-	if m.collect == nil || ctx.Err() != nil {
+	if m.collect == nil || ctx.Err() != nil || (m.collectOn != nil && !m.collectOn()) {
 		return
 	}
 	jobs, err := m.store.Jobs(ctx, store.JobFilter{
@@ -624,7 +626,7 @@ func (m *jobMonitor) retryCollect(ctx context.Context) {
 		if err != nil {
 			continue
 		}
-		if account.Private(evs) || account.HasOutput(evs, j.RemoteID) {
+		if account.Private(evs) || account.HasOutput(evs, j.RemoteID) || account.OutputGaveUp(evs, j.RemoteID) {
 			m.collectTries[j.ID] = collectMaxTries
 			continue
 		}
@@ -647,8 +649,12 @@ func (m *jobMonitor) retryCollect(ctx context.Context) {
 			}
 		}
 		m.collectTries[j.ID]++
-		if m.collectTries[j.ID] >= collectMaxTries && err != nil && m.outputProblem != nil {
-			m.outputProblem(j, err)
+		if m.collectTries[j.ID] >= collectMaxTries {
+			// Saved, so a later session does not start over.
+			_ = m.store.AddEvent(ctx, j.ID, account.EventOutputUnread, j.RemoteID)
+			if err != nil && m.outputProblem != nil {
+				m.outputProblem(j, err)
+			}
 		}
 	}
 }

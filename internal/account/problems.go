@@ -220,3 +220,18 @@ func HasOutput(evs []store.Event, remoteID string) bool {
 	}
 	return false
 }
+
+// EventOutputUnread marks that reading the output of one run failed for good
+// (the text is the remote ID); the monitor then stops trying, in this session
+// and in later ones.
+const EventOutputUnread = "output_unread"
+
+// OutputGaveUp reports whether evs hold an EventOutputUnread for remoteID.
+func OutputGaveUp(evs []store.Event, remoteID string) bool {
+	for _, e := range evs {
+		if e.Kind == EventOutputUnread && e.Text == remoteID {
+			return true
+		}
+	}
+	return false
+}

@@ -466,7 +466,7 @@ func TestSecretArgAndPrintsContent(t *testing.T) {
 		argv []string
 		want bool
 	}{
-		{[]string{"cat", "~/.ssh/id_rsa"}, true},
+		{[]string{"ls", "-l", "~/.ssh/id_rsa"}, true},
 		{[]string{"cat", "~/.ssh/config"}, false},
 		{[]string{"cat", "~/.ssh/config.d/labmill"}, false},
 		{[]string{"cat", "~/.ssh/authorized_keys"}, false},
@@ -1183,8 +1183,8 @@ func TestRemoteCommandFailureReported(t *testing.T) {
 	}}
 	h := remoteHarness(t, fr)
 	var got []string
-	h.env.CommandFailed = func(cluster, command string, code int, stderr string) {
-		got = append(got, fmt.Sprintf("%s|%s|%d|%s", cluster, command, code, stderr))
+	h.env.CommandFailed = func(cluster, program string, code int) {
+		got = append(got, fmt.Sprintf("%s|%s|%d", cluster, program, code))
 	}
 	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"squeue", "--me"}}); err != nil {
 		t.Fatal(err)
@@ -1195,7 +1195,25 @@ func TestRemoteCommandFailureReported(t *testing.T) {
 	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"mkdir", "/data/mygroup/out"}}); err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 1 || !strings.HasPrefix(got[0], "hpcone|") || !strings.HasSuffix(got[0], "|2|no such file") {
-		t.Errorf("got %v", got)
+	if len(got) != 1 || got[0] != "hpcone|mkdir|2" {
+		t.Errorf("got %v, want the program name and exit code only", got)
+	}
+	// A command that ran by the user's setting is reported the same way, with no argument.
+	h.env.AutoRunRemote = func() bool { return true }
+	got = nil
+	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"mv", "secret-token-file", "x"}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0] != "hpcone|mv|2" {
+		t.Errorf("auto-run: got %v", got)
+	}
+	// A read-only command that names a sign-in file is a probe too: not reported.
+	got = nil
+	h.env.AutoRunRemote = nil
+	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"ls", "-l", "~/.ssh/id_rsa"}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 0 {
+		t.Errorf("secret-file read reported: %v", got)
 	}
 }

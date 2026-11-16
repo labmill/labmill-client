@@ -540,3 +540,33 @@ func TestMonitorRetriesOutputRead(t *testing.T) {
 		t.Errorf("tries %d (want %d), problems %d (want 1)", n, collectMaxTries, problems)
 	}
 }
+
+// A give-up is saved: a new monitor (a later session) does not try again, and
+// nothing is retried while no account is linked.
+func TestMonitorOutputGiveUpPersists(t *testing.T) {
+	f := newMonitorFixture(t)
+	id := f.job(t, store.Job{Name: "a", Cluster: "hpcone", RemoteID: "9", State: store.StateCompleted})
+	n := 0
+	f.m.collect = func(context.Context, store.Job, backend.Backend) error { n++; return errors.New("x") }
+	f.m.collectOn = func() bool { return false }
+	f.m.check(context.Background())
+	if n != 0 {
+		t.Fatalf("collect ran %d times without an account", n)
+	}
+	f.m.collectOn = nil
+	for i := 0; i < collectMaxTries+1; i++ {
+		f.m.check(context.Background())
+	}
+	if n != collectMaxTries {
+		t.Fatalf("tries %d, want %d", n, collectMaxTries)
+	}
+	evs, _ := f.db.Events(context.Background(), id, 0)
+	if !account.OutputGaveUp(evs, "9") {
+		t.Fatal("give-up not saved")
+	}
+	f.m.collectTries = nil // a new session
+	f.m.check(context.Background())
+	if n != collectMaxTries {
+		t.Errorf("a new session tried again: %d", n)
+	}
+}
