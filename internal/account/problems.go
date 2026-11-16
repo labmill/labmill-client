@@ -192,11 +192,8 @@ func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j s
 	if Private(evs) {
 		return nil
 	}
-	for _, e := range evs {
-		var o Output
-		if e.Kind == EventOutput && json.Unmarshal([]byte(e.Text), &o) == nil && o.RemoteID == j.RemoteID {
-			return nil
-		}
+	if HasOutput(evs, j.RemoteID) {
+		return nil
 	}
 	head := 0
 	if j.State == store.StateFailed {
@@ -211,4 +208,15 @@ func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j s
 		return err
 	}
 	return st.AddEvent(ctx, j.ID, EventOutput, string(b))
+}
+
+// HasOutput reports whether evs hold the output event of the run with remote ID remoteID.
+func HasOutput(evs []store.Event, remoteID string) bool {
+	for _, e := range evs {
+		var o Output
+		if e.Kind == EventOutput && json.Unmarshal([]byte(e.Text), &o) == nil && o.RemoteID == remoteID {
+			return true
+		}
+	}
+	return false
 }

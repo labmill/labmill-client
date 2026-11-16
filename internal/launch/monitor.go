@@ -105,8 +105,13 @@ type jobMonitor struct {
 	// job_status through jobEnded): it reads the job's output for its report
 	// to the Labmill account. problem, when set, gets a job whose checks
 	// failed monitorMaxFailures times in a row.
-	collect func(ctx context.Context, j store.Job, be backend.Backend)
+	collect func(ctx context.Context, j store.Job, be backend.Backend) error
 	problem func(j store.Job, err error)
+	// outputProblem gets a job whose output could not be read in
+	// collectMaxTries tries. collectTries counts the tries per job (0 or
+	// absent: none yet; collectGaveUp: done). Only the monitor goroutine uses them.
+	outputProblem func(j store.Job, err error)
+	collectTries  map[int64]int
 
 	interval, timeout time.Duration // 0 means monitorInterval / monitorCallTimeout
 
@@ -209,6 +214,7 @@ func (m *jobMonitor) check(ctx context.Context) {
 		return
 	}
 	defer m.retryAutoFetch(ctx)
+	defer m.retryCollect(ctx)
 	jobs, err := m.store.Jobs(ctx, store.JobFilter{States: monitoredStates})
 	if err != nil {
 		return
@@ -275,7 +281,7 @@ func (m *jobMonitor) check(ctx context.Context) {
 		if m.collect != nil && account.Final(st.State) {
 			done := j // CollectOutput reads once per run, so a repeat is cheap
 			done.State = st.State
-			m.collect(ctx, done, r.be)
+			_ = m.collect(ctx, done, r.be)
 		}
 	}
 }
@@ -457,7 +463,7 @@ func (m *jobMonitor) collectLater(id int64) {
 		if !ok {
 			return
 		}
-		m.collect(ctx, j, be)
+		_ = m.collect(ctx, j, be)
 	}()
 }
 
@@ -575,4 +581,74 @@ func awaySummary(jobs []awayEntry) string {
 		parts = parts[:maxAway]
 	}
 	return "While you were away: " + strings.Join(parts, ", ") + more + "."
+}
+
+const (
+	collectMaxTries = 5                   // reads of one job's output before a problem is recorded
+	collectPerCheck = 3                   // jobs retried in one check
+	collectWindow   = 14 * 24 * time.Hour // older ended jobs are not retried
+)
+
+// retryCollect reads again the output of ended jobs that still have no output
+// event (the first read failed, or Labmill was closed). A job is tried at most
+// collectMaxTries times; after that a problem is recorded (outputProblem) and
+// the job is left alone. Private jobs and jobs that already have an output
+// event are skipped.
+func (m *jobMonitor) retryCollect(ctx context.Context) {
+	if m.collect == nil || ctx.Err() != nil {
+		return
+	}
+	jobs, err := m.store.Jobs(ctx, store.JobFilter{
+		States:       []store.JobState{store.StateCompleted, store.StateFetched, store.StateFailed, store.StateCanceled},
+		UpdatedSince: m.clock().Add(-collectWindow),
+	})
+	if err != nil {
+		return
+	}
+	if m.collectTries == nil {
+		m.collectTries = map[int64]int{}
+	}
+	timeout := m.timeout
+	if timeout <= 0 {
+		timeout = monitorCallTimeout
+	}
+	left := collectPerCheck
+	for _, j := range jobs {
+		if left == 0 || ctx.Err() != nil {
+			return
+		}
+		if m.collectTries[j.ID] >= collectMaxTries || j.RemoteID == "" {
+			continue
+		}
+		evs, err := m.store.Events(ctx, j.ID, 0)
+		if err != nil {
+			continue
+		}
+		if account.Private(evs) || account.HasOutput(evs, j.RemoteID) {
+			m.collectTries[j.ID] = collectMaxTries
+			continue
+		}
+		c, ok := m.cfg.Cluster(j.Cluster)
+		if !ok {
+			continue
+		}
+		be, ok := m.backendWithin(ctx, c, timeout)
+		if !ok {
+			continue // no connection now is not a failed read
+		}
+		left--
+		err = m.collect(ctx, j, be)
+		if err == nil {
+			// A backend that cannot read output gives no error and no event:
+			// count the try so the job is not asked for ever.
+			if evs, err2 := m.store.Events(ctx, j.ID, 0); err2 == nil && account.HasOutput(evs, j.RemoteID) {
+				m.collectTries[j.ID] = collectMaxTries
+				continue
+			}
+		}
+		m.collectTries[j.ID]++
+		if m.collectTries[j.ID] >= collectMaxTries && err != nil && m.outputProblem != nil {
+			m.outputProblem(j, err)
+		}
+	}
 }

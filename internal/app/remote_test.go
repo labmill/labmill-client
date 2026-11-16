@@ -1174,3 +1174,28 @@ func TestSystemPromptModulesFirst(t *testing.T) {
 		}
 	}
 }
+
+// A command that is not read-only and exits non-zero is reported to
+// Env.CommandFailed; a read-only probe that fails is not.
+func TestRemoteCommandFailureReported(t *testing.T) {
+	fr := &fakeRunner{fn: func(context.Context, []string) (backend.Result, error) {
+		return backend.Result{ExitCode: 2, Stderr: "no such file"}, nil
+	}}
+	h := remoteHarness(t, fr)
+	var got []string
+	h.env.CommandFailed = func(cluster, command string, code int, stderr string) {
+		got = append(got, fmt.Sprintf("%s|%s|%d|%s", cluster, command, code, stderr))
+	}
+	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"squeue", "--me"}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("a read-only probe was reported: %v", got)
+	}
+	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"mkdir", "/data/mygroup/out"}}); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || !strings.HasPrefix(got[0], "hpcone|") || !strings.HasSuffix(got[0], "|2|no such file") {
+		t.Errorf("got %v", got)
+	}
+}

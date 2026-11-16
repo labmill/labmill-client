@@ -145,6 +145,8 @@ type Env struct {
 	RememberAccount func(ctx context.Context, c config.Cluster, account string) error
 	// Worked records the user's yes or no for an ended job (job_worked). Nil: nothing is sent.
 	Worked func(ctx context.Context, jobID int64, yes bool) error
+	// CommandFailed is told when a command that was not read-only ends with a non-zero exit (remote_command). Nil: nothing is recorded.
+	CommandFailed func(cluster, command string, exitCode int, stderr string)
 	// RSEPrepare names the team and builds the report for ask_rse; RSESend sends exactly what RSEPrepare returned, with the body, and returns the request id.
 	// The report is rebuilt at send time and must equal the approved one. Nil: ask_rse is not available.
 	RSEPrepare func(ctx context.Context, jobID int64, team string, details bool) (RSEHelp, error)

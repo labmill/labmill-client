@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
+	"labmill-client/internal/account"
 	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/config"
@@ -503,5 +504,39 @@ func TestRetryNotice(t *testing.T) {
 	}
 	if got := retryNotice(j, "", backend.Status{State: store.StateRunning}); got != "" {
 		t.Errorf("notice without retry = %q", got)
+	}
+}
+
+// An ended job whose output read failed is read again at a later check; after
+// collectMaxTries failures a problem is recorded once and the job is left alone.
+func TestMonitorRetriesOutputRead(t *testing.T) {
+	f := newMonitorFixture(t)
+	id := f.job(t, store.Job{Name: "a", Cluster: "hpcone", RemoteID: "9", State: store.StateCompleted})
+	calls := 0
+	f.m.collect = func(ctx context.Context, j store.Job, _ backend.Backend) error {
+		calls++
+		if calls == 1 {
+			return errors.New("ssh: timeout")
+		}
+		return f.db.AddEvent(ctx, j.ID, account.EventOutput, `{"remote_id":"9"}`)
+	}
+	f.m.check(context.Background())
+	f.m.check(context.Background())
+	f.m.check(context.Background())
+	if calls != 2 {
+		t.Errorf("collect ran %d times, want 2 (fail, then success, then none)", calls)
+	}
+	_ = id
+
+	g := newMonitorFixture(t)
+	g.job(t, store.Job{Name: "b", Cluster: "hpcone", RemoteID: "10", State: store.StateFailed})
+	n, problems := 0, 0
+	g.m.collect = func(context.Context, store.Job, backend.Backend) error { n++; return errors.New("no output file") }
+	g.m.outputProblem = func(store.Job, error) { problems++ }
+	for i := 0; i < collectMaxTries+3; i++ {
+		g.m.check(context.Background())
+	}
+	if n != collectMaxTries || problems != 1 {
+		t.Errorf("tries %d (want %d), problems %d (want 1)", n, collectMaxTries, problems)
 	}
 }
