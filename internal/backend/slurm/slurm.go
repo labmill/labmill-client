@@ -1116,10 +1116,82 @@ func (s *Slurm) Logs(ctx context.Context, remoteID string, tailLines int) (strin
 // only when the file is longer than head+tail, `head -n`. A missing stderr
 // file is not an error.
 func (s *Slurm) Output(ctx context.Context, remoteID string, head, tail int) (stdout, stderr []string, err error) {
-	if err := checkRemoteID(remoteID); err != nil {
+	out, errPath, err := s.outputPaths(ctx, remoteID)
+	if err != nil {
 		return nil, nil, err
 	}
-	out, errPath := "", ""
+	if stdout, err = s.headTail(ctx, out, head, tail); err != nil {
+		return nil, nil, err
+	}
+	if errPath != "" {
+		stderr, _ = s.headTail(ctx, errPath, head, tail)
+	}
+	return stdout, stderr, nil
+}
+
+// OutputFull implements backend.FullOutputReader: the whole text of both
+// files, split into lines. A file above maxBytes gives its first head lines,
+// one marker line and its last maxBytes bytes.
+func (s *Slurm) OutputFull(ctx context.Context, remoteID string, head, maxBytes int) (stdout, stderr []string, err error) {
+	out, errPath, err := s.outputPaths(ctx, remoteID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if stdout, err = s.readFull(ctx, out, head, maxBytes); err != nil {
+		return nil, nil, err
+	}
+	if errPath != "" {
+		stderr, _ = s.readFull(ctx, errPath, head, maxBytes)
+	}
+	return stdout, stderr, nil
+}
+
+// readFull reads the file at path (see OutputFull).
+func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) ([]string, error) {
+	run := func(argv ...string) (string, error) {
+		res, err := s.Runner.Run(ctx, argv, nil)
+		if err != nil {
+			return "", fmt.Errorf("%s: %w", argv[0], err)
+		}
+		if res.ExitCode != 0 {
+			return "", cmdError(argv[0]+" "+path, res)
+		}
+		return res.Stdout, nil
+	}
+	wc, err := run("wc", "-c", "--", path)
+	if err != nil {
+		return nil, err
+	}
+	size, _ := strconv.Atoi(strings.Fields(wc + " 0")[0])
+	if size <= maxBytes {
+		text, err := run("cat", "--", path)
+		if err != nil {
+			return nil, err
+		}
+		return backend.SplitOutput(text), nil
+	}
+	h, err := run("head", "-n", strconv.Itoa(head), "--", path)
+	if err != nil {
+		return nil, err
+	}
+	t, err := run("tail", "-c", strconv.Itoa(maxBytes), "--", path)
+	if err != nil {
+		return nil, err
+	}
+	lines := backend.SplitOutput(t)
+	if len(lines) > 0 {
+		lines = lines[1:] // the first one is cut in the middle
+	}
+	first := backend.SplitOutput(h)
+	return append(append(first, "[... the middle of a large file was not read ...]"), lines...), nil
+}
+
+// outputPaths finds the stdout and stderr files of a job. stderr is "" when
+// both go to one file.
+func (s *Slurm) outputPaths(ctx context.Context, remoteID string) (out, errPath string, err error) {
+	if err := checkRemoteID(remoteID); err != nil {
+		return "", "", err
+	}
 	if res, err := s.Runner.Run(ctx, []string{"scontrol", "show", "job", remoteID}, nil); err == nil && res.ExitCode == 0 {
 		for _, tok := range strings.Fields(res.Stdout) {
 			if p, ok := strings.CutPrefix(tok, "StdOut="); ok && out == "" {
@@ -1131,16 +1203,13 @@ func (s *Slurm) Output(ctx context.Context, remoteID string, head, tail int) (st
 	}
 	if out == "" {
 		if out, err = s.outputPath(ctx, remoteID); err != nil {
-			return nil, nil, err
+			return "", "", err
 		}
 	}
-	if stdout, err = s.headTail(ctx, out, head, tail); err != nil {
-		return nil, nil, err
+	if errPath == out {
+		errPath = ""
 	}
-	if errPath != "" && errPath != out {
-		stderr, _ = s.headTail(ctx, errPath, head, tail)
-	}
-	return stdout, stderr, nil
+	return out, errPath, nil
 }
 
 // headTail reads the first head and last tail lines of the file at path (see Output).
@@ -1345,8 +1414,9 @@ func gresGPUTypes(gres string) []string {
 }
 
 var (
-	_ backend.Backend      = (*Slurm)(nil)
-	_ backend.OutputReader = (*Slurm)(nil)
+	_ backend.Backend          = (*Slurm)(nil)
+	_ backend.OutputReader     = (*Slurm)(nil)
+	_ backend.FullOutputReader = (*Slurm)(nil)
 )
 
 // Jobs implements backend.Lister. Active jobs come from

@@ -45,3 +45,30 @@ func TestOutput(t *testing.T) {
 		t.Error("bad job id accepted")
 	}
 }
+
+func TestOutputFull(t *testing.T) {
+	// A small file: all lines, progress-bar redraws split on carriage returns.
+	r := &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "20 /w/a.out\n"},
+		"cat":      {Stdout: "start\n10%\r20%\r30%\ndone\n"},
+	}}
+	out, errs, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 100, 1000)
+	if err != nil || strings.Join(out, ",") != "start,10%,20%,30%,done" || errs != nil {
+		t.Fatalf("small = %v %v %v", out, errs, err)
+	}
+	// A large file: head lines, a marker, the last bytes without the cut first line.
+	r = &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "5000000 /w/a.out\n"},
+		"head":     {Stdout: "h1\nh2\n"},
+		"tail":     {Stdout: "rtial\nt1\nt2\n"},
+	}}
+	out, _, err = (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 2, 1000)
+	if err != nil || strings.Join(out, ",") != "h1,h2,[... the middle of a large file was not read ...],t1,t2" {
+		t.Fatalf("large = %v %v", out, err)
+	}
+	if _, _, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8; rm", 1, 1); err == nil {
+		t.Error("bad job id accepted")
+	}
+}

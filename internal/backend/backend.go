@@ -531,3 +531,24 @@ var ErrSubmitUncertain = errors.New("the submit may or may not have reached the 
 type AccountLister interface {
 	Accounts(ctx context.Context) (accounts []string, def string)
 }
+
+// FullOutputReader is implemented by backends that can read a job's whole
+// output files. For each file it returns all lines when the file has at most
+// maxBytes bytes, else the first head lines, one marker line and the lines of
+// the last maxBytes bytes. stderr is nil when the job writes both to one
+// file. It only reads.
+type FullOutputReader interface {
+	OutputFull(ctx context.Context, remoteID string, head, maxBytes int) (stdout, stderr []string, err error)
+}
+
+// SplitOutput splits text into lines. A carriage return ends a line too, so
+// the many redraws of a progress bar become lines that can be collapsed.
+func SplitOutput(s string) []string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	s = strings.ReplaceAll(s, "\r", "\n")
+	s = strings.TrimSuffix(s, "\n")
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, "\n")
+}

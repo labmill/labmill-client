@@ -57,6 +57,9 @@ func NewRedactor(words ...string) Redactor {
 
 // Line redacts one line and cuts it to maxLineLen bytes.
 func (r Redactor) Line(l string) string {
+	if markerRE.MatchString(l) {
+		return l
+	}
 	l = strings.ToValidUTF8(l, "")
 	for _, w := range r.words { // first: a word can be part of a path or host the rules would cut apart
 		l = w.ReplaceAllString(l, "<name>")
