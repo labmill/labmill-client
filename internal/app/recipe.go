@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -40,6 +41,7 @@ type recipe struct {
 	Files       []jobFile       `json:"files,omitempty"`
 	Spec        backend.JobSpec `json:"spec"`
 	Software    []string        `json:"software,omitempty"` // as written, not looked up on the cluster
+	Note        string          `json:"note,omitempty"`     // set when rebuilt after an automatic resubmission
 }
 
 var (
@@ -161,13 +163,17 @@ func (t *toolset) saveRecipe(ctx context.Context, j store.Job, r recipe) string 
 // recipeOf is the recipe of job j: the saved one, else (a job submitted
 // before recipes) one rebuilt from the job's script, settings and files.
 func (t *toolset) recipeOf(ctx context.Context, j store.Job) (recipe, error) {
+	stale := false
 	if text, ok, err := t.latestEvent(ctx, j.ID, eventRecipe); err != nil {
 		return recipe{}, err
 	} else if ok {
 		var r recipe
-		if json.Unmarshal([]byte(text), &r) == nil && r.Script != "" {
+		// An automatic resubmission replaces the script and the remote id: the saved
+		// recipe is then stale, so rebuild it from the job.
+		if json.Unmarshal([]byte(text), &r) == nil && r.Script != "" && r.RemoteID == j.RemoteID && r.Script == j.Script {
 			return r, nil
 		}
+		stale = r.Script != ""
 	}
 	if strings.TrimSpace(j.Script) == "" || j.Cluster == "" {
 		return recipe{}, fmt.Errorf("Job %d (%s) has no script yet, so it has no recipe.", j.ID, j.Name)
@@ -184,6 +190,9 @@ func (t *toolset) recipeOf(ctx context.Context, j store.Job) (recipe, error) {
 	}
 	r := t.buildRecipe(j, j.Script, files, spec)
 	r.SubmittedAt = time.Time{} // unknown: the job predates recipes
+	if stale {
+		r.Note = "The script was changed after the first submission (automatic resubmission). The settings below are those of the first submission; the script is the current one."
+	}
 	return r, nil
 }
 
@@ -198,6 +207,9 @@ func (r recipe) text(jobID int64) string {
 		fmt.Fprintf(&b, " with Labmill %s", sanitize(r.Client))
 	}
 	b.WriteString(".\n")
+	if r.Note != "" {
+		b.WriteString(sanitize(r.Note) + "\n")
+	}
 	s := r.Spec
 	fmt.Fprintf(&b, "Settings: work folder %s", sanitize(s.WorkDir))
 	if s.Partition != "" {
@@ -326,22 +338,30 @@ func (t *toolset) rerunJob() agent.Tool {
 			if err != nil {
 				return "", err
 			}
+			taken := map[string]bool{}
+			all, aerr := t.env.Store.Jobs(ctx, store.JobFilter{})
+			if aerr != nil {
+				return "", fmt.Errorf("I couldn't check the other jobs: %w", aerr)
+			}
+			for _, o := range all {
+				taken[o.Name] = true
+				if o.ID != j.ID && o.Cluster == c.Name && activeState(o.State) && (sameFolder(o, j.RemoteDir) || sameFolder(o, r.Spec.WorkDir) || t.specWorkDirIn(ctx, o.ID, r.Spec.WorkDir)) {
+					return "", fmt.Errorf("Job %d (%s) may still be running in the same work folder (state %s). Run job_status first; a second run there can damage its output.", o.ID, sanitize(o.Name), o.State)
+				}
+			}
 			name := in.Name
 			if name == "" {
 				name = safeJobName(j.Name + "-rerun")
-				base := name
-				taken := map[string]bool{}
-				if all, aerr := t.env.Store.Jobs(ctx, store.JobFilter{}); aerr == nil {
-					for _, o := range all {
-						taken[o.Name] = true
-					}
-				}
-				for n := 2; taken[name]; n++ {
-					name = fmt.Sprintf("%s%d", base, n)
-				}
 			}
 			if name != safeJobName(name) {
 				return "", fmt.Errorf("Job name %q isn't allowed: use letters, digits, dots, dashes and underscores.", sanitize(name))
+			}
+			base := name
+			if len(base) > 60 {
+				base = base[:60]
+			}
+			for n := 2; taken[name]; n++ {
+				name = fmt.Sprintf("%s%d", base, n)
 			}
 			if len(r.Files) > 0 {
 				if err := t.checkJobFilesTarget(c, r.Spec); err != nil {
@@ -375,4 +395,31 @@ func (t *toolset) rerunJob() agent.Tool {
 				id, name, c.Name, j.ID, sanitize(r.Spec.WorkDir), j.ID, id, r.Script), nil
 		},
 	}
+}
+
+// activeState reports a job that may still run on the cluster.
+func activeState(s store.JobState) bool {
+	return s == store.StateSubmitted || s == store.StatePending || s == store.StateRunning
+}
+
+// sameFolder reports whether job o works in dir or below it: by its remote
+// folder or by a path in its script.
+func sameFolder(o store.Job, dir string) bool {
+	dir = path.Clean(dir)
+	if dir == "." || dir == "/" {
+		return false
+	}
+	return (o.RemoteDir != "" && inFolder(dir, o.RemoteDir)) || mentionsFolder(o.Script, dir)
+}
+
+// specWorkDirIn reports whether job id has dir (or a folder below it) as the
+// work folder in its saved settings.
+func (t *toolset) specWorkDirIn(ctx context.Context, id int64, dir string) bool {
+	dir = path.Clean(dir)
+	if dir == "." || dir == "/" {
+		return false
+	}
+	var spec backend.JobSpec
+	text, ok, err := t.latestEvent(ctx, id, eventSpec)
+	return err == nil && ok && json.Unmarshal([]byte(text), &spec) == nil && spec.WorkDir != "" && inFolder(dir, spec.WorkDir)
 }

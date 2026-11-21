@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -143,9 +144,23 @@ func TestRecipeRerunTwiceAndAccount(t *testing.T) {
 	// A recipe event on a job is not part of its account record.
 	evs, _ := h.env.Store.Events(ctx, id, 0)
 	j, _ := h.env.Store.Job(ctx, id)
-	in, _ := account.BuildReport(j, evs, "ref")
-	if b, _ := json.Marshal(in); strings.Contains(string(b), "recipe") {
-		t.Errorf("report carries the recipe: %s", b)
+	report := func(evs []store.Event) string {
+		in, _ := account.BuildReport(j, evs, "ref")
+		account.AddDetails(&in, j, evs, account.NewRedactor())
+		b, _ := json.Marshal(in)
+		return string(b)
+	}
+	var without []store.Event
+	for _, e := range evs {
+		if e.Kind != eventRecipe {
+			without = append(without, e)
+		}
+	}
+	if len(without) == len(evs) {
+		t.Fatal("no recipe event")
+	}
+	if report(evs) != report(without) {
+		t.Errorf("the recipe changes the report:\n%s\n%s", report(evs), report(without))
 	}
 }
 
@@ -163,5 +178,66 @@ func TestRecipeRebuilt(t *testing.T) {
 	out, err := h.run(t, "job_recipe", map[string]any{"job_id": jobs[0].ID})
 	if err != nil || !strings.Contains(out, "Recipe of job") || strings.Contains(out, "submitted 0001") {
 		t.Fatalf("%q %v", out, err)
+	}
+}
+
+// A resubmission replaces the script and the remote id; the recipe follows.
+func TestRecipeAfterResubmission(t *testing.T) {
+	h, _ := filesHarness(t)
+	h.env.ResultsDir = t.TempDir()
+	ctx := context.Background()
+	if _, err := h.run(t, "draft_job", map[string]any{"cluster": "hpcone",
+		"spec": map[string]any{"name": "rs", "work_dir": t.TempDir(), "command": "echo one"}}); err != nil {
+		t.Fatal(err)
+	}
+	jobs, _ := h.env.Store.Jobs(ctx, store.JobFilter{})
+	id := jobs[0].ID
+	if _, err := submitWith(t, h, id, nil); err != nil {
+		t.Fatal(err)
+	}
+	h.env.Store.UpdateJob(ctx, id, func(j *store.Job) error {
+		j.Script += "\n#SBATCH --mem=64G\necho grown\n"
+		j.RemoteID, j.State = "999", store.StateFailed
+		return nil
+	})
+	out, err := h.run(t, "job_recipe", map[string]any{"job_id": id})
+	if err != nil || !strings.Contains(out, "echo grown") && strings.Contains(out, "first submission") {
+		t.Fatalf("stale recipe: %q %v", out, err)
+	}
+}
+
+// A second run in a work folder with a live job is refused, and an explicit
+// name that is taken gets a suffix.
+func TestRecipeRerunGuards(t *testing.T) {
+	h, _ := filesHarness(t)
+	h.env.ResultsDir = t.TempDir()
+	ctx := context.Background()
+	if _, err := h.run(t, "draft_job", map[string]any{"cluster": "hpcone",
+		"spec": map[string]any{"name": "g1", "work_dir": t.TempDir(), "command": "echo hi"}}); err != nil {
+		t.Fatal(err)
+	}
+	jobs, _ := h.env.Store.Jobs(ctx, store.JobFilter{})
+	id := jobs[0].ID
+	if _, err := submitWith(t, h, id, nil); err != nil {
+		t.Fatal(err)
+	}
+	h.env.Store.UpdateJob(ctx, id, func(j *store.Job) error { j.State = store.StateCompleted; return nil })
+	if _, err := h.run(t, "rerun_job", map[string]any{"job_id": id, "name": "g1"}); err != nil {
+		t.Fatalf("taken name: %v", err)
+	}
+	jobs, _ = h.env.Store.Jobs(ctx, store.JobFilter{})
+	var draft store.Job
+	for _, x := range jobs {
+		if x.Name == "g12" {
+			draft = x
+		}
+	}
+	if draft.ID == 0 {
+		t.Fatalf("no suffixed name: %+v", jobs)
+	}
+	// Another live job in the same folder blocks the run.
+	h.env.Store.UpdateJob(ctx, draft.ID, func(j *store.Job) error { j.RemoteID, j.State = "5", store.StateRunning; return nil })
+	if _, err := h.run(t, "rerun_job", map[string]any{"job_id": id}); err == nil || !strings.Contains(err.Error(), fmt.Sprintf("Job %d (g12) may still be running", draft.ID)) {
+		t.Fatalf("rerun beside a live job: %v", err)
 	}
 }

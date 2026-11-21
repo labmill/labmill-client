@@ -124,7 +124,7 @@ Keep the recipe of every job: the exact script, the settings (partition, account
 
 To run it again, submit the same script from the same work folder: `cd <work folder> && sbatch <script>`. Check first that the input data is still there and that a new run may overwrite the old output (or change `--output` and the output folder). A module named without a version loads the cluster's current default, which can differ from the first run: load a pinned version (`module load name/1.2.3`) to repeat a result.
 
-In Labmill the recipe is saved when a job is submitted. job_recipe shows it; rerun_job drafts a new job from it, and the user approves the script again with submit_job.
+Before a second run, check that no other job still runs in that work folder (`squeue --me -o "%i %Z"`). If the job was resubmitted with a changed script (more memory, another partition), repeat the current script, not the first one. In Labmill the recipe is saved when a job is submitted. job_recipe shows it; rerun_job drafts a new job from it, and the user approves the script again with submit_job.
 
 ## Partitions, accounts and QOS
 
