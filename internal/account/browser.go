@@ -76,7 +76,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 	select {
 	case code = <-codes:
 	case why := <-refused:
-		return Me{}, fmt.Errorf("the sign-in in the browser was not completed (%s): run labmill login to try again", why)
+		return Me{}, fmt.Errorf("the sign-in in the browser was not completed (%s): run labmill login to try again", oneLine(why, 64))
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return Me{}, errors.New("the sign-in in the browser did not finish in 10 minutes: run labmill login to try again")
@@ -92,7 +92,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 		switch {
 		case errors.As(err, &se) && se.Code == http.StatusTooManyRequests:
 			return Me{}, errors.New("too many sign-in tries: wait a minute, then run labmill login again")
-		case errors.As(err, &se) && se.Code >= 400 && se.Code < 500:
+		case errors.As(err, &se) && (se.Code == 400 || se.Code == 401 || se.Code == 403 || se.Code == 410):
 			// The code is one-time and short-lived; no token was involved yet.
 			return Me{}, errors.New("the sign-in code was already used or has expired: run labmill login again")
 		}

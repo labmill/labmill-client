@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -79,9 +80,10 @@ func TestBrowserLogin(t *testing.T) {
 
 // A refused sign-in says what to do, never raw server text or a token message when no token exists yet.
 func TestBrowserLoginRefusals(t *testing.T) {
-	status := 400
+	var status atomic.Int32
+	status.Store(400)
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, `{"error":"code used"}`, status)
+		http.Error(w, `{"error":"code used"}`, int(status.Load()))
 	}))
 	defer api.Close()
 	run := func(cb url.Values) error {
@@ -89,7 +91,11 @@ func TestBrowserLoginRefusals(t *testing.T) {
 			u, _ := url.Parse(raw)
 			q := u.Query()
 			cb.Set("state", q.Get("state"))
-			go http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + cb.Encode())
+			go func() {
+				if r, err := http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + cb.Encode()); err == nil {
+					r.Body.Close()
+				}
+			}()
 			return nil
 		}
 		_, err := BrowserLogin(context.Background(), filepath.Join(t.TempDir(), "a.json"), api.URL, "", browser, nil, time.Now())
@@ -98,8 +104,8 @@ func TestBrowserLoginRefusals(t *testing.T) {
 	for _, c := range []struct {
 		code int
 		want string
-	}{{400, "already used or has expired"}, {401, "already used or has expired"}, {429, "too many sign-in tries"}} {
-		status = c.code
+	}{{400, "already used or has expired"}, {401, "already used or has expired"}, {410, "already used or has expired"}, {429, "too many sign-in tries"}} {
+		status.Store(int32(c.code))
 		if err := run(url.Values{"code": {"c1"}}); err == nil || !strings.Contains(err.Error(), c.want) || strings.Contains(err.Error(), "program token") {
 			t.Errorf("status %d: %v", c.code, err)
 		}
@@ -126,5 +132,29 @@ func TestStatusErrorText(t *testing.T) {
 		if got := (&StatusError{Code: c.code, Text: c.text}).Error(); !strings.Contains(got, c.want) {
 			t.Errorf("%d %q: %q", c.code, c.text, got)
 		}
+	}
+}
+
+func TestBrowserLoginRefusedValueIsShort(t *testing.T) {
+	long := "bad\x1b[31m" + strings.Repeat("x", 500) + "\nline"
+	browser := func(raw string) error {
+		u, _ := url.Parse(raw)
+		q := u.Query()
+		go func() {
+			if r, err := http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + url.Values{"state": {q.Get("state")}, "error": {long}}.Encode()); err == nil {
+				r.Body.Close()
+			}
+		}()
+		return nil
+	}
+	_, err := BrowserLogin(context.Background(), filepath.Join(t.TempDir(), "a.json"), "http://127.0.0.1:1", "", browser, nil, time.Now())
+	if err == nil || strings.ContainsAny(err.Error(), "\x1b\n") || len(err.Error()) > 200 {
+		t.Fatalf("long error value: %q", err)
+	}
+}
+
+func TestStatusErrorOtherCodes(t *testing.T) {
+	if got := (&StatusError{Code: 404, Text: "no\nsuch\x1b[1m page"}).Error(); got != "the Labmill account refused this (404): no such page" {
+		t.Errorf("%q", got)
 	}
 }

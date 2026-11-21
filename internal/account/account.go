@@ -179,7 +179,7 @@ func plainText(s string) string {
 			s = j.Message
 		}
 	}
-	s = strings.TrimSpace(textsafe.Clean(s))
+	s = oneLine(s, 200)
 	if strings.HasPrefix(s, "<") || strings.HasPrefix(s, "{") {
 		return ""
 	}
@@ -347,4 +347,13 @@ type AccountRequest struct {
 	SubjectTemplate string `json:"subject_template"`
 	BodyTemplate    string `json:"body_template"`
 	WebFormURL      string `json:"web_form_url"`
+}
+
+// oneLine is s without control sequences, on one line, cut to max runes: server text shown to the user.
+func oneLine(s string, max int) string {
+	s = strings.Join(strings.Fields(textsafe.Clean(s)), " ")
+	if r := []rune(s); len(r) > max {
+		s = string(r[:max]) + "..."
+	}
+	return s
 }
