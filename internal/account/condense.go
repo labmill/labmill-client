@@ -37,7 +37,7 @@ func similarKey(l string) string {
 }
 
 // collapse replaces each run of three or more similar lines by its first
-// line and "⋮ (N similar lines)" (N counts the others).
+// line, "⋮ (N similar lines)" and its last line (N counts the ones left out).
 func collapse(lines []string) []string {
 	out := make([]string, 0, len(lines))
 	for i := 0; i < len(lines); {
@@ -47,7 +47,7 @@ func collapse(lines []string) []string {
 			j++
 		}
 		if j-i >= 3 {
-			out = append(out, lines[i], fmt.Sprintf("⋮ (%d similar lines)", j-i-1))
+			out = append(out, lines[i], fmt.Sprintf("⋮ (%d similar lines)", j-i-2), lines[j-1])
 		} else {
 			out = append(out, lines[i:j]...)
 		}

@@ -4,7 +4,7 @@ You can connect Labmill to your account at [app.labmill.org](https://app.labmill
 
 ## What is sent
 
-**Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.**
+**Labmill sends the job script, the job output, condensed (start, end and error lines), and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.**
 
 For each job, when the scheduler accepts it, when it starts and when it ends, Labmill sends one record. A later record of the same job replaces the earlier one. The record holds:
 

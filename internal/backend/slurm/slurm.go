@@ -1162,7 +1162,14 @@ func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) (
 	if err != nil {
 		return nil, err
 	}
-	size, _ := strconv.Atoi(strings.Fields(wc + " 0")[0])
+	f := strings.Fields(wc)
+	if len(f) == 0 {
+		return nil, fmt.Errorf("wc %s: no size in the answer", path)
+	}
+	size, err := strconv.Atoi(f[0])
+	if err != nil {
+		return nil, fmt.Errorf("wc %s: bad size %q", path, f[0])
+	}
 	if size <= maxBytes {
 		text, err := run("cat", "--", path)
 		if err != nil {
@@ -1170,7 +1177,7 @@ func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) (
 		}
 		return backend.SplitOutput(text), nil
 	}
-	h, err := run("head", "-n", strconv.Itoa(head), "--", path)
+	h, err := run("head", "-c", strconv.Itoa(maxBytes), "--", path) // bytes, not lines: a file with few newlines (progress bars) must not stream whole
 	if err != nil {
 		return nil, err
 	}
@@ -1183,6 +1190,9 @@ func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) (
 		lines = lines[1:] // the first one is cut in the middle
 	}
 	first := backend.SplitOutput(h)
+	if len(first) > head {
+		first = first[:head]
+	}
 	return append(append(first, "[... the middle of a large file was not read ...]"), lines...), nil
 }
 

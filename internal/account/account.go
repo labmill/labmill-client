@@ -29,7 +29,7 @@ import (
 
 // Notice is shown once, when the user connects an account (labmill login,
 // Settings > Labmill account): what the client sends.
-const Notice = "Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts."
+const Notice = "Labmill sends the job script, the job output, condensed (start, end and error lines), and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts."
 
 // DefaultURL is the Labmill web app; LABMILL_ACCOUNT_URL overrides it (tests, staging).
 const DefaultURL = "https://app.labmill.org"

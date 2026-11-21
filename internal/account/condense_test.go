@@ -21,7 +21,7 @@ func TestCondenseIdenticalLines(t *testing.T) {
 		in[i] = "waiting for the queue"
 	}
 	out := Condense(in, OutputBudget)
-	if len(out) != 2 || out[0] != "waiting for the queue" || out[1] != "⋮ (9999 similar lines)" {
+	if len(out) != 3 || out[0] != "waiting for the queue" || out[1] != "⋮ (9998 similar lines)" || out[2] != out[0] {
 		t.Errorf("got %d lines: %v", len(out), out)
 	}
 }
@@ -36,7 +36,7 @@ func TestCondenseSimilarLinesAndBars(t *testing.T) {
 		in = append(in, s)
 	}
 	out := Condense(in, OutputBudget)
-	if len(out) != 5 || out[1] != "⋮ (499 similar lines)" || out[2] != "done" || out[4] != "⋮ (2 similar lines)" {
+	if len(out) != 7 || out[1] != "⋮ (498 similar lines)" || out[2] != "2026-11-18 10:08:19 step 499 loss 0.3493 id 02f967ed" || out[3] != "done" || out[5] != "⋮ (1 similar lines)" {
 		t.Errorf("got %q", out)
 	}
 }
@@ -90,7 +90,7 @@ func TestCondenseOutputRedactsRepeatedSecret(t *testing.T) {
 	so, se := CondenseOutput(red, out, errs)
 	text := strings.Join(so, "\n") + strings.Join(se, "\n")
 	noSecrets(t, "condensed output", text)
-	if len(so) != 2 || len(se) != 2 {
+	if len(so) != 3 || len(se) != 3 {
 		t.Errorf("stdout %d lines, stderr %d lines", len(so), len(se))
 	}
 	if size(so)+size(se) > OutputBudget {
@@ -102,5 +102,17 @@ func TestRedactorLeavesMarkers(t *testing.T) {
 	m := "⋮ (123456 similar lines)"
 	if got := NewRedactor().Line(m); got != m {
 		t.Errorf("marker changed: %q", got)
+	}
+}
+
+func TestCondenseKeepsLastLineOfRun(t *testing.T) {
+	in := []string{"start"}
+	for i := 0; i < 10; i++ {
+		in = append(in, fmt.Sprintf("loss %d.5", i))
+	}
+	in = append(in, "loss nan", "Traceback (most recent call last):")
+	out := strings.Join(Condense(in, OutputBudget), "\n")
+	if !strings.Contains(out, "loss nan") {
+		t.Errorf("last line of the run lost: %q", out)
 	}
 }

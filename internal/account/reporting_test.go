@@ -345,7 +345,7 @@ func TestCollectOutputCondensesWholeFile(t *testing.T) {
 	for _, e := range evs {
 		if e.Kind == EventOutput {
 			var o Output
-			if json.Unmarshal([]byte(e.Text), &o) != nil || len(o.Stdout) != 2 || strings.Contains(e.Text, "someone") {
+			if json.Unmarshal([]byte(e.Text), &o) != nil || len(o.Stdout) != 3 || strings.Contains(e.Text, "someone") {
 				t.Errorf("output event %s", e.Text)
 			}
 			return
