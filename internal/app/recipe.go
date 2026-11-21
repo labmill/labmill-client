@@ -168,9 +168,10 @@ func (t *toolset) recipeOf(ctx context.Context, j store.Job) (recipe, error) {
 		return recipe{}, err
 	} else if ok {
 		var r recipe
-		// An automatic resubmission replaces the script and the remote id: the saved
-		// recipe is then stale, so rebuild it from the job.
-		if json.Unmarshal([]byte(text), &r) == nil && r.Script != "" && r.RemoteID == j.RemoteID && r.Script == j.Script {
+		// A resubmission after preemption changes only the remote id. A changed script
+		// makes the saved recipe stale: rebuild it from the job.
+		if json.Unmarshal([]byte(text), &r) == nil && r.Script != "" && r.Script == j.Script {
+			r.RemoteID = j.RemoteID
 			return r, nil
 		}
 		stale = r.Script != ""
@@ -384,7 +385,10 @@ func (t *toolset) rerunJob() agent.Tool {
 			}
 			if err == nil {
 				// The new job is as private as the old one.
-				if evs, eerr := t.env.Store.Events(ctx, j.ID, 0); eerr == nil && account.Private(evs) {
+				evs, eerr := t.env.Store.Events(ctx, j.ID, 0)
+				if eerr != nil {
+					err = eerr
+				} else if account.Private(evs) {
 					err = t.env.Store.AddEvent(ctx, id, account.EventPrivate, "")
 				}
 			}

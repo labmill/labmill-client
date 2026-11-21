@@ -201,7 +201,7 @@ func TestRecipeAfterResubmission(t *testing.T) {
 		return nil
 	})
 	out, err := h.run(t, "job_recipe", map[string]any{"job_id": id})
-	if err != nil || !strings.Contains(out, "echo grown") && strings.Contains(out, "first submission") {
+	if err != nil || !strings.Contains(out, "echo grown") || !strings.Contains(out, "first submission") {
 		t.Fatalf("stale recipe: %q %v", out, err)
 	}
 }
@@ -239,5 +239,26 @@ func TestRecipeRerunGuards(t *testing.T) {
 	h.env.Store.UpdateJob(ctx, draft.ID, func(j *store.Job) error { j.RemoteID, j.State = "5", store.StateRunning; return nil })
 	if _, err := h.run(t, "rerun_job", map[string]any{"job_id": id}); err == nil || !strings.Contains(err.Error(), fmt.Sprintf("Job %d (g12) may still be running", draft.ID)) {
 		t.Fatalf("rerun beside a live job: %v", err)
+	}
+}
+
+// A resubmission after preemption changes only the remote id: the saved recipe stays.
+func TestRecipeAfterPreemption(t *testing.T) {
+	h, _ := filesHarness(t)
+	h.env.ResultsDir = t.TempDir()
+	ctx := context.Background()
+	if _, err := h.run(t, "draft_job", map[string]any{"cluster": "hpcone",
+		"spec": map[string]any{"name": "pre", "work_dir": t.TempDir(), "command": "echo one"}}); err != nil {
+		t.Fatal(err)
+	}
+	jobs, _ := h.env.Store.Jobs(ctx, store.JobFilter{})
+	id := jobs[0].ID
+	if _, err := submitWith(t, h, id, nil); err != nil {
+		t.Fatal(err)
+	}
+	h.env.Store.UpdateJob(ctx, id, func(j *store.Job) error { j.RemoteID = "1001"; return nil })
+	out, err := h.run(t, "job_recipe", map[string]any{"job_id": id})
+	if err != nil || strings.Contains(out, "was changed") || strings.Contains(out, "submitted 0001") {
+		t.Fatalf("preempted recipe: %q %v", out, err)
 	}
 }
