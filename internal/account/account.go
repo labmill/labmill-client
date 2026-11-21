@@ -159,7 +159,30 @@ func (e *StatusError) Error() string {
 	if e.Code == http.StatusUnauthorized || e.Code == http.StatusForbidden {
 		return ErrRejected.Error()
 	}
-	return fmt.Sprintf("the Labmill account answered %d: %s", e.Code, e.Text)
+	if e.Code >= 500 {
+		return fmt.Sprintf("the Labmill account has a problem (%d). Try again later; if it stays, tell your RSE or Labmill support", e.Code)
+	}
+	if t := plainText(e.Text); t != "" {
+		return fmt.Sprintf("the Labmill account refused this (%d): %s", e.Code, t)
+	}
+	return fmt.Sprintf("the Labmill account refused this (%d)", e.Code)
+}
+
+// plainText is the message of an error answer: the "error" or "message" field of a JSON body, else the body
+// itself unless it is a web page. A first-time user must not see raw JSON or HTML.
+func plainText(s string) string {
+	var j struct{ Error, Message string }
+	if json.Unmarshal([]byte(s), &j) == nil {
+		s = j.Error
+		if s == "" {
+			s = j.Message
+		}
+	}
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "<") || strings.HasPrefix(s, "{") {
+		return ""
+	}
+	return s
 }
 
 // Is makes errors.Is(err, ErrRejected) true for 401 and 403.

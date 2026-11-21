@@ -76,3 +76,53 @@ func TestBrowserLogin(t *testing.T) {
 		t.Fatalf("cancelled: %v", err)
 	}
 }
+
+// A refused sign-in says what to do, never raw server text or a token message when no token exists yet.
+func TestBrowserLoginRefusals(t *testing.T) {
+	status := 400
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error":"code used"}`, status)
+	}))
+	defer api.Close()
+	run := func(cb url.Values) error {
+		browser := func(raw string) error {
+			u, _ := url.Parse(raw)
+			q := u.Query()
+			cb.Set("state", q.Get("state"))
+			go http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + cb.Encode())
+			return nil
+		}
+		_, err := BrowserLogin(context.Background(), filepath.Join(t.TempDir(), "a.json"), api.URL, "", browser, nil, time.Now())
+		return err
+	}
+	for _, c := range []struct {
+		code int
+		want string
+	}{{400, "already used or has expired"}, {401, "already used or has expired"}, {429, "too many sign-in tries"}} {
+		status = c.code
+		if err := run(url.Values{"code": {"c1"}}); err == nil || !strings.Contains(err.Error(), c.want) || strings.Contains(err.Error(), "program token") {
+			t.Errorf("status %d: %v", c.code, err)
+		}
+	}
+	if err := run(url.Values{"error": {"access_denied"}}); err == nil || !strings.Contains(err.Error(), "access_denied") || !strings.Contains(err.Error(), "labmill login") {
+		t.Errorf("denied in the browser: %v", err)
+	}
+}
+
+func TestStatusErrorText(t *testing.T) {
+	for _, c := range []struct {
+		code int
+		text string
+		want string
+	}{
+		{409, `{"error":"you have 10 program tokens; revoke one in Settings"}`, "the Labmill account refused this (409): you have 10 program tokens; revoke one in Settings"},
+		{422, `{"detail":[1]}`, "the Labmill account refused this (422)"},
+		{404, "<html>Not found</html>", "the Labmill account refused this (404)"},
+		{502, "<html>Bad gateway</html>", "has a problem (502)"},
+		{401, "x", "did not accept the token"},
+	} {
+		if got := (&StatusError{Code: c.code, Text: c.text}).Error(); !strings.Contains(got, c.want) {
+			t.Errorf("%d %q: %q", c.code, c.text, got)
+		}
+	}
+}

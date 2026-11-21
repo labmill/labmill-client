@@ -35,7 +35,7 @@ Only jobs that change after you connect are sent. Jobs that ended before stay on
     - **Desktop app:** open **Settings > Labmill account**, paste the token into **Program token** and click **Connect**.
     - **Terminal:** run `labmill login` and paste the token when Labmill asks. The token is not shown while you paste it.
 
-Labmill checks the token with your account before it keeps it. A wrong or revoked token is refused with a message.
+Labmill checks the token with your account before it keeps it. A wrong or revoked token is refused with a message. In the browser sign-in, a sign-in code that was already used or has expired, too many tries, and a sign-in you cancel in the browser each end with a message that says to run `labmill login` again.
 
 The token is kept on this computer only, in `account.json` next to `clusters.yaml` (`~/.config/labmill/account.json`). Only your user account can read the file. Labmill sends the token only to app.labmill.org, over an encrypted connection.
 
