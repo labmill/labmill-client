@@ -1746,7 +1746,12 @@ func (t *toolset) submitJob() agent.Tool {
 			if err != nil {
 				return "", fmt.Errorf("The job was submitted to %s as %s, but I couldn't record that: %w", c.Name, id, err)
 			}
-			return fmt.Sprintf("Submitted job %d (%s) to %s. The cluster's job ID is %s.", j.ID, j.Name, c.Name, id), nil
+			j.RemoteID, j.Script = id, script
+			msg := fmt.Sprintf("Submitted job %d (%s) to %s. The cluster's job ID is %s.", j.ID, j.Name, c.Name, id)
+			if w := t.saveRecipe(context.WithoutCancel(ctx), j, t.buildRecipe(j, script, files, spec)); w != "" {
+				msg += " " + w
+			}
+			return msg, nil
 		},
 	}
 }

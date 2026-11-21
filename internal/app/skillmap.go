@@ -131,6 +131,12 @@ var toolSkills = map[string][]skillSection{
 	"job_worked": {
 		{"research-computing", "references/getting-help.md", "did-it-work"},
 	},
+	"job_recipe": {
+		{"slurm-user", "references/slurm.md", "run-a-job-again"},
+	},
+	"rerun_job": {
+		{"slurm-user", "references/slurm.md", "run-a-job-again"},
+	},
 	"request_account": {
 		{"research-computing", "references/ssh.md", "no-account-on-the-cluster-yet"},
 	},
