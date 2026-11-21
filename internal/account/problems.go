@@ -176,7 +176,7 @@ func ToolKind(tool, text string) string {
 	return KindTool
 }
 
-// CollectOutput saves the redacted first and last lines of the output of
+// CollectOutput saves the redacted, condensed output (start, end and error lines) of
 // job j's current run as an EventOutput event, once per run, when j has
 // ended, is not private and be can read output files. A backend that reads
 // whole files gives the output condensed (Condense); another gives its first

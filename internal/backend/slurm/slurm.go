@@ -1177,7 +1177,7 @@ func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) (
 		}
 		return backend.SplitOutput(text), nil
 	}
-	h, err := run("head", "-c", strconv.Itoa(maxBytes), "--", path) // bytes, not lines: a file with few newlines (progress bars) must not stream whole
+	h, err := run("head", "-c", strconv.Itoa(min(maxBytes, 64<<10)), "--", path) // bytes, not lines: a file with few newlines (progress bars) must not stream whole
 	if err != nil {
 		return nil, err
 	}

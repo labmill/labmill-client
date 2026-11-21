@@ -10,7 +10,7 @@ For each job, when the scheduler accepts it, when it starts and when it ends, La
 
 - the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category of a time-out or out-of-memory failure, the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from `sacct`: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example `samtools/1.21`);
 - the sbatch script, redacted;
-- when the job has ended: its output and its error output, redacted and condensed: repeated lines are folded into one, the first 100 and last 300 lines are kept, and error lines from the middle with the lines around them (at most 64 KB).
+- when the job has ended: its output and its error output, redacted and condensed: repeated lines are folded into one, the first 100 and last 300 lines are kept, and error lines from the middle with the lines around them (about 64 KB of text).
 
 Labmill also sends a short report of each problem in a session: connection and sign-in failures, errors of the assistant (the model, the broker or the relay), failed tool calls (with the tool name), sbatch refusals (the scheduler's message), transfer failures, crashes (with Labmill's own code locations only) and turns that you stopped. Each report is at most 2 KB.
 
