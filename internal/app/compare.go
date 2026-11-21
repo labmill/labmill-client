@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ import (
 func (t *toolset) compareClusters() agent.Tool {
 	return agent.Tool{
 		Name: "compare_clusters",
-		Description: "Ask the user's other clusters when a drafted job would start there (Slurm's own `sbatch --test-only`; nothing is submitted, nothing is signed in to: a cluster without an open login is skipped). " +
+		Description: "Ask every cluster of the user, the job's own included, when a drafted job would start there (Slurm's own `sbatch --test-only`; nothing is submitted, nothing is signed in to: a cluster without an open login is skipped). " +
 			"Use it after draft_job when the expected start on the job's cluster is late, or when the user asks if another cluster is better. " +
 			"It only reports. Never switch the job to another cluster by yourself: tell the user the comparison and let them choose. " +
 			"A script written for one cluster may name partitions or accounts the others do not have; a rejection says so.",
@@ -34,32 +35,24 @@ func (t *toolset) compareClusters() agent.Tool {
 			if err := decode(input, &in); err != nil {
 				return agent.Proposal{}, err
 			}
-			j, targets, err := t.compareTargets(context.Background(), in.JobID)
-			if err != nil {
-				return agent.Proposal{}, err
-			}
-			names := make([]string, len(targets))
-			for i, c := range targets {
-				names[i] = sanitize(c.Name)
-				if c.Name == j.Cluster {
-					names[i] += " (the job's cluster)"
-				}
-			}
-			return agent.Proposal{Tool: "compare_clusters",
-				Summary: fmt.Sprintf("Send the script of job %d to %s for a start-time test (nothing is submitted)", j.ID, strings.Join(names, ", ")),
-				Details: j.Script}, nil
+			_, _, p, err := t.compareProposal(context.Background(), in.JobID)
+			return p, err
 		},
-		Run: func(ctx context.Context, input json.RawMessage, _ agent.Decision) (string, error) {
+		Run: func(ctx context.Context, input json.RawMessage, d agent.Decision) (string, error) {
 			var in struct {
 				JobID int64 `json:"job_id"`
 			}
 			if err := decode(input, &in); err != nil {
 				return "", err
 			}
-			j, targets, err := t.compareTargets(ctx, in.JobID)
+			j, targets, p, err := t.compareProposal(ctx, in.JobID)
 			if err != nil {
 				return "", err
 			}
+			if err := sameAsApproved(p, d.Proposal); err != nil {
+				return "", errors.New("The script or the cluster list changed since the user approved it. Please ask again.")
+			}
+
 			var b strings.Builder
 			fmt.Fprintf(&b, "Expected start of job %d (%s) by cluster. Times are each cluster's own clock.\n", j.ID, sanitize(j.Name))
 			for _, c := range targets {
@@ -97,6 +90,25 @@ func (t *toolset) compareTargets(ctx context.Context, id int64) (store.Job, []co
 		return j, nil, fmt.Errorf("The user has no other cluster configured, so there is nothing to compare.")
 	}
 	return j, all, nil
+}
+
+// compareProposal is the card for job id with the job and the clusters behind it.
+// Run builds it again and refuses when it differs from the approved one.
+func (t *toolset) compareProposal(ctx context.Context, id int64) (store.Job, []config.Cluster, agent.Proposal, error) {
+	j, targets, err := t.compareTargets(ctx, id)
+	if err != nil {
+		return j, nil, agent.Proposal{}, err
+	}
+	names := make([]string, len(targets))
+	for i, c := range targets {
+		names[i] = sanitize(c.Name)
+		if c.Name == j.Cluster {
+			names[i] += " (the job's cluster)"
+		}
+	}
+	return j, targets, agent.Proposal{Tool: "compare_clusters",
+		Summary: fmt.Sprintf("Send the script of job %d to %s for a start-time test (nothing is submitted; a cluster without an open login is skipped)", j.ID, strings.Join(names, ", ")),
+		Details: j.Script}, nil
 }
 
 // startOn is the one-line start estimate of script on cluster c.

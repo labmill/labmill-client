@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/backend/slurm"
 	"labmill-client/internal/config"
@@ -76,5 +77,24 @@ func TestCompareClustersProposal(t *testing.T) {
 	h.env.Store.UpdateJob(context.Background(), j.ID, func(x *store.Job) error { x.RemoteID, x.Script = "", " "; return nil })
 	if _, err := h.tools["compare_clusters"].Propose(mustJSON(map[string]any{"job_id": j.ID})); err == nil || !strings.Contains(err.Error(), "no script") {
 		t.Errorf("empty script: %v", err)
+	}
+}
+
+// Run refuses when the script changed after the user approved the card.
+func TestCompareClustersChangedAfterApproval(t *testing.T) {
+	h, rr := slurmHarness(t, rules.SlurmHints{})
+	j := draftedSlurmJob(t, h)
+	h.env.BackendNoLogin = func(context.Context, config.Cluster) (backend.Backend, bool) {
+		return &slurm.Slurm{Runner: rr}, true
+	}
+	in := mustJSON(map[string]any{"job_id": j.ID})
+	tool := h.tools["compare_clusters"]
+	p, err := tool.Propose(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.env.Store.UpdateJob(context.Background(), j.ID, func(x *store.Job) error { x.Script += "\necho other\n"; return nil })
+	if _, err := tool.Run(context.Background(), in, agent.Decision{Proposal: p}); err == nil || !strings.Contains(err.Error(), "changed") {
+		t.Errorf("changed script ran: %v", err)
 	}
 }
