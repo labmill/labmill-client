@@ -161,11 +161,11 @@ func TestStatusErrorOtherCodes(t *testing.T) {
 
 func TestWhoamiCleansNames(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"person_id":"p1","display_name":"Ann\u001b[31m\nLee"}`))
+		w.Write([]byte(`{"person_id":"` + strings.Repeat("p", 300) + `","display_name":"Ann\u001b[31m\nLee"}`))
 	}))
 	defer api.Close()
 	me, err := (&Client{URL: api.URL, Token: "lmt_x"}).Whoami(context.Background())
-	if err != nil || me.DisplayName != "Ann Lee" {
+	if err != nil || me.DisplayName != "Ann Lee" || len([]rune(me.PersonID)) != 103 || !strings.HasSuffix(me.PersonID, "...") {
 		t.Fatalf("%+v %v", me, err)
 	}
 }
@@ -193,6 +193,9 @@ func TestBrowserLogin400ShowsReason(t *testing.T) {
 
 func TestDetailKeepsServerText(t *testing.T) {
 	if got := Detail(&StatusError{Code: 502, Text: "upstream down"}); !strings.Contains(got, "upstream down") {
+		t.Errorf("%q", got)
+	}
+	if got := Detail(&StatusError{Code: 502, Text: "<html>Bad gateway</html>"}); strings.Contains(got, "html") {
 		t.Errorf("%q", got)
 	}
 	if got := Detail(&StatusError{Code: 409, Text: "x"}); got != (&StatusError{Code: 409, Text: "x"}).Error() {

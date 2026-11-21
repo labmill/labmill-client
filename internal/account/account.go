@@ -366,7 +366,10 @@ func oneLine(s string, max int) string {
 func Detail(err error) string {
 	var se *StatusError
 	if errors.As(err, &se) && se.Code >= 500 {
-		return fmt.Sprintf("the Labmill account answered %d: %s", se.Code, oneLine(se.Text, 200))
+		if t := plainText(se.Text); t != "" {
+			return se.Error() + ": " + t
+		}
+		return se.Error()
 	}
 	return err.Error()
 }
