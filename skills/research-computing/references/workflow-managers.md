@@ -26,11 +26,11 @@ jobs. Never run the steps themselves on the login node.
 
 ```bash
 # Snakemake 8 or newer, with the Slurm executor plugin installed in the env
+snakemake -n                       # dry run first: the steps and counts, nothing runs
 snakemake --executor slurm --jobs 50 \
   --default-resources slurm_account=<account> slurm_partition=<partition> \
                       mem_mb=4000 runtime=60 \
   --latency-wait 60 --rerun-incomplete
-snakemake -n                       # dry run first: the steps and counts, nothing runs
 
 # Nextflow
 module load Nextflow               # or a container; pin the version

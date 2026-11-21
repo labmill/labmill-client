@@ -25,7 +25,7 @@ Labmill looks through your chosen data and code folders (or, if you chose none, 
 
 You confirm the right folder, or tell Labmill which one you meant. Nothing has left your computer yet. Labmill only makes a list of the files, with their sizes and checksums, so it can later verify that everything arrived intact.
 
-If the folder holds a Snakemake or Nextflow workflow (a Snakefile, *.smk, nextflow.config or *.nf file), Labmill reads it and runs the workflow manager as one small controller job on the cluster. The manager then submits its own steps as Slurm jobs. Labmill does not turn the whole pipeline into one big script.
+If the folder holds a Snakemake or Nextflow workflow (a `Snakefile`, `*.smk`, `nextflow.config` or `*.nf` file), Labmill reads it and runs the workflow manager as one small controller job on the cluster. The manager then submits its own steps as Slurm jobs. Labmill does not turn the whole pipeline into one big script.
 
 ## 3. Labmill picks where to run
 

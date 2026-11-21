@@ -21,7 +21,7 @@ func TestWorkflowNote(t *testing.T) {
 		t.Errorf("false hit: %q", got)
 	}
 	got := workflowNote("/r", e("proj/workflow/Snakefile", "proj/rules/map.SMK", "proj/main.nf", "proj/nextflow.config"))
-	for _, want := range []string{"Snakemake (/r/proj/rules/map.SMK, /r/proj/workflow/Snakefile)", "Nextflow (/r/proj/main.nf, /r/proj/nextflow.config)", "one small controller job"} {
+	for _, want := range []string{"Snakemake (" + filepath.Join("/r", "proj/rules/map.SMK") + ", " + filepath.Join("/r", "proj/workflow/Snakefile") + ")", "Nextflow (" + filepath.Join("/r", "proj/main.nf") + ", " + filepath.Join("/r", "proj/nextflow.config") + ")", "one small controller job"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in %q", want, got)
 		}
@@ -45,5 +45,17 @@ func TestStageDataNamesWorkflowManager(t *testing.T) {
 	out, err = h.run(t, "preview_file", map[string]any{"path": h.home + "/data/flow/Snakefile"})
 	if err != nil || !strings.Contains(out, "rule all") {
 		t.Fatalf("preview: %q %v", out, err)
+	}
+}
+
+// At most 5 files per manager are named.
+func TestWorkflowNoteLimit(t *testing.T) {
+	var es []store.ManifestEntry
+	for _, n := range []string{"a", "b", "c", "d", "e", "f", "g"} {
+		es = append(es, store.ManifestEntry{Path: n + ".smk"})
+	}
+	got := workflowNote("/r", es)
+	if strings.Count(got, ".smk") != 5 || strings.Contains(got, "f.smk") || strings.Contains(got, "g.smk") {
+		t.Errorf("limit: %q", got)
 	}
 }
