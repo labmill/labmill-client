@@ -98,3 +98,36 @@ func TestCompareClustersChangedAfterApproval(t *testing.T) {
 		t.Errorf("changed script ran: %v", err)
 	}
 }
+
+// Run asks exactly the clusters the card names: one sbatch --test-only each.
+func TestCompareClustersAsksTheCardList(t *testing.T) {
+	h, rr := slurmHarness(t, rules.SlurmHints{})
+	j := draftedSlurmJob(t, h)
+	h.env.BackendNoLogin = func(context.Context, config.Cluster) (backend.Backend, bool) {
+		return &slurm.Slurm{Runner: rr}, true
+	}
+	in := mustJSON(map[string]any{"job_id": j.ID})
+	p, err := h.tools["compare_clusters"].Propose(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	named := 0
+	for _, c := range h.env.Config.List() {
+		if strings.Contains(p.Summary, c.Name) {
+			named++
+		}
+	}
+	before := len(rr.calls)
+	if _, err := h.tools["compare_clusters"].Run(context.Background(), in, agent.Decision{Proposal: p}); err != nil {
+		t.Fatal(err)
+	}
+	asked := 0
+	for _, c := range rr.calls[before:] {
+		if len(c) > 1 && c[0] == "sbatch" && c[1] == "--test-only" {
+			asked++
+		}
+	}
+	if named < 2 || asked != named {
+		t.Errorf("card names %d clusters, Run asked %d", named, asked)
+	}
+}
