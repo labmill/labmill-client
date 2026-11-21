@@ -10,6 +10,7 @@ import (
 	"labmill-client/internal/agent"
 	"labmill-client/internal/backend"
 	"labmill-client/internal/config"
+	"labmill-client/internal/store"
 )
 
 // compare_clusters (owner queue (e)): asks the other clusters, with `sbatch
@@ -33,16 +34,15 @@ func (t *toolset) compareClusters() agent.Tool {
 			if err := decode(input, &in); err != nil {
 				return agent.Proposal{}, err
 			}
-			j, err := t.job(context.Background(), in.JobID)
+			j, targets, err := t.compareTargets(context.Background(), in.JobID)
 			if err != nil {
 				return agent.Proposal{}, err
 			}
-			var names []string
-			if t.env.Config != nil {
-				for _, c := range t.env.Config.List() {
-					if c.Name != j.Cluster {
-						names = append(names, sanitize(c.Name))
-					}
+			names := make([]string, len(targets))
+			for i, c := range targets {
+				names[i] = sanitize(c.Name)
+				if c.Name == j.Cluster {
+					names[i] += " (the job's cluster)"
 				}
 			}
 			return agent.Proposal{Tool: "compare_clusters",
@@ -56,41 +56,47 @@ func (t *toolset) compareClusters() agent.Tool {
 			if err := decode(input, &in); err != nil {
 				return "", err
 			}
-			j, err := t.job(ctx, in.JobID)
+			j, targets, err := t.compareTargets(ctx, in.JobID)
 			if err != nil {
 				return "", err
 			}
-			if j.RemoteID != "" {
-				return "", fmt.Errorf("Job %d is already submitted to %s. Compare before submit_job.", j.ID, j.Cluster)
-			}
-			if strings.TrimSpace(j.Script) == "" {
-				return "", fmt.Errorf("Job %d has no script yet. Call draft_job first.", j.ID)
-			}
-			if t.env.Config == nil || t.env.BackendNoLogin == nil {
-				return "", fmt.Errorf("Comparing clusters isn't available right now.")
-			}
-			if len(t.env.Config.List()) < 2 {
-				return "The user has no other cluster configured, so there is nothing to compare.", nil
-			}
 			var b strings.Builder
 			fmt.Fprintf(&b, "Expected start of job %d (%s) by cluster. Times are each cluster's own clock.\n", j.ID, sanitize(j.Name))
-			others := 0
-			for _, c := range t.env.Config.List() {
+			for _, c := range targets {
 				mark := ""
 				if c.Name == j.Cluster {
 					mark = " (the job's cluster)"
-				} else {
-					others++
 				}
 				fmt.Fprintf(&b, "- %s%s: %s\n", c.Name, mark, t.startOn(ctx, c, j.Script))
-			}
-			if others == 0 {
-				return "The user has no other cluster configured, so there is nothing to compare.", nil
 			}
 			b.WriteString("Nothing was changed. The job stays on its cluster unless the user asks to move it; a new draft on another cluster needs its own data upload and approval.")
 			return b.String(), nil
 		},
 	}
+}
+
+// compareTargets checks the job and returns the clusters that get its script:
+// all configured ones, the job's own included. Propose and Run both use it, so
+// the card names what Run asks.
+func (t *toolset) compareTargets(ctx context.Context, id int64) (store.Job, []config.Cluster, error) {
+	j, err := t.job(ctx, id)
+	if err != nil {
+		return j, nil, err
+	}
+	if j.RemoteID != "" {
+		return j, nil, fmt.Errorf("Job %d is already submitted to %s. Compare before submit_job.", j.ID, j.Cluster)
+	}
+	if strings.TrimSpace(j.Script) == "" {
+		return j, nil, fmt.Errorf("Job %d has no script yet. Call draft_job first.", j.ID)
+	}
+	if t.env.Config == nil || t.env.BackendNoLogin == nil {
+		return j, nil, fmt.Errorf("Comparing clusters isn't available right now.")
+	}
+	all := t.env.Config.List()
+	if len(all) < 2 {
+		return j, nil, fmt.Errorf("The user has no other cluster configured, so there is nothing to compare.")
+	}
+	return j, all, nil
 }
 
 // startOn is the one-line start estimate of script on cluster c.

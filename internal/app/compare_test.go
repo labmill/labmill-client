@@ -50,3 +50,31 @@ func TestCompareClusters(t *testing.T) {
 		t.Errorf("job changed: %+v", got)
 	}
 }
+
+// The approval card names every cluster that gets the script, shows the script,
+// and the checks run before it, not after approval.
+func TestCompareClustersProposal(t *testing.T) {
+	h, rr := slurmHarness(t, rules.SlurmHints{})
+	j := draftedSlurmJob(t, h)
+	h.env.BackendNoLogin = func(context.Context, config.Cluster) (backend.Backend, bool) {
+		return &slurm.Slurm{Runner: rr}, true
+	}
+	p, err := h.tools["compare_clusters"].Propose(mustJSON(map[string]any{"job_id": j.ID}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(p.Summary, "second") || !strings.Contains(p.Summary, "hpcone (the job's cluster)") {
+		t.Errorf("summary: %q", p.Summary)
+	}
+	if p.Details != j.Script || p.Details == "" {
+		t.Errorf("details: %q", p.Details)
+	}
+	h.env.Store.UpdateJob(context.Background(), j.ID, func(x *store.Job) error { x.RemoteID = "5"; return nil })
+	if _, err := h.tools["compare_clusters"].Propose(mustJSON(map[string]any{"job_id": j.ID})); err == nil || !strings.Contains(err.Error(), "already submitted") {
+		t.Errorf("submitted job: %v", err)
+	}
+	h.env.Store.UpdateJob(context.Background(), j.ID, func(x *store.Job) error { x.RemoteID, x.Script = "", " "; return nil })
+	if _, err := h.tools["compare_clusters"].Propose(mustJSON(map[string]any{"job_id": j.ID})); err == nil || !strings.Contains(err.Error(), "no script") {
+		t.Errorf("empty script: %v", err)
+	}
+}
