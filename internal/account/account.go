@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"labmill-client/internal/config"
+	"labmill-client/internal/textsafe"
 )
 
 // Notice is shown once, when the user connects an account (labmill login,
@@ -178,7 +179,7 @@ func plainText(s string) string {
 			s = j.Message
 		}
 	}
-	s = strings.TrimSpace(s)
+	s = strings.TrimSpace(textsafe.Clean(s))
 	if strings.HasPrefix(s, "<") || strings.HasPrefix(s, "{") {
 		return ""
 	}

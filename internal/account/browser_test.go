@@ -116,6 +116,8 @@ func TestStatusErrorText(t *testing.T) {
 		want string
 	}{
 		{409, `{"error":"you have 10 program tokens; revoke one in Settings"}`, "the Labmill account refused this (409): you have 10 program tokens; revoke one in Settings"},
+		{409, "too many program tokens (10): revoke one in Settings first", "refused this (409): too many program tokens (10): revoke one in Settings first"},
+		{409, "bad\x1b[31m red", "(409): bad red"},
 		{422, `{"detail":[1]}`, "the Labmill account refused this (422)"},
 		{404, "<html>Not found</html>", "the Labmill account refused this (404)"},
 		{502, "<html>Bad gateway</html>", "has a problem (502)"},
