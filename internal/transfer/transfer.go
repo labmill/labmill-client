@@ -377,7 +377,9 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 		if o.Size() != e.Size {
 			return fmt.Errorf("verify %s: remote size %d, expected %d", e.Path, o.Size(), e.Size)
 		}
-		if sent != nil {
+		// Only a real copy is a verified file: rclone skips a same-size, same-time
+		// file unchecked, which may hold other content.
+		if old, existed := size[e.Path]; sent != nil && (!existed || old != e.Size || force[e.Path]) {
 			sent[e.Path] = o.ModTime(ctx)
 		}
 		stop.setFiles(i + 1)

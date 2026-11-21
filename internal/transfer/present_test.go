@@ -129,3 +129,40 @@ func TestRetryDoesNotRehashSentFiles(t *testing.T) {
 		t.Errorf("b.txt = %q", b)
 	}
 }
+
+// A file that rclone skipped unchecked (same size and time, the hash check could
+// not read it) is not counted as sent: the retry hashes it and replaces it.
+func TestRetryHashesFileSkippedUnchecked(t *testing.T) {
+	if testing.Short() {
+		t.Skip("spawns processes")
+	}
+	local := t.TempDir()
+	write(t, filepath.Join(local, "d", "a.txt"), "aaaa")
+	when := time.Date(2021, 3, 4, 5, 6, 7, 0, time.UTC)
+	os.Chtimes(filepath.Join(local, "d", "a.txt"), when, when)
+	entries, _, err := BuildManifest(context.Background(), local, []string{"d"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &fakeSha256sum{lie: map[string]bool{}, hide: map[string]bool{"proj/run1/d/a.txt": true}, release: make(chan struct{})}
+	t.Cleanup(func() { close(f.release) })
+	remoteRoot, r, _ := transferEnvCmds(t, map[string]sshtest.Handler{"sha256sum": f.handler})
+	f.root = remoteRoot
+	stale := filepath.Join(remoteRoot, "proj", "run1", "d", "a.txt")
+	write(t, stale, "bbbb")
+	os.Chtimes(stale, when, when)
+	r.Sent = SentFiles{}
+	if err := Upload(context.Background(), local, entries, r, nil); err != nil {
+		t.Fatalf("first: %v", err)
+	}
+	if len(r.Sent) != 0 {
+		t.Fatalf("unchecked file recorded: %v", r.Sent)
+	}
+	f.hide = map[string]bool{}
+	if err := Upload(context.Background(), local, entries, r, nil); err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if b, _ := os.ReadFile(stale); string(b) != "aaaa" {
+		t.Errorf("stale content stayed: %q", b)
+	}
+}

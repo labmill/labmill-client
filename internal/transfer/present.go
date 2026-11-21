@@ -22,11 +22,14 @@ import (
 // call them equal, so the caller copies them regardless of time. size holds the
 // remote size of every manifest file that exists there. A file in sent (sent and
 // verified by an earlier attempt of the same transfer) whose remote size and
-// modification time are unchanged counts as present without a hash. Only a cancelled
+// modification time are unchanged counts as present without a hash. Only files whose
+// content was verified (copied by Upload, or equal by hash) enter sent; the mtime
+// check does not see a rewrite that keeps size and mtime. Only a cancelled
 // ctx is an error.
 func presentOnRemote(ctx context.Context, dst Remote, fdst rfs.Fs, entries []store.ManifestEntry, step func(cur string), sent SentFiles) (present, differ map[string]bool, size map[string]int64, err error) {
 	present, differ, size = map[string]bool{}, map[string]bool{}, map[string]int64{}
 	var cand []store.ManifestEntry
+	mtimes := map[string]time.Time{}
 	for _, e := range entries {
 		o, err := fdst.NewObject(ctx, e.Path)
 		if err != nil {
@@ -41,6 +44,7 @@ func presentOnRemote(ctx context.Context, dst Remote, fdst rfs.Fs, entries []sto
 			continue
 		}
 		cand = append(cand, e)
+		mtimes[e.Path] = o.ModTime(ctx)
 	}
 	for i := 0; i < len(cand); {
 		n, qlen, nbytes := 0, 0, int64(0)
@@ -72,6 +76,9 @@ func presentOnRemote(ctx context.Context, dst Remote, fdst rfs.Fs, entries []sto
 			switch sum, ok := sums[path.Join(dst.Dir, e.Path)]; {
 			case ok && sum == e.SHA256:
 				present[e.Path] = true
+				if sent != nil {
+					sent[e.Path] = mtimes[e.Path] // hash-verified: a retry need not hash it again
+				}
 			case ok:
 				differ[e.Path] = true
 			}
