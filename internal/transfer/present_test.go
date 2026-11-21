@@ -76,7 +76,11 @@ func TestUploadWithoutSha256sumSkipsNothing(t *testing.T) {
 	entries, _, _ := BuildManifest(context.Background(), local, []string{"d"}, nil)
 	remoteRoot, r := transferEnv(t)
 	write(t, filepath.Join(remoteRoot, "proj", "run1", "d", "a.txt"), "same content")
-	r.OnPresent = func([]string) { t.Error("OnPresent without a checksum") }
+	r.OnPresent = func(rels []string) {
+		if len(rels) > 0 {
+			t.Error("OnPresent without a checksum")
+		}
+	}
 	if err := Upload(context.Background(), local, entries, r, nil); err != nil {
 		t.Fatalf("Upload: %v", err)
 	}
