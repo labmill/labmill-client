@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"labmill-client/internal/config"
+	"labmill-client/internal/textsafe"
 )
 
 // Notice is shown once, when the user connects an account (labmill login,
@@ -159,7 +160,30 @@ func (e *StatusError) Error() string {
 	if e.Code == http.StatusUnauthorized || e.Code == http.StatusForbidden {
 		return ErrRejected.Error()
 	}
-	return fmt.Sprintf("the Labmill account answered %d: %s", e.Code, e.Text)
+	if e.Code >= 500 {
+		return fmt.Sprintf("the Labmill account has a problem (%d). Try again later; if it stays, tell your RSE or Labmill support", e.Code)
+	}
+	if t := plainText(e.Text); t != "" {
+		return fmt.Sprintf("the Labmill account refused this (%d): %s", e.Code, t)
+	}
+	return fmt.Sprintf("the Labmill account refused this (%d)", e.Code)
+}
+
+// plainText is the message of an error answer: the "error" or "message" field of a JSON body, else the body
+// itself unless it is a web page. A first-time user must not see raw JSON or HTML.
+func plainText(s string) string {
+	var j struct{ Error, Message string }
+	if json.Unmarshal([]byte(s), &j) == nil {
+		s = j.Error
+		if s == "" {
+			s = j.Message
+		}
+	}
+	s = oneLine(s, 200)
+	if strings.HasPrefix(s, "<") || strings.HasPrefix(s, "{") {
+		return ""
+	}
+	return s
 }
 
 // Is makes errors.Is(err, ErrRejected) true for 401 and 403.
@@ -215,6 +239,9 @@ func (c *Client) do(ctx context.Context, method, path string, body any, out any)
 func (c *Client) Whoami(ctx context.Context) (Me, error) {
 	var me Me
 	err := c.do(ctx, http.MethodGet, "/api/me", nil, &me)
+	// Shown in both front ends: no control sequences, one line.
+	me.DisplayName = oneLine(me.DisplayName, 100)
+	me.PersonID = oneLine(me.PersonID, 100)
 	return me, err
 }
 
@@ -323,4 +350,26 @@ type AccountRequest struct {
 	SubjectTemplate string `json:"subject_template"`
 	BodyTemplate    string `json:"body_template"`
 	WebFormURL      string `json:"web_form_url"`
+}
+
+// oneLine is s without control sequences, on one line, cut to max runes: server text shown to the user.
+func oneLine(s string, max int) string {
+	s = strings.Join(strings.Fields(textsafe.Clean(s)), " ")
+	if r := []rune(s); len(r) > max {
+		s = string(r[:max]) + "..."
+	}
+	return s
+}
+
+// Detail is err for the stored record of a failed upload: a StatusError keeps its code and the server's short
+// text (also for a 5xx, which Error() hides from the user).
+func Detail(err error) string {
+	var se *StatusError
+	if errors.As(err, &se) && se.Code >= 500 {
+		if t := plainText(se.Text); t != "" {
+			return se.Error() + ": " + t
+		}
+		return se.Error()
+	}
+	return err.Error()
 }

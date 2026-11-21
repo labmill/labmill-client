@@ -38,14 +38,23 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 		return Me{}, fmt.Errorf("can't wait for the browser: %w", err)
 	}
 	codes := make(chan string, 1)
+	refused := make(chan string, 1)
 	srv := &http.Server{ReadHeaderTimeout: 10 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
+		if r.URL.Path == "/callback" && q.Get("state") == state && q.Get("error") != "" {
+			http.Error(w, "The sign-in was not finished. Go back to the Labmill program and start it again.", http.StatusBadRequest)
+			select {
+			case refused <- q.Get("error"):
+			default:
+			}
+			return
+		}
 		if r.URL.Path != "/callback" || q.Get("state") != state || q.Get("code") == "" {
 			http.Error(w, "This is not the sign-in Labmill is waiting for. Start it again from the Labmill program.", http.StatusBadRequest)
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, `<!doctype html><meta charset="utf-8"><title>Labmill</title><p style="font:16px sans-serif;margin:3em">Labmill is connected. You can close this tab and go back to the Labmill program.</p>`)
+		fmt.Fprint(w, `<!doctype html><meta charset="utf-8"><title>Labmill</title><p style="font:16px sans-serif;margin:3em">Labmill got the sign-in. Go back to the Labmill program to see the result.</p>`)
 		select {
 		case codes <- q.Get("code"):
 		default:
@@ -66,9 +75,11 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 	var code string
 	select {
 	case code = <-codes:
+	case why := <-refused:
+		return Me{}, fmt.Errorf("the sign-in in the browser was not completed (%s): run labmill login to try again", oneLine(why, 64))
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return Me{}, errors.New("the sign-in in the browser did not finish in 10 minutes: try again")
+			return Me{}, errors.New("the sign-in in the browser did not finish in 10 minutes: run labmill login to try again")
 		}
 		return Me{}, ctx.Err()
 	}
@@ -77,6 +88,17 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 	}
 	if err := (&Client{URL: baseURL, HTTP: hc}).do(ctx, http.MethodPost, "/api/client-auth/token",
 		map[string]string{"code": code, "verifier": verifier}, &out); err != nil {
+		var se *StatusError
+		switch {
+		case errors.As(err, &se) && se.Code == http.StatusTooManyRequests:
+			return Me{}, errors.New("too many sign-in tries: wait a minute, then run labmill login again")
+		case errors.As(err, &se) && se.Code == 400 && plainText(se.Text) != "":
+			// Maybe a used code, maybe a request fault: show the server's reason.
+			return Me{}, fmt.Errorf("the sign-in code was refused (%s): run labmill login again", plainText(se.Text))
+		case errors.As(err, &se) && (se.Code == 400 || se.Code == 401 || se.Code == 403 || se.Code == 410):
+			// The code is one-time and short-lived; no token was involved yet.
+			return Me{}, errors.New("the sign-in code was already used or has expired: run labmill login again")
+		}
 		return Me{}, err
 	}
 	return Login(ctx, path, baseURL, out.Token, hc, now)
