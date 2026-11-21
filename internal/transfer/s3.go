@@ -87,7 +87,7 @@ func UploadS3(ctx context.Context, root string, entries []store.ManifestEntry, d
 			return err
 		}
 		defer shutdownFs(fdst)
-		return uploadEntries(ctx, absRoot, fsrc, fdst, entries, nil, nil, progress)
+		return uploadEntries(ctx, absRoot, fsrc, fdst, entries, nil, nil, nil, progress)
 	}
 	err = attempt(ctx, false)
 	if isETagMismatch(err) {
