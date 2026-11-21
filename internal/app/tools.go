@@ -1557,6 +1557,13 @@ func (t *toolset) uploadData() agent.Tool {
 			dst, _ := t.remote(c, dir)
 			var replaced []string // existing remote files overwritten with a different size
 			dst.OnReplace = func(rel string, _ int64) { replaced = append(replaced, rel) }
+			var present []string // already on the cluster with the same SHA-256, not sent
+			seen := false
+			dst.OnPresent = func(rels []string) { // the first attempt only: a retry also skips files sent before the break
+				if !seen {
+					seen, present = true, rels
+				}
+			}
 			prevState, prevMessage := j.State, j.Message
 			err = t.env.Store.UpdateJob(ctx, j.ID, func(j *store.Job) error { j.State = store.StateUploading; return nil })
 			if err != nil {
@@ -1617,10 +1624,19 @@ func (t *toolset) uploadData() agent.Tool {
 			if p.s3 != nil {
 				return withTransfer(fmt.Sprintf("Uploaded %s (%s) to %s. The data is in S3, not on the cluster's disks. When you draft the job, give work_dir as an absolute folder on the cluster. %s", plural(files, "file", "files"), humanSize(size), sanitize(remoteDir), s3Hint(sanitize(remoteDir))), summary, p.rclone), nil
 			}
-			msg := fmt.Sprintf("Uploaded %s (%s) to %s:%s.", plural(files, "file", "files"), humanSize(size), c.Name, remoteDir) + replacedNote(replaced)
+			msg := fmt.Sprintf("Uploaded %s (%s) to %s:%s.", plural(files, "file", "files"), humanSize(size), c.Name, remoteDir) + replacedNote(replaced) + presentNote(present)
 			return withTransfer(msg, summary, p.rclone), nil
 		},
 	}
+}
+
+// presentNote is the sentence appended to an upload result when some files were
+// not sent because the cluster already had them (same size and SHA-256).
+func presentNote(rels []string) string {
+	if len(rels) == 0 {
+		return ""
+	}
+	return " " + plural(len(rels), "file", "files") + " already on the cluster with the same SHA-256, not sent again."
 }
 
 // maxReplacedShown is how many replaced file names the upload result lists.
@@ -1641,7 +1657,7 @@ func replacedNote(rels []string) string {
 	for i, r := range shown {
 		names[i] = sanitize(r)
 	}
-	note := fmt.Sprintf(" Replaced %s on the cluster (they had a different size): %s", plural(len(rels), "existing file", "existing files"), strings.Join(names, ", "))
+	note := fmt.Sprintf(" Replaced %s on the cluster (they had a different size or content): %s", plural(len(rels), "existing file", "existing files"), strings.Join(names, ", "))
 	if more := len(rels) - len(shown); more > 0 {
 		note += fmt.Sprintf(", and %d more", more)
 	}

@@ -122,3 +122,39 @@ func TestUploadResultReportsReplaced(t *testing.T) {
 		t.Errorf("result = %q", res)
 	}
 }
+
+// The upload result says how many files the cluster already had.
+func TestUploadResultReportsPresent(t *testing.T) {
+	if presentNote(nil) != "" {
+		t.Error("note for no present files")
+	}
+	h := newHarness(t)
+	out, err := h.run(t, "stage_data", map[string]any{"root": h.home, "paths": []string{"data/mri-2026"}, "job_name": "pres"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var staged struct {
+		JobID int64 `json:"job_id"`
+	}
+	if err := json.Unmarshal([]byte(out), &staged); err != nil {
+		t.Fatal(err)
+	}
+	h.env.Upload = func(_ context.Context, _ string, entries []store.ManifestEntry, dst transfer.Remote, _ func(transfer.Progress)) error {
+		dst.OnPresent([]string{entries[0].Path})
+		dst.OnPresent(entries2(entries)) // a retry skips what the first attempt sent
+		return nil
+	}
+	res, err := h.run(t, "upload_data", map[string]any{"job_id": staged.JobID, "cluster": "hpcone"})
+	if err != nil || !strings.Contains(res, "1 file already on the cluster with the same SHA-256, not sent again") {
+		t.Errorf("result = %q, %v", res, err)
+	}
+}
+
+// entries2 returns every manifest path.
+func entries2(entries []store.ManifestEntry) []string {
+	var p []string
+	for _, e := range entries {
+		p = append(p, e.Path)
+	}
+	return p
+}
