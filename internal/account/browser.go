@@ -54,7 +54,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(w, `<!doctype html><meta charset="utf-8"><title>Labmill</title><p style="font:16px sans-serif;margin:3em">Labmill is connected. You can close this tab and go back to the Labmill program.</p>`)
+		fmt.Fprint(w, `<!doctype html><meta charset="utf-8"><title>Labmill</title><p style="font:16px sans-serif;margin:3em">Labmill got the sign-in. Go back to the Labmill program to see the result.</p>`)
 		select {
 		case codes <- q.Get("code"):
 		default:
@@ -92,6 +92,9 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 		switch {
 		case errors.As(err, &se) && se.Code == http.StatusTooManyRequests:
 			return Me{}, errors.New("too many sign-in tries: wait a minute, then run labmill login again")
+		case errors.As(err, &se) && se.Code == 400 && plainText(se.Text) != "":
+			// Maybe a used code, maybe a request fault: show the server's reason.
+			return Me{}, fmt.Errorf("the sign-in code was refused (%s): run labmill login again", plainText(se.Text))
 		case errors.As(err, &se) && (se.Code == 400 || se.Code == 401 || se.Code == 403 || se.Code == 410):
 			// The code is one-time and short-lived; no token was involved yet.
 			return Me{}, errors.New("the sign-in code was already used or has expired: run labmill login again")

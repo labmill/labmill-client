@@ -83,7 +83,7 @@ func TestBrowserLoginRefusals(t *testing.T) {
 	var status atomic.Int32
 	status.Store(400)
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, `{"error":"code used"}`, int(status.Load()))
+		w.WriteHeader(int(status.Load()))
 	}))
 	defer api.Close()
 	run := func(cb url.Values) error {
@@ -155,6 +155,47 @@ func TestBrowserLoginRefusedValueIsShort(t *testing.T) {
 
 func TestStatusErrorOtherCodes(t *testing.T) {
 	if got := (&StatusError{Code: 404, Text: "no\nsuch\x1b[1m page"}).Error(); got != "the Labmill account refused this (404): no such page" {
+		t.Errorf("%q", got)
+	}
+}
+
+func TestWhoamiCleansNames(t *testing.T) {
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"person_id":"p1","display_name":"Ann\u001b[31m\nLee"}`))
+	}))
+	defer api.Close()
+	me, err := (&Client{URL: api.URL, Token: "lmt_x"}).Whoami(context.Background())
+	if err != nil || me.DisplayName != "Ann Lee" {
+		t.Fatalf("%+v %v", me, err)
+	}
+}
+
+func TestBrowserLogin400ShowsReason(t *testing.T) {
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error":"verifier does not match"}`, 400)
+	}))
+	defer api.Close()
+	browser := func(raw string) error {
+		u, _ := url.Parse(raw)
+		q := u.Query()
+		go func() {
+			if r, err := http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + url.Values{"state": {q.Get("state")}, "code": {"c"}}.Encode()); err == nil {
+				r.Body.Close()
+			}
+		}()
+		return nil
+	}
+	_, err := BrowserLogin(context.Background(), filepath.Join(t.TempDir(), "a.json"), api.URL, "", browser, nil, time.Now())
+	if err == nil || !strings.Contains(err.Error(), "verifier does not match") {
+		t.Fatalf("%v", err)
+	}
+}
+
+func TestDetailKeepsServerText(t *testing.T) {
+	if got := Detail(&StatusError{Code: 502, Text: "upstream down"}); !strings.Contains(got, "upstream down") {
+		t.Errorf("%q", got)
+	}
+	if got := Detail(&StatusError{Code: 409, Text: "x"}); got != (&StatusError{Code: 409, Text: "x"}).Error() {
 		t.Errorf("%q", got)
 	}
 }

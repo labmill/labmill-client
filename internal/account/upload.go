@@ -155,7 +155,7 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 		if errors.As(err, &se) && se.Code == http.StatusBadRequest {
 			next = store.Never // the API refuses this report; sending it again won't help
 		}
-		if err := u.Store.UploadFailed(ctx, up.JobID, up.RemoteID, next, err.Error()); err != nil {
+		if err := u.Store.UploadFailed(ctx, up.JobID, up.RemoteID, next, Detail(err)); err != nil {
 			return sent, err
 		}
 		if errors.Is(err, ErrRejected) {

@@ -239,6 +239,9 @@ func (c *Client) do(ctx context.Context, method, path string, body any, out any)
 func (c *Client) Whoami(ctx context.Context) (Me, error) {
 	var me Me
 	err := c.do(ctx, http.MethodGet, "/api/me", nil, &me)
+	// Shown in both front ends: no control sequences, one line.
+	me.DisplayName = oneLine(me.DisplayName, 100)
+	me.PersonID = oneLine(me.PersonID, 100)
 	return me, err
 }
 
@@ -356,4 +359,14 @@ func oneLine(s string, max int) string {
 		s = string(r[:max]) + "..."
 	}
 	return s
+}
+
+// Detail is err for the stored record of a failed upload: a StatusError keeps its code and the server's short
+// text (also for a 5xx, which Error() hides from the user).
+func Detail(err error) string {
+	var se *StatusError
+	if errors.As(err, &se) && se.Code >= 500 {
+		return fmt.Sprintf("the Labmill account answered %d: %s", se.Code, oneLine(se.Text, 200))
+	}
+	return err.Error()
 }
