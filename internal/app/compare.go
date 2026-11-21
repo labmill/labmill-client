@@ -24,7 +24,31 @@ func (t *toolset) compareClusters() agent.Tool {
 			"Use it after draft_job when the expected start on the job's cluster is late, or when the user asks if another cluster is better. " +
 			"It only reports. Never switch the job to another cluster by yourself: tell the user the comparison and let them choose. " +
 			"A script written for one cluster may name partitions or accounts the others do not have; a rejection says so.",
-		Schema: objSchema(map[string]any{"job_id": intProp("id of the drafted job")}, "job_id"),
+		Schema:        objSchema(map[string]any{"job_id": intProp("id of the drafted job")}, "job_id"),
+		NeedsApproval: true,
+		Propose: func(input json.RawMessage) (agent.Proposal, error) {
+			var in struct {
+				JobID int64 `json:"job_id"`
+			}
+			if err := decode(input, &in); err != nil {
+				return agent.Proposal{}, err
+			}
+			j, err := t.job(context.Background(), in.JobID)
+			if err != nil {
+				return agent.Proposal{}, err
+			}
+			var names []string
+			if t.env.Config != nil {
+				for _, c := range t.env.Config.List() {
+					if c.Name != j.Cluster {
+						names = append(names, sanitize(c.Name))
+					}
+				}
+			}
+			return agent.Proposal{Tool: "compare_clusters",
+				Summary: fmt.Sprintf("Send the script of job %d to %s for a start-time test (nothing is submitted)", j.ID, strings.Join(names, ", ")),
+				Details: j.Script}, nil
+		},
 		Run: func(ctx context.Context, input json.RawMessage, _ agent.Decision) (string, error) {
 			var in struct {
 				JobID int64 `json:"job_id"`
@@ -44,6 +68,9 @@ func (t *toolset) compareClusters() agent.Tool {
 			}
 			if t.env.Config == nil || t.env.BackendNoLogin == nil {
 				return "", fmt.Errorf("Comparing clusters isn't available right now.")
+			}
+			if len(t.env.Config.List()) < 2 {
+				return "The user has no other cluster configured, so there is nothing to compare.", nil
 			}
 			var b strings.Builder
 			fmt.Fprintf(&b, "Expected start of job %d (%s) by cluster. Times are each cluster's own clock.\n", j.ID, sanitize(j.Name))
@@ -72,7 +99,7 @@ func (t *toolset) startOn(ctx context.Context, c config.Cluster, script string) 
 	defer cancel()
 	be, ok := t.env.BackendNoLogin(ctx, c)
 	if !ok {
-		return "not checked (no open login; sign in to it first)"
+		return "not checked (no open login right now; sign in to it first)"
 	}
 	e, ok := be.(backend.StartEstimator)
 	if !ok {
