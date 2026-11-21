@@ -467,6 +467,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		Backend: func(ctx context.Context, c config.Cluster) (backend.Backend, error) {
 			return conns.backendFor(ctx, c)
 		},
+		BackendNoLogin: conns.backendNoLogin,
 		RemoteHome: func(ctx context.Context, c config.Cluster) (string, error) {
 			return conns.remoteHome(ctx, c)
 		},

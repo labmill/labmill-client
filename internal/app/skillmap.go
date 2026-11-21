@@ -27,6 +27,9 @@ var toolSkills = map[string][]skillSection{
 		{"slurm-user", "references/slurm.md", "partitions-accounts-and-qos"},
 		{"slurm-user", "references/slurm.md", "requesting-gpus"},
 	},
+	"compare_clusters": {
+		{"slurm-user", "references/placement-and-preemption.md", "which-resource-to-ask-for"},
+	},
 	"probe_qos": {
 		{"slurm-user", "references/placement-and-preemption.md", "preemption"},
 		{"slurm-user", "references/placement-and-preemption.md", "which-resource-to-ask-for"},
