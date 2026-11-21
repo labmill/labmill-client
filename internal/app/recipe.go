@@ -369,6 +369,13 @@ func (t *toolset) rerunJob() agent.Tool {
 					return "", err
 				}
 			}
+			// The new job is as private as the old one. Read that before CreateJob, so a
+			// failure leaves no draft without the mark.
+			evs, err := t.env.Store.Events(ctx, j.ID, 0)
+			if err != nil {
+				return "", fmt.Errorf("I couldn't read the old job's settings: %w", err)
+			}
+			private := account.Private(evs)
 			id, err := t.env.Store.CreateJob(ctx, store.Job{
 				Name: name, Cluster: c.Name, Backend: j.Backend, State: store.StateDraft, Script: r.Script,
 				LocalDir: filepath.Join(t.env.ResultsDir, name), RemoteDir: j.RemoteDir,
@@ -384,11 +391,7 @@ func (t *toolset) rerunJob() agent.Tool {
 				err = t.saveJobFiles(ctx, id, r.Files)
 			}
 			if err == nil {
-				// The new job is as private as the old one.
-				evs, eerr := t.env.Store.Events(ctx, j.ID, 0)
-				if eerr != nil {
-					err = eerr
-				} else if account.Private(evs) {
+				if private {
 					err = t.env.Store.AddEvent(ctx, id, account.EventPrivate, "")
 				}
 			}
