@@ -683,9 +683,13 @@ func (t *toolset) stageData() agent.Tool {
 			if skipped == nil {
 				skipped = []string{}
 			}
-			out, _ := json.Marshal(map[string]any{
+			res := map[string]any{
 				"job_id": id, "files": files, "bytes": size, "skipped": capLines(skipped, maxResultLines),
-			})
+			}
+			if w := workflowNote(root, entries); w != "" {
+				res["workflow"] = w
+			}
+			out, _ := json.Marshal(res)
 			return string(out), nil
 		},
 	}
