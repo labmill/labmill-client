@@ -442,12 +442,12 @@ var textExts = map[string]bool{
 	".r": true, ".jl": true, ".m": true, ".pl": true, ".rb": true, ".go": true, ".rs": true,
 	".java": true, ".js": true, ".ts": true,
 	".yaml": true, ".yml": true, ".toml": true, ".cfg": true, ".ini": true, ".cmake": true,
-	".sbatch": true, ".slurm": true, ".mk": true,
+	".sbatch": true, ".slurm": true, ".mk": true, ".smk": true, ".nf": true,
 }
 
 var textNames = map[string]bool{
 	"cmakelists.txt": true, "makefile": true, "dockerfile": true,
-	"environment.yml": true, "pyproject.toml": true,
+	"environment.yml": true, "pyproject.toml": true, "snakefile": true, "nextflow.config": true,
 }
 
 // docPrefixes name documentation files by their first letters; the extension
@@ -505,7 +505,7 @@ func redactSecrets(text string) string {
 func (t *toolset) previewFile() agent.Tool {
 	return agent.Tool{
 		Name:        "preview_file",
-		Description: "Show lines of a text file inside the allowed folders. Data files (CSV, tables, sequences, structures, .txt data, JSON, notebooks, logs and anything not listed below) are a small sample: the first lines only (default 10, at most 20 and 4 KiB). Documentation and code files (README*, LICENSE*, requirements*.txt, md, rst, py, sh, R, jl, c, cpp, h, cu, f90, yaml, toml, cfg, CMakeLists.txt, Makefile, Dockerfile and similar; at most 1 MiB; values of keys such as password, token or api_key are hidden) can be read in pages: default 100 lines, at most 200 lines and 16 KiB per call; pass start_line (1-based) to continue where the last page stopped (the reply says which start_line is next). Binary files are refused. Read the README and the build files (CMakeLists.txt, Makefile, setup.py, pyproject.toml, requirements) completely, page by page with start_line, before you decide how to build and run the code. Never guess file names (run.sh, build.sh, ...): list the folder first with find_local_data (or use the staged file list) and preview only files that exist; a name that does not exist is answered with the names that do. A relative path is looked up in the user's chosen code folder, then the data folder.",
+		Description: "Show lines of a text file inside the allowed folders. Data files (CSV, tables, sequences, structures, .txt data, JSON, notebooks, logs and anything not listed below) are a small sample: the first lines only (default 10, at most 20 and 4 KiB). Documentation and code files (README*, LICENSE*, requirements*.txt, Snakefile, *.smk, *.nf, nextflow.config, md, rst, py, sh, R, jl, c, cpp, h, cu, f90, yaml, toml, cfg, CMakeLists.txt, Makefile, Dockerfile and similar; at most 1 MiB; values of keys such as password, token or api_key are hidden) can be read in pages: default 100 lines, at most 200 lines and 16 KiB per call; pass start_line (1-based) to continue where the last page stopped (the reply says which start_line is next). Binary files are refused. Read the README and the build files (CMakeLists.txt, Makefile, setup.py, pyproject.toml, requirements, Snakefile, nextflow.config) completely, page by page with start_line, before you decide how to build and run the code. Never guess file names (run.sh, build.sh, ...): list the folder first with find_local_data (or use the staged file list) and preview only files that exist; a name that does not exist is answered with the names that do. A relative path is looked up in the user's chosen code folder, then the data folder.",
 		Schema: objSchema(map[string]any{
 			"path":       strProp("full path of the file, or a path relative to the chosen code or data folder"),
 			"lines":      intProp("number of lines (data files: default 10, max 20; documentation and code: default 100, max 200); alias max_lines"),

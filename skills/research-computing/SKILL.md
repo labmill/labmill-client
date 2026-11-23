@@ -55,6 +55,9 @@ ask for it before choosing a cluster or staging data.
   exec, `--nv`, `--bind`, cache location, building, Docker images versus SIF,
   when a container beats modules. Read when software is easier to ship as an
   image, or when Docker is the only recipe you have.
+- **[references/workflow-managers.md](references/workflow-managers.md)**: Snakemake
+  and Nextflow pipelines on Slurm: how to recognise them, run the controller
+  as one small job, the Slurm executor or profile, restart, work folders.
 - **[references/jupyter.md](references/jupyter.md)**: notebooks on a Slurm
   compute node with an SSH tunnel, kernels from venv or conda, turning a
   notebook into a batch script.

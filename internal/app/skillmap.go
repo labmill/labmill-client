@@ -53,6 +53,7 @@ var toolSkills = map[string][]skillSection{
 		{"slurm-user", "references/from-your-laptop.md", "two-folders-data-and-code"},
 		{"slurm-user", "references/from-your-laptop.md", "what-claude-may-read"},
 		{"slurm-user", "references/from-your-laptop.md", "when-there-is-data-but-no-code"},
+		{"research-computing", "references/workflow-managers.md", "the-pattern"},
 	},
 	"draft_job": {
 		{"slurm-user", "references/slurm.md", "a-job-script"},
