@@ -172,6 +172,8 @@ without the question and says so in the chat.
    sinfo -N -t idle -o "%N %P %c %m %G %f"   # idle nodes with size and features
    ```
 
+   With more than one cluster, run `sbatch --test-only` on each login node and compare the expected starts. A script may name a partition or account that another cluster lacks: edit those lines first. Report the comparison and let the user choose; never move the job yourself. Data must be uploaded again to the other cluster.
+
 3. A job that needs more than the preemptible resource gives (long, not
    restartable, many nodes) goes to the normal partition.
 

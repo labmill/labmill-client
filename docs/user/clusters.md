@@ -46,3 +46,7 @@ Before the first change, Labmill saves a copy of `clusters.yaml` next to it.
 ## Open a terminal on the cluster
 
 `labmill shell <cluster>` opens a terminal on the login node while Labmill is signed in. The desktop app has a **Terminal** button. What you type there is not sent to the assistant.
+
+## Is another cluster better?
+
+If you have more than one cluster, ask "would this start sooner elsewhere?". After a job is drafted, Labmill asks each of your clusters (the one of the job included) when the job would start there (Slurm's own `sbatch --test-only`; nothing is submitted). Labmill first shows which clusters get your script and asks you to approve. It only asks clusters you are already signed in to, and it never signs in for you. You get the list of expected start times. Labmill never moves a job by itself: you decide, and a job on another cluster needs its data uploaded again and your approval again.
