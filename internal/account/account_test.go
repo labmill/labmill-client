@@ -26,8 +26,9 @@ type fakeAPI struct {
 	mu       sync.Mutex
 	jobs     []string // raw bodies of POST /api/jobs
 	refs     map[string]bool
-	jobFails int // answer 500 to this many job posts first
-	jobCode  int // when set, answer every job post with it
+	jobFails int    // answer 500 to this many job posts first
+	jobCode  int    // when set, answer every job post with it
+	jobBody  string // with jobCode: the JSON body of the answer
 	requests int
 	// resolve answers GET /api/systems/resolve; nil: 404 (an older server).
 	resolve  func(q url.Values) (int, any)
@@ -37,6 +38,7 @@ type fakeAPI struct {
 	posts       []string // every POST /api/jobs body, repeats too
 	events      []string // raw bodies of POST /api/client-events
 	eventFails  int      // answer 500 to this many event posts first
+	eventBody   string   // when set, answer every event post with 403 and this JSON body
 }
 
 func (f *fakeAPI) handler(t *testing.T) http.Handler {
@@ -53,6 +55,12 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 			json.NewEncoder(w).Encode(Me{PersonID: "11111111-2222-3333-4444-555555555555", Role: "user", DisplayName: "Test User", Contributes: f.contributes})
 		case "POST /api/client-events":
 			b, _ := io.ReadAll(r.Body)
+			if f.eventBody != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusForbidden)
+				io.WriteString(w, f.eventBody)
+				return
+			}
 			if f.eventFails > 0 {
 				f.eventFails--
 				http.Error(w, "down", http.StatusInternalServerError)
@@ -81,6 +89,12 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 			}
 			b, _ := io.ReadAll(r.Body)
 			if f.jobCode != 0 {
+				if f.jobBody != "" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(f.jobCode)
+					io.WriteString(w, f.jobBody)
+					return
+				}
 				http.Error(w, "bad field: state", f.jobCode)
 				return
 			}
@@ -370,6 +384,40 @@ func TestRefusedAndRejected(t *testing.T) {
 	}
 	if _, waiting, _, _, _ := Queue(context.Background(), st2); waiting != 1 {
 		t.Errorf("the report must wait for a new token: waiting = %d", waiting)
+	}
+}
+
+func TestGuestForbiddenKeepsQueue(t *testing.T) {
+	f := &fakeAPI{jobCode: http.StatusForbidden, jobBody: `{"error":"verify your institution email","reason":"institution_email_unverified"}`}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	addJob(t, st, store.StateCompleted, "")
+	addJob(t, st, store.StateCompleted, "")
+	now := time.Now()
+	u := &Uploader{Store: st, LinkPath: p, Now: func() time.Time { return now }, Institution: func(string) string { return "Example University" }}
+	_, err := u.Pass(context.Background())
+	if !errors.Is(err, ErrUnverified) || errors.Is(err, ErrRejected) {
+		t.Fatalf("guest 403: %v", err)
+	}
+	if !strings.Contains(err.Error(), "verify your institution email") || strings.Contains(err.Error(), "new program token") {
+		t.Errorf("message: %v", err)
+	}
+	_, waiting, refused, lastErr, _ := Queue(context.Background(), st)
+	if waiting != 2 || refused != 0 {
+		t.Errorf("the queue must stay: waiting %d, refused %d", waiting, refused)
+	}
+	if !strings.Contains(lastErr, "verify") {
+		t.Errorf("last error %q", lastErr)
+	}
+	// After verification the same reports go out.
+	f.mu.Lock()
+	f.jobCode, f.jobBody = 0, ""
+	f.mu.Unlock()
+	now = now.Add(Backoff(1) + time.Second)
+	if n, err := u.Pass(context.Background()); n != 2 || err != nil {
+		t.Fatalf("after verify: %d %v", n, err)
 	}
 }
 

@@ -314,3 +314,29 @@ func TestHugeOutputStaysBelowTheLimit(t *testing.T) {
 		t.Errorf("report is %d bytes", len(b))
 	}
 }
+
+func TestGuestForbiddenKeepsProblems(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, eventBody: `{"error":"verify your institution email","reason":"institution_email_unverified"}`}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	now := time.Now()
+	pr := &Problems{Store: st, LinkPath: p, Version: "1.2.3", OS: "darwin", Now: func() time.Time { return now }}
+	pr.Record(KindCrash, "", "", 0, "panic: boom")
+	u := uploader(st, p)
+	u.Now = func() time.Time { return now }
+	if _, err := u.Pass(context.Background()); !errors.Is(err, ErrUnverified) {
+		t.Fatalf("guest 403: %v", err)
+	}
+	if due, _ := st.DueClientEvents(context.Background(), now.Add(Backoff(1)+time.Second), 10); len(due) != 1 {
+		t.Fatalf("the problem report must stay queued: %d due", len(due))
+	}
+	f.mu.Lock()
+	f.eventBody = ""
+	f.mu.Unlock()
+	now = now.Add(Backoff(1) + time.Second)
+	if _, err := u.Pass(context.Background()); err != nil || len(f.events) != 1 {
+		t.Fatalf("after verify: %v, %d batches", err, len(f.events))
+	}
+}
