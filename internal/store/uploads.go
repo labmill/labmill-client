@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -144,4 +145,17 @@ func (s *Store) UploadFailed(ctx context.Context, jobID int64, remoteID string, 
 		return fmt.Errorf("store: recording failed report for job %d: %w", jobID, err)
 	}
 	return nil
+}
+
+// HasUploads reports whether any report was ever queued.
+func (s *Store) HasUploads(ctx context.Context) (bool, error) {
+	var one int
+	err := s.db.QueryRowContext(ctx, `SELECT 1 FROM uploads LIMIT 1`).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("store: reading uploads: %w", err)
+	}
+	return true, nil
 }

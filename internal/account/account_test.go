@@ -186,7 +186,7 @@ func addJob(t *testing.T, st *store.Store, end store.JobState, msg string) int64
 func link(t *testing.T, url string, at time.Time) string {
 	t.Helper()
 	p := filepath.Join(t.TempDir(), "labmill", "account.json")
-	if err := Save(p, Link{URL: url, Token: goodToken, LinkedAt: at}); err != nil {
+	if err := Save(p, Link{URL: url, Token: goodToken, LinkedAt: at, FirstLink: true}); err != nil {
 		t.Fatal(err)
 	}
 	return p
@@ -331,13 +331,46 @@ func TestJobsBeforeLinkNotSent(t *testing.T) {
 	defer srv.Close()
 	st := newStore(t)
 	addJob(t, st, store.StateCompleted, "")
-	p := link(t, srv.URL, time.Now().Add(time.Second))
-	time.Sleep(1100 * time.Millisecond)
-	// The old job is saved again after the link (results fetched): still not sent.
+	// Linked 25 hours after the job ended: too old for the first-link grace.
+	p := link(t, srv.URL, time.Now().Add(linkGrace+time.Hour))
 	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
-	u := &Uploader{Store: st, LinkPath: p}
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
 	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
 		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestJobEndedJustBeforeLinkIsSent(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	// The job ended, then the user connected 1 hour later.
+	p := link(t, srv.URL, time.Now().Add(time.Hour))
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	if n, err := u.Pass(context.Background()); err != nil || n != 1 {
+		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestNoGraceAfterRelogin(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	if n, err := u.Pass(context.Background()); err != nil || n != 1 {
+		t.Fatalf("first pass: %d %v", n, err)
+	}
+	// Logout, a job ends while disconnected, login again 1 hour later: not sent (uploads exist).
+	id := addJob(t, st, store.StateCompleted, "")
+	p = link(t, srv.URL, time.Now().Add(time.Hour))
+	u.LinkPath = p
+	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
+		t.Fatalf("after relogin: %d %v (job %d)", n, err, id)
 	}
 }
 
@@ -571,5 +604,40 @@ func TestBuildReportResubmissions(t *testing.T) {
 	got, _ = BuildReport(store.Job{State: store.StateCompleted, RemoteID: "2"}, nil, "r")
 	if b, _ := json.Marshal(got); strings.Contains(string(b), "resubmissions") {
 		t.Errorf("zero must be left out: %s", b)
+	}
+}
+
+func TestNoGraceForOldLinkFile(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	// A link file of an older build has no first_link marker: its user never saw the 24 h text.
+	p := filepath.Join(t.TempDir(), "account.json")
+	Save(p, Link{URL: srv.URL, Token: goodToken, LinkedAt: time.Now().Add(time.Hour)})
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
+		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestOldJobSavedAgainAfterLinkNotSent(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	p := link(t, srv.URL, time.Now().Add(time.Second))
+	// Something was queued before (no grace now), and the old job is saved again after the link: still not sent.
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	id2 := addJob(t, st, store.StateCompleted, "")
+	if _, err := st.AddUpload(context.Background(), store.Upload{JobID: id2, RemoteID: "4242", Ref: "lmc-x", Payload: "{}", NextAt: store.Never}); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(1100 * time.Millisecond)
+	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
+	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
+		t.Fatalf("pass: %d %v", n, err)
 	}
 }

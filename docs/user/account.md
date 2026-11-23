@@ -25,7 +25,7 @@ Labmill never sends data files, program code other than the job script, or envir
 - **A private job:** tell the assistant "keep this job private" when you ask for the job. Its record then holds only the scheduler facts. Labmill does not read its output and sends no problem report about it.
 - **A fully private account:** when the contribution setting of your account is off (app.labmill.org, **Settings**), every record holds only the scheduler facts, and Labmill sends no problem reports. The server also keeps no script, output lines or problem reports for such an account.
 
-Only jobs that change after you connect are sent. Jobs that ended before stay on your computer only.
+When you connect for the first time, Labmill sends the jobs that ended in the last 24 hours (so a job you ran just before you connected is not lost), and then every job that changes. Labmill says this before the connection is made. Older jobs stay on your computer only. The 24 hours apply only while Labmill has sent no job yet. After that, for example after `labmill logout` and a new login, jobs that ended while you were disconnected stay on your computer.
 
 ## Connect
 

@@ -36,6 +36,7 @@ func runAccount(ctx context.Context, args []string, stdin io.Reader, stdout, std
 			return 1
 		}
 		var me account.Me
+		fmt.Fprintln(stderr, account.FirstLinkNotice+" "+account.Notice)
 		if len(args) > 1 && args[1] == "--token" {
 			fmt.Fprintf(stderr, "Make a program token at %s (Settings > Program tokens) and paste it here: ", base)
 			tok, rerr := readToken(stdin)
@@ -57,7 +58,7 @@ func runAccount(ctx context.Context, args []string, stdin io.Reader, stdout, std
 			fmt.Fprintln(stderr, "Labmill:", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Connected to the Labmill account of %s. Jobs from now on are sent to it.\n%s\n", who(me), account.Notice)
+		fmt.Fprintf(stdout, "Connected to the Labmill account of %s. New jobs are sent to it.\n", who(me))
 		return 0
 	case "logout":
 		if err := account.Remove(path); err != nil {
