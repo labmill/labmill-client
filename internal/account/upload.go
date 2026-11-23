@@ -132,7 +132,7 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 	c := &Client{URL: l.URL, Token: l.Token, HTTP: u.HTTP}
 	full := u.contributes(ctx, c)
 	since := l.LinkedAt
-	if ups, err := u.Store.Uploads(ctx); err == nil && len(ups) == 0 {
+	if has, err := u.Store.HasUploads(ctx); l.FirstLink && err == nil && !has {
 		since = since.Add(-linkGrace) // the first link: a job that just ended counts
 	}
 	if err := u.enqueue(ctx, since, full); err != nil {

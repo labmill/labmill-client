@@ -42,9 +42,10 @@ const tokenPrefix = "lmt_"
 
 // Link is the saved account link.
 type Link struct {
-	URL      string    `json:"url"`
-	Token    string    `json:"token"`
-	LinkedAt time.Time `json:"linked_at"` // jobs that ended before this are not sent (24 h earlier on the first link)
+	URL       string    `json:"url"`
+	Token     string    `json:"token"`
+	LinkedAt  time.Time `json:"linked_at"`            // jobs that ended before this are not sent (24 h earlier on the first link)
+	FirstLink bool      `json:"first_link,omitempty"` // set by a login: the 24 h grace may apply. Old files have none.
 }
 
 // Me is the answer of GET /api/me.
@@ -324,7 +325,7 @@ func Login(ctx context.Context, path, baseURL, tok string, hc *http.Client, now 
 	if err != nil {
 		return Me{}, err
 	}
-	return me, Save(path, Link{URL: baseURL, Token: tok, LinkedAt: now.UTC()})
+	return me, Save(path, Link{URL: baseURL, Token: tok, LinkedAt: now.UTC(), FirstLink: true})
 }
 
 // Whoami loads the link at path and asks the API who it belongs to.
