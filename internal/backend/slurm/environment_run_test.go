@@ -82,7 +82,8 @@ func TestRenderedVenvConcurrentRuns(t *testing.T) {
 	}
 	wg.Wait()
 	if n := r.installs(); n != 1 {
-		t.Errorf("pip install ran %d times, want 1", n)
+		stale, _ := filepath.Glob(filepath.Join(r.envs(), "*.lock.d.stale.*"))
+		t.Errorf("pip install ran %d times, want 1 (lock moved aside as stale: %v)", n, stale)
 	}
 	if left, _ := filepath.Glob(filepath.Join(r.envs(), "*.lock.d")); len(left) != 0 {
 		t.Errorf("lock folders left behind: %v", left)
