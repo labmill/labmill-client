@@ -235,6 +235,11 @@ type Remote struct {
 	// OnVerify, if not nil, is called by Download with the result of the
 	// SHA-256 comparison after the files arrived (see Verification).
 	OnVerify func(Verification)
+	// OnPresent, if not nil, is called by Upload with the manifest paths that were
+	// not sent because the cluster already holds a file with the same size and
+	// SHA-256 (checked with the cluster's sha256sum; see presentOnRemote).
+	// It runs once per Upload call, also with an empty list.
+	OnPresent func(rels []string)
 }
 
 // Progress reports transfer progress.
@@ -264,8 +269,11 @@ var maxRemoteFiles = 100_000
 // against the manifest (still a regular file reached without symlinks, same
 // size, same SHA-256); otherwise Upload stops with "file changed since you
 // approved the upload". If dst.Dir exists on the cluster as a file, Upload
-// fails. Re-running after an interruption skips files already present with
-// the same size and modification time (rclone's default comparison).
+// fails. Files already on the cluster with the same size are compared by SHA-256
+// (presentOnRemote) and skipped when equal; other files are skipped by size
+// and modification time (rclone default) after an interruption.
+// Files skipped as present are not re-checked locally: the cluster already
+// holds exactly the approved content.
 // progress, if not nil, is called at least once per second while data moves
 // and once at the end. dst.OnReplace reports files that overwrite a
 // different-sized remote file.
@@ -291,7 +299,19 @@ func Upload(ctx context.Context, root string, entries []store.ManifestEntry, dst
 		return err
 	}
 	defer shutdownFs(fdst)
-	return uploadEntries(ctx, absRoot, fsrc, fdst, entries, dst.OnReplace, progress)
+	return uploadEntries(ctx, absRoot, fsrc, fdst, entries, dst.OnReplace, func(ctx context.Context, step func(string)) (map[string]bool, map[string]bool, error) {
+		skip, differ, err := presentOnRemote(ctx, dst, fdst, entries, step)
+		if err == nil && dst.OnPresent != nil {
+			var rels []string
+			for _, e := range entries {
+				if skip[e.Path] {
+					rels = append(rels, e.Path)
+				}
+			}
+			dst.OnPresent(rels)
+		}
+		return skip, differ, err
+	}, progress)
 }
 
 // uploadEntries is the common part of Upload and UploadS3: each manifest
@@ -299,7 +319,7 @@ func Upload(ctx context.Context, root string, entries []store.ManifestEntry, dst
 // verified by size. (rclone's CopyFile also compares hashes after a copy when
 // source and destination share one; see UploadS3.) ctx must come from
 // rcloneContext.
-func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entries []store.ManifestEntry, onReplace func(rel string, oldSize int64), progress func(Progress)) error {
+func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entries []store.ManifestEntry, onReplace func(rel string, oldSize int64), pre func(ctx context.Context, step func(string)) (skip, force map[string]bool, err error), progress func(Progress)) error {
 	total := Progress{TotalFiles: len(entries)}
 	for _, e := range entries {
 		total.TotalBytes += e.Size
@@ -307,9 +327,22 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 	stop := pollProgress(ctx, total, progress)
 	defer stop.finish(nil)
 
+	var skip, force map[string]bool
+	if pre != nil {
+		var err error
+		if skip, force, err = pre(ctx, stop.setCurrent); err != nil {
+			return err
+		}
+		stop.setCurrent("")
+	}
 	for i, e := range entries {
 		if err := cleanRel(e.Path); err != nil {
 			return fmt.Errorf("manifest entry %q: %w", e.Path, err)
+		}
+		if skip[e.Path] {
+			stop.skipped(e.Size)
+			stop.setFiles(i + 1)
+			continue
 		}
 		stop.setCurrent(e.Path)
 		err := recheckLocal(ctx, absRoot, e, stop.setHashing)
@@ -318,11 +351,17 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 			return err
 		}
 		if onReplace != nil {
-			if old, err := fdst.NewObject(ctx, e.Path); err == nil && old.Size() != e.Size {
+			if old, err := fdst.NewObject(ctx, e.Path); err == nil && (old.Size() != e.Size || force[e.Path]) {
 				onReplace(e.Path, old.Size())
 			}
 		}
-		if err := operations.CopyFile(ctx, fdst, fsrc, e.Path, e.Path); err != nil {
+		copyCtx := ctx
+		if force[e.Path] {
+			var ci *rfs.ConfigInfo
+			copyCtx, ci = rfs.AddConfig(ctx)
+			ci.IgnoreTimes = true // the cluster's copy has the same size and time but other content
+		}
+		if err := operations.CopyFile(copyCtx, fdst, fsrc, e.Path, e.Path); err != nil {
 			return fmt.Errorf("upload %s: %w", e.Path, err)
 		}
 		o, err := fdst.NewObject(ctx, e.Path)
@@ -814,6 +853,7 @@ type poller struct {
 	report func(Progress)
 	mu     sync.Mutex
 	files  int
+	skip   int64  // bytes of files not sent because the cluster has them
 	hashed int64  // bytes hashed so far in the pre-send re-check of the current file
 	cur    string // the file being processed
 	quit   chan struct{}
@@ -852,7 +892,7 @@ func (pl *poller) emit(final *Progress) {
 		return
 	}
 	p := pl.total
-	p.Bytes = min(accounting.Stats(pl.ctx).GetBytes(), p.TotalBytes)
+	p.Bytes = min(accounting.Stats(pl.ctx).GetBytes()+pl.skip, p.TotalBytes)
 	p.Checking = pl.hashed
 	p.Files = pl.files
 	p.Current = pl.cur
@@ -864,6 +904,12 @@ func (pl *poller) emit(final *Progress) {
 func (pl *poller) setHashing(n int64) {
 	pl.mu.Lock()
 	pl.hashed = n
+	pl.mu.Unlock()
+}
+
+func (pl *poller) skipped(n int64) {
+	pl.mu.Lock()
+	pl.skip += n
 	pl.mu.Unlock()
 }
 

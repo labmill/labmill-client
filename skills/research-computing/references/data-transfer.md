@@ -31,6 +31,7 @@ scp -r dir mycluster:/path/to/project/   # fine for small things
   doesn't stop it.
 - Windows: `scp`/`sftp` ship with the OpenSSH client; for rsync use WSL or
   rclone.
+- To skip data already on the cluster, compare content, not times: `rsync -avh --checksum` or `sha256sum` the same files on both sides. Labmill does this for files of equal size and sends only those that differ.
 
 ## rclone
 

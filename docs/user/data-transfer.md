@@ -21,7 +21,7 @@ Hidden folders, system folders and files that look like keys or passwords are no
 ## Long transfers
 
 - Your computer does not go to sleep while a transfer runs.
-- If a transfer breaks, Labmill starts it again by itself, up to three times. It skips files that are already there.
+- If a transfer breaks, Labmill starts it again by itself, up to three times. It skips files that are already there. A file on the cluster with the same size is compared by its SHA-256 sum: if it matches, it is not sent again, and the chat says how many files were skipped.
 - If it still fails, the chat tells you.
 
 ## Checks on results
