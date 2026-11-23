@@ -612,6 +612,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#run-a-job-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Run a job again
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1652,6 +1663,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#run-a-job-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Run a job again
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1687,6 +1709,7 @@
 <h2 id="2-labmill-finds-your-data">2. Labmill finds your data<a class="headerlink" href="#2-labmill-finds-your-data" title="Permanent link">&para;</a></h2>
 <p>Labmill looks through your chosen data and code folders (or, if you chose none, your home folder) for folders that match your description and shows what it found: the folder, how many files, how big it is, and a few example file names. It sees names and sizes, and it can preview a file if that helps: a short sample from the start of a data file, or a page at a time of a document or script (see the <a href="../">overview</a>). Hidden folders and key files are skipped (see the <a href="../">overview</a>).</p>
 <p>You confirm the right folder, or tell Labmill which one you meant. Nothing has left your computer yet. Labmill only makes a list of the files, with their sizes and checksums, so it can later verify that everything arrived intact.</p>
+<p>If the folder holds a Snakemake or Nextflow workflow (a <code>Snakefile</code>, <code>*.smk</code>, <code>nextflow.config</code> or <code>*.nf</code> file), Labmill reads it and runs the workflow manager as one small controller job on the cluster. The manager then submits its own steps as Slurm jobs. Labmill does not turn the whole pipeline into one big script.</p>
 <h2 id="3-labmill-picks-where-to-run">3. Labmill picks where to run<a class="headerlink" href="#3-labmill-picks-where-to-run" title="Permanent link">&para;</a></h2>
 <p>Labmill looks at what each cluster offers (partitions, GPU types, how busy it is) and suggests one. You can say "use the other cluster" or name a partition.</p>
 <h2 id="4-approve-the-upload">4. Approve the upload<a class="headerlink" href="#4-approve-the-upload" title="Permanent link">&para;</a></h2>
@@ -1732,6 +1755,8 @@
 <h2 id="8-get-your-results">8. Get your results<a class="headerlink" href="#8-get-your-results" title="Permanent link">&para;</a></h2>
 <p>When the job is finished, say "get the results". Labmill proposes which files to download and where to put them. By default, results go into <code>~/labmill-results/&lt;job name&gt;</code>. You approve the download, and the files appear in that folder.</p>
 <p>After the download, Labmill compares each file's SHA-256 checksum with the one computed on the cluster, so you know nothing was damaged on the way. If a file doesn't match, Labmill keeps your copy under a name ending in <code>.mismatch</code> (nothing is deleted or overwritten), tells you which file, and doesn't mark the job as fetched, so you can fetch it again. If the cluster can't compute checksums, Labmill falls back to comparing file sizes and says so. In the desktop app, click <strong>Open folder</strong> (in the chat or next to the job in the job list) to open it in Explorer, Finder or your file manager.</p>
+<h2 id="run-a-job-again">Run a job again<a class="headerlink" href="#run-a-job-again" title="Permanent link">&para;</a></h2>
+<p>Labmill saves a recipe for every job it submits: the script, the settings (partition, CPUs, memory, time limit, work folder), extra files and the software the script names. The recipe stays on your computer, also as <code>labmill-recipe.json</code> in the job's results folder. Ask "how was job 12 run?" to see it, or "run job 12 again" to get a new draft from it. You approve the script again before anything is submitted. The new job uses the same work folder, so its output can replace the old output there. A module named without a version loads the cluster's current default, which can differ from the first run. The recipe file holds the script as written, so check it before you share the results folder.</p>
 
 
 

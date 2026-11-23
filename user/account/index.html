@@ -1450,12 +1450,12 @@
 <h1 id="connect-the-client-to-your-labmill-account">Connect the client to your Labmill account<a class="headerlink" href="#connect-the-client-to-your-labmill-account" title="Permanent link">&para;</a></h1>
 <p>You can connect Labmill to your account at <a href="https://app.labmill.org">app.labmill.org</a>. Then your jobs show in the web app: their state, times and resources, the job script, the end of the job output, and the problems Labmill saw. You and the research software engineers (RSEs) of your institution can then see what went wrong and help. This is optional. Labmill works the same without it, and while it is not connected it sends nothing to Labmill.</p>
 <h2 id="what-is-sent">What is sent<a class="headerlink" href="#what-is-sent" title="Permanent link">&para;</a></h2>
-<p><strong>Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.</strong></p>
+<p><strong>Labmill sends the job script, the job output, condensed (start, end and error lines), and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.</strong></p>
 <p>For each job, when the scheduler accepts it, when it starts and when it ends, Labmill sends one record. A later record of the same job replaces the earlier one. The record holds:</p>
 <ul>
 <li>the scheduler facts: the cluster (as the HPC system that the web app knows), the Slurm state, the failure category of a time-out or out-of-memory failure, the exit code, when the job was submitted, started and ended, the queue wait, the resources it asked for (CPUs, memory, GPUs and GPU type, time limit, nodes), what it got and used (from <code>sacct</code>: CPUs, memory, GPUs, nodes, elapsed time, CPU efficiency, largest memory use), the partition and the software modules it loaded (for example <code>samtools/1.21</code>);</li>
 <li>the sbatch script, redacted;</li>
-<li>when the job has ended: the last 500 lines of its output and of its error output, redacted; for a failed job also the first 100 lines.</li>
+<li>when the job has ended: its output and its error output, redacted and condensed: repeated lines are folded into one, the first 100 and last 300 lines are kept, and error lines from the middle with the lines around them (about 64 KB of text).</li>
 </ul>
 <p>Labmill also sends a short report of each problem in a session: connection and sign-in failures, errors of the assistant (the model, the broker or the relay), failed tool calls (with the tool name), sbatch refusals (the scheduler's message), transfer failures, crashes (with Labmill's own code locations only) and turns that you stopped. Each report is at most 2 KB.</p>
 <h2 id="redaction">Redaction<a class="headerlink" href="#redaction" title="Permanent link">&para;</a></h2>
@@ -1466,14 +1466,21 @@
 <li><strong>A private job:</strong> tell the assistant "keep this job private" when you ask for the job. Its record then holds only the scheduler facts. Labmill does not read its output and sends no problem report about it.</li>
 <li><strong>A fully private account:</strong> when the contribution setting of your account is off (app.labmill.org, <strong>Settings</strong>), every record holds only the scheduler facts, and Labmill sends no problem reports. The server also keeps no script, output lines or problem reports for such an account.</li>
 </ul>
-<p>Only jobs that change after you connect are sent. Jobs that ended before stay on your computer only.</p>
+<p>When you connect for the first time, Labmill sends the jobs that ended in the last 24 hours (so a job you ran just before you connected is not lost), and then every job that changes. Labmill says this before the connection is made. Older jobs stay on your computer only. The 24 hours apply only while Labmill has sent no job yet. After that, for example after <code>labmill logout</code> and a new login, jobs that ended while you were disconnected stay on your computer.</p>
 <h2 id="connect">Connect<a class="headerlink" href="#connect" title="Permanent link">&para;</a></h2>
+<p><strong>Sign in with the browser</strong> (the normal way):</p>
+<ul>
+<li><strong>Desktop app:</strong> the first-run welcome form has <strong>Sign in with your browser</strong>.</li>
+<li><strong>Terminal:</strong> run <code>labmill login</code>. Labmill opens your browser at app.labmill.org (the address is printed too, for example when you work over SSH). Sign in there and press <strong>Connect this computer</strong>. Then go back to Labmill. The sign-in code stays on your computer and the page never shows the token.</li>
+</ul>
+<p>Labmill waits up to 10 minutes for the browser.</p>
+<p><strong>With a program token</strong> (when no browser is at hand):</p>
 <ol>
 <li>Sign in at <a href="https://app.labmill.org">app.labmill.org</a> and open <strong>Settings &gt; Program tokens</strong>.</li>
 <li>Make a token. The web app shows it once. It starts with <code>lmt_</code> and is valid for one year.</li>
 <li>Give it to Labmill:<ul>
 <li><strong>Desktop app:</strong> open <strong>Settings &gt; Labmill account</strong>, paste the token into <strong>Program token</strong> and click <strong>Connect</strong>.</li>
-<li><strong>Terminal:</strong> run <code>labmill login</code> and paste the token when Labmill asks. The token is not shown while you paste it.</li>
+<li><strong>Terminal:</strong> run <code>labmill login --token</code> and paste the token when Labmill asks. The token is not shown while you paste it.</li>
 </ul>
 </li>
 </ol>

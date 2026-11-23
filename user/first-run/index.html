@@ -431,6 +431,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#your-labmill-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Your Labmill account
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-first-login" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1443,6 +1454,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#your-labmill-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Your Labmill account
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-first-login" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1581,6 +1603,14 @@
 <p>You only do this once. Your cluster list is kept in <code>~/.config/labmill/clusters.yaml</code>, and the institution you chose is its <code>site:</code> line (for example <code>site: example.edu</code>). If <code>clusters.yaml</code> has no <code>site:</code> line (for example settings saved by an older Labmill) or names an institution this Labmill doesn't know, Labmill shows the institution form again with a short explanation and adds only the <code>site:</code> line; your clusters stay as they are. To switch institution later, change the <code>site:</code> line (and the cluster entries), or move <code>clusters.yaml</code> aside and start Labmill again to get the welcome form.</p>
 <p>Labmill reads job times in UTC, so you normally don't need to set anything. Only if a Slurm cluster's job start and end times still look wrong (its Slurm ignores the time zone request), add a <code>timezone:</code> line to its entry, for example <code>timezone: Europe/Berlin</code>.</p>
 <p>If your user name has several Slurm accounts on a cluster, Labmill asks you once which one to charge and saves it as an <code>account:</code> line in that cluster's entry (for example <code>account: mygroup</code>). Change or remove the line to choose again. With one account, Labmill uses it without asking.</p>
+<h2 id="your-labmill-account">Your Labmill account<a class="headerlink" href="#your-labmill-account" title="Permanent link">&para;</a></h2>
+<p>The welcome form starts with a sign-in to your Labmill account (step 0): your browser opens, you sign in with Google, GitHub, LinkedIn or ORCID, and the form goes on. Labmill says before the link is made which jobs it sends. See <a href="../account/">Connect the client to your Labmill account</a> for what is sent. Notes:</p>
+<ol>
+<li>Sign in at <a href="https://app.labmill.org">app.labmill.org</a> and <strong>verify your institution email</strong> (the web app sends a link). Until you verify, the account is a guest account: the web app refuses job records. Labmill keeps them on your computer, tries again later and sends them after you verify. This needs the Labmill client version that knows the guest case; an older one tells you to make a new token, which does not help.</li>
+<li>Check the link with <code>labmill whoami</code>: it shows the account and how many records were sent or wait.</li>
+<li>To connect again later (for example after <code>labmill logout</code>), run <code>labmill login</code> or use <strong>Settings &gt; Labmill account</strong> in the desktop app.</li>
+</ol>
+<p>Without a connected account Labmill sends nothing to Labmill.</p>
 <h2 id="the-first-login">The first login<a class="headerlink" href="#the-first-login" title="Permanent link">&para;</a></h2>
 <p>Labmill signs in to the cluster the first time it needs it, for example when you ask about queues or when you approve an upload. A small box pops up in the window.</p>
 <ol>

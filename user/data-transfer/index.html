@@ -1423,7 +1423,7 @@
 <h2 id="long-transfers">Long transfers<a class="headerlink" href="#long-transfers" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Your computer does not go to sleep while a transfer runs.</li>
-<li>If a transfer breaks, Labmill starts it again by itself, up to three times. It skips files that are already there.</li>
+<li>If a transfer breaks, Labmill starts it again by itself, up to three times. It skips files that are already there. A file on the cluster with the same size is compared by its SHA-256 sum: if it matches, it is not sent again, and the chat says how many files were skipped.</li>
 <li>If it still fails, the chat tells you.</li>
 </ul>
 <h2 id="checks-on-results">Checks on results<a class="headerlink" href="#checks-on-results" title="Permanent link">&para;</a></h2>

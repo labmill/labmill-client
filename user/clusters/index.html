@@ -517,6 +517,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#is-another-cluster-better" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Is another cluster better?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1408,6 +1419,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#is-another-cluster-better" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Is another cluster better?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1463,6 +1485,8 @@
 <p>Before the first change, Labmill saves a copy of <code>clusters.yaml</code> next to it.</p>
 <h2 id="open-a-terminal-on-the-cluster">Open a terminal on the cluster<a class="headerlink" href="#open-a-terminal-on-the-cluster" title="Permanent link">&para;</a></h2>
 <p><code>labmill shell &lt;cluster&gt;</code> opens a terminal on the login node while Labmill is signed in. The desktop app has a <strong>Terminal</strong> button. What you type there is not sent to the assistant.</p>
+<h2 id="is-another-cluster-better">Is another cluster better?<a class="headerlink" href="#is-another-cluster-better" title="Permanent link">&para;</a></h2>
+<p>If you have more than one cluster, ask "would this start sooner elsewhere?". After a job is drafted, Labmill asks each of your clusters (the one of the job included) when the job would start there (Slurm's own <code>sbatch --test-only</code>; nothing is submitted). Labmill first shows which clusters get your script and asks you to approve. It only asks clusters you are already signed in to, and it never signs in for you. You get the list of expected start times. Labmill never moves a job by itself: you decide, and a job on another cluster needs its data uploaded again and your approval again.</p>
 
 
 
