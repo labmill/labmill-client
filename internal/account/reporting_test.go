@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -312,5 +313,46 @@ func TestHugeOutputStaysBelowTheLimit(t *testing.T) {
 	}
 	if b := f.posts[0]; len(b) > maxReportBytes || !strings.Contains(b, "stdout_lines") {
 		t.Errorf("report is %d bytes", len(b))
+	}
+}
+
+func TestProblemsKeptWhenMeFails(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, meFails: 1}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	now := time.Now()
+	pr := &Problems{Store: st, LinkPath: p, Version: "1.2.3", OS: "darwin", Now: func() time.Time { return now }}
+	pr.Record(KindCrash, "", "", 0, "panic: boom")
+	u := uploader(st, p)
+	u.Now = func() time.Time { return now }
+	if _, err := u.Pass(context.Background()); err != nil || len(f.events) != 0 {
+		t.Fatalf("pass with /api/me down: %v, %d batches", err, len(f.events))
+	}
+	if due, _ := st.DueClientEvents(context.Background(), now, 10); len(due) != 1 {
+		t.Fatalf("the problem report was dropped: %d due", len(due))
+	}
+	if _, err := u.Pass(context.Background()); err != nil || len(f.events) != 1 {
+		t.Fatalf("next pass: %v, %d batches", err, len(f.events))
+	}
+}
+
+func TestRevokedTokenReportedWithOnlyProblemsQueued(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, meCode: http.StatusUnauthorized}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	now := time.Now()
+	pr := &Problems{Store: st, LinkPath: p, Version: "1.2.3", OS: "darwin", Now: func() time.Time { return now }}
+	pr.Record(KindCrash, "", "", 0, "panic: boom")
+	u := uploader(st, p)
+	u.Now = func() time.Time { return now }
+	if _, err := u.Pass(context.Background()); !errors.Is(err, ErrRejected) {
+		t.Fatalf("revoked token: %v", err)
+	}
+	if due, _ := st.DueClientEvents(context.Background(), now, 10); len(due) != 1 {
+		t.Fatalf("the problem report was dropped: %d due", len(due))
 	}
 }

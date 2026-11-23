@@ -37,6 +37,8 @@ type fakeAPI struct {
 	posts       []string // every POST /api/jobs body, repeats too
 	events      []string // raw bodies of POST /api/client-events
 	eventFails  int      // answer 500 to this many event posts first
+	meFails     int      // answer 500 to this many GET /api/me first
+	meCode      int      // when set, answer GET /api/me with it
 }
 
 func (f *fakeAPI) handler(t *testing.T) http.Handler {
@@ -50,6 +52,15 @@ func (f *fakeAPI) handler(t *testing.T) http.Handler {
 		}
 		switch r.Method + " " + r.URL.Path {
 		case "GET /api/me":
+			if f.meCode != 0 {
+				http.Error(w, "no", f.meCode)
+				return
+			}
+			if f.meFails > 0 {
+				f.meFails--
+				http.Error(w, "down", http.StatusInternalServerError)
+				return
+			}
 			json.NewEncoder(w).Encode(Me{PersonID: "11111111-2222-3333-4444-555555555555", Role: "user", DisplayName: "Test User", Contributes: f.contributes})
 		case "POST /api/client-events":
 			b, _ := io.ReadAll(r.Body)
