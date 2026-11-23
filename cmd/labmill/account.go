@@ -58,7 +58,7 @@ func runAccount(ctx context.Context, args []string, stdin io.Reader, stdout, std
 			fmt.Fprintln(stderr, "Labmill:", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Connected to the Labmill account of %s. Jobs of the last 24 hours and new jobs are sent to it.\n", who(me))
+		fmt.Fprintf(stdout, "Connected to the Labmill account of %s. New jobs are sent to it.\n", who(me))
 		return 0
 	case "logout":
 		if err := account.Remove(path); err != nil {

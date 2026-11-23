@@ -157,6 +157,7 @@ func signedInClient(ctx context.Context) (*account.Client, error) {
 		}
 		host, _ := os.Hostname()
 		fmt.Fprintln(os.Stderr, "Welcome to labmill. First sign in to your Labmill account (Google, GitHub, LinkedIn or ORCID).")
+		fmt.Fprintln(os.Stderr, account.FirstLinkNotice+" "+account.Notice)
 		if _, err := account.BrowserLogin(ctx, path, base, host, func(u string) error {
 			fmt.Fprintf(os.Stderr, "Your browser opens. If it does not, open this address:\n  %s\n", u)
 			_ = mailreq.Open(u)
