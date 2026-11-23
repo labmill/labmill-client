@@ -36,13 +36,13 @@ Labmill reads job times in UTC, so you normally don't need to set anything. Only
 
 If your user name has several Slurm accounts on a cluster, Labmill asks you once which one to charge and saves it as an `account:` line in that cluster's entry (for example `account: mygroup`). Change or remove the line to choose again. With one account, Labmill uses it without asking.
 
-## Connect your Labmill account (optional)
+## Your Labmill account
 
-If you want your jobs to show in the web app, connect Labmill to your account after the setup. See [Connect the client to your Labmill account](account.md) for what is sent. The steps:
+The welcome form starts with a sign-in to your Labmill account (step 0): your browser opens, you sign in with Google, GitHub, LinkedIn or ORCID, and the form goes on. Labmill says before the link is made which jobs it sends. See [Connect the client to your Labmill account](account.md) for what is sent. Notes:
 
 1. Sign in at [app.labmill.org](https://app.labmill.org) and **verify your institution email** (the web app sends a link). Until you verify, the account is a guest account: the web app refuses job records. Labmill keeps them on your computer, tries again later and sends them after you verify. This needs the Labmill client version that knows the guest case; an older one tells you to make a new token, which does not help.
-2. In the terminal run `labmill login` (or use **Settings > Labmill account** in the desktop app) and finish the sign-in.
-3. Check it with `labmill whoami`: it shows the account and how many records were sent or wait.
+2. Check the link with `labmill whoami`: it shows the account and how many records were sent or wait.
+3. To connect again later (for example after `labmill logout`), run `labmill login` or use **Settings > Labmill account** in the desktop app.
 
 Without a connected account Labmill sends nothing to Labmill.
 
