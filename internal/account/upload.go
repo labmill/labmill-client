@@ -161,6 +161,9 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 		if errors.Is(err, ErrRejected) {
 			return sent, err // the token is no longer valid: the other reports wait too
 		}
+		if errors.Is(err, ErrUnverified) {
+			return sent, err // every report gets the same answer: they stay queued
+		}
 	}
 	return sent, u.sendEvents(ctx, c, full)
 }

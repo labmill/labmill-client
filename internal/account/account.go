@@ -63,6 +63,12 @@ var ErrNotLinked = errors.New("this computer is not connected to a Labmill accou
 // ErrRejected means the API refused the token (revoked, expired or wrong).
 var ErrRejected = errors.New("the Labmill account did not accept the token: make a new program token and connect again")
 
+// ErrUnverified means the API refused the request because the institution email of the account is not verified.
+// The token is good: queued reports wait until the user verifies.
+var ErrUnverified = errors.New("the Labmill account is a guest account: verify your institution email in the Labmill account, then reports and events are sent (they stay queued)")
+
+const reasonUnverified = "institution_email_unverified"
+
 // Path is account.json next to clusters.yaml.
 func Path() (string, error) {
 	cfg, err := config.DefaultPath()
@@ -157,6 +163,9 @@ type StatusError struct {
 }
 
 func (e *StatusError) Error() string {
+	if e.unverified() {
+		return ErrUnverified.Error()
+	}
 	if e.Code == http.StatusUnauthorized || e.Code == http.StatusForbidden {
 		return ErrRejected.Error()
 	}
@@ -186,8 +195,20 @@ func plainText(s string) string {
 	return s
 }
 
-// Is makes errors.Is(err, ErrRejected) true for 401 and 403.
+// unverified is true for the guest 403: the JSON body has reason "institution_email_unverified".
+func (e *StatusError) unverified() bool {
+	var j struct{ Reason string }
+	return e.Code == http.StatusForbidden && json.Unmarshal([]byte(e.Text), &j) == nil && j.Reason == reasonUnverified
+}
+
+// Is makes errors.Is(err, ErrRejected) true for 401 and 403, except the guest 403 (ErrUnverified).
 func (e *StatusError) Is(target error) bool {
+	if target == ErrUnverified {
+		return e.unverified()
+	}
+	if e.unverified() {
+		return false
+	}
 	return target == ErrRejected && (e.Code == http.StatusUnauthorized || e.Code == http.StatusForbidden)
 }
 
@@ -226,7 +247,7 @@ func (c *Client) do(ctx context.Context, method, path string, body any, out any)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		b, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
+		b, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		return &StatusError{Code: resp.StatusCode, Text: strings.TrimSpace(string(b))}
 	}
 	if out == nil {
