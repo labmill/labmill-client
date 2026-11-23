@@ -2,7 +2,7 @@
 
 ## Labmill says it has no assistant
 
-`ANTHROPIC_API_KEY` is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run `labmill login`), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. [CHECK: how the desktop app on macOS finds the key when started from Finder.]
+`ANTHROPIC_API_KEY` is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run `labmill login`), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. On macOS an app started from Finder does not read the variables of your shell profile: start it from a terminal window where the variable is set, or, if you are an invited tester, connect it with a Labmill account in **Settings > Labmill account**.
 
 ## macOS or Windows blocks the program
 
@@ -59,3 +59,7 @@ Labmill reads `clusters.yaml` and the SSH settings when it starts. Quit Labmill 
 ## Logs
 
 The log is `labmill.log` in the folder of the job database (`~/.local/state/labmill/` by default). In the desktop app, **Settings > About and diagnostics > Open logs folder** opens it. **Copy diagnostics** makes a short report without passwords, keys, codes or user names. Send it with your question to <help@labmill.org>.
+
+## Labmill says my account is a guest account
+
+Your Labmill account is a guest account until you verify your institution email: the web app sends a link to it. Until then the web app refuses job records and problem reports from Labmill. Labmill keeps them on your computer, tries again later, and sends them after you verify. Nothing is lost, and your work in Labmill is not affected. Open [app.labmill.org](https://app.labmill.org), verify the institution email, and wait a few minutes (the retry pause grows up to 6 hours).
