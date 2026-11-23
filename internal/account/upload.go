@@ -56,22 +56,23 @@ type Uploader struct {
 const contribTTL = time.Hour
 
 // contributes asks the API whether the account contributes, at most once per
-// contribTTL. An error counts as false for this pass (facts only).
-func (u *Uploader) contributes(ctx context.Context, c *Client) bool {
+// contribTTL. err is set when the API did not answer: job reports hold facts only for this pass, and
+// problem reports stay queued.
+func (u *Uploader) contributes(ctx context.Context, c *Client) (full bool, err error) {
 	u.mu.Lock()
 	if !u.contribAt.IsZero() && u.now().Sub(u.contribAt) < contribTTL {
 		defer u.mu.Unlock()
-		return u.contrib
+		return u.contrib, nil
 	}
 	u.mu.Unlock()
 	me, err := c.Whoami(ctx)
 	if err != nil {
-		return false
+		return false, err
 	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	u.contrib, u.contribAt = me.Contributes != nil && *me.Contributes, u.now()
-	return u.contrib
+	return u.contrib, nil
 }
 
 // redactor is the Redactor for job j.
@@ -130,7 +131,7 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 		return 0, err
 	}
 	c := &Client{URL: l.URL, Token: l.Token, HTTP: u.HTTP}
-	full := u.contributes(ctx, c)
+	full, meErr := u.contributes(ctx, c)
 	if err := u.enqueue(ctx, l.LinkedAt, full); err != nil {
 		return 0, err
 	}
@@ -164,6 +165,12 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 		if errors.Is(err, ErrUnverified) {
 			return sent, err // every report gets the same answer: they stay queued
 		}
+	}
+	if meErr != nil {
+		if errors.Is(meErr, ErrRejected) {
+			return sent, meErr // the token is no longer valid: say so, the problem reports wait
+		}
+		return sent, nil // problem reports wait for an answer; dropping them would lose them for good
 	}
 	return sent, u.sendEvents(ctx, c, full)
 }
