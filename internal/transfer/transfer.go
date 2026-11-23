@@ -240,6 +240,9 @@ type Remote struct {
 	// SHA-256 (checked with the cluster's sha256sum; see presentOnRemote).
 	// It runs once per Upload call, also with an empty list.
 	OnPresent func(rels []string)
+	// Sent, if not nil, is shared by the attempts of one WithRetry: Upload records
+	// each file it copied and verified, and a retry skips the hash for it.
+	Sent SentFiles
 }
 
 // Progress reports transfer progress.
@@ -299,8 +302,8 @@ func Upload(ctx context.Context, root string, entries []store.ManifestEntry, dst
 		return err
 	}
 	defer shutdownFs(fdst)
-	return uploadEntries(ctx, absRoot, fsrc, fdst, entries, dst.OnReplace, func(ctx context.Context, step func(string)) (map[string]bool, map[string]bool, error) {
-		skip, differ, err := presentOnRemote(ctx, dst, fdst, entries, step)
+	return uploadEntries(ctx, absRoot, fsrc, fdst, entries, dst.OnReplace, func(ctx context.Context, step func(string)) (map[string]bool, map[string]bool, map[string]int64, error) {
+		skip, differ, size, err := presentOnRemote(ctx, dst, fdst, entries, step, dst.Sent)
 		if err == nil && dst.OnPresent != nil {
 			var rels []string
 			for _, e := range entries {
@@ -310,8 +313,8 @@ func Upload(ctx context.Context, root string, entries []store.ManifestEntry, dst
 			}
 			dst.OnPresent(rels)
 		}
-		return skip, differ, err
-	}, progress)
+		return skip, differ, size, err
+	}, dst.Sent, progress)
 }
 
 // uploadEntries is the common part of Upload and UploadS3: each manifest
@@ -319,7 +322,7 @@ func Upload(ctx context.Context, root string, entries []store.ManifestEntry, dst
 // verified by size. (rclone's CopyFile also compares hashes after a copy when
 // source and destination share one; see UploadS3.) ctx must come from
 // rcloneContext.
-func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entries []store.ManifestEntry, onReplace func(rel string, oldSize int64), pre func(ctx context.Context, step func(string)) (skip, force map[string]bool, err error), progress func(Progress)) error {
+func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entries []store.ManifestEntry, onReplace func(rel string, oldSize int64), pre func(ctx context.Context, step func(string)) (skip, force map[string]bool, size map[string]int64, err error), sent SentFiles, progress func(Progress)) error {
 	total := Progress{TotalFiles: len(entries)}
 	for _, e := range entries {
 		total.TotalBytes += e.Size
@@ -328,9 +331,10 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 	defer stop.finish(nil)
 
 	var skip, force map[string]bool
+	var size map[string]int64 // remote sizes found by pre, so onReplace needs no second stat
 	if pre != nil {
 		var err error
-		if skip, force, err = pre(ctx, stop.setCurrent); err != nil {
+		if skip, force, size, err = pre(ctx, stop.setCurrent); err != nil {
 			return err
 		}
 		stop.setCurrent("")
@@ -350,9 +354,11 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 		if err != nil {
 			return err
 		}
-		if onReplace != nil {
-			if old, err := fdst.NewObject(ctx, e.Path); err == nil && (old.Size() != e.Size || force[e.Path]) {
-				onReplace(e.Path, old.Size())
+		if old, ok := size[e.Path]; onReplace != nil && ok && (old != e.Size || force[e.Path]) {
+			onReplace(e.Path, old)
+		} else if onReplace != nil && pre == nil {
+			if o, err := fdst.NewObject(ctx, e.Path); err == nil && o.Size() != e.Size {
+				onReplace(e.Path, o.Size())
 			}
 		}
 		copyCtx := ctx
@@ -370,6 +376,11 @@ func uploadEntries(ctx context.Context, absRoot string, fsrc, fdst rfs.Fs, entri
 		}
 		if o.Size() != e.Size {
 			return fmt.Errorf("verify %s: remote size %d, expected %d", e.Path, o.Size(), e.Size)
+		}
+		// Only a real copy is a verified file: rclone skips a same-size, same-time
+		// file unchecked, which may hold other content.
+		if old, existed := size[e.Path]; sent != nil && (!existed || old != e.Size || force[e.Path]) {
+			sent[e.Path] = o.ModTime(ctx)
 		}
 		stop.setFiles(i + 1)
 	}

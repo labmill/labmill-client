@@ -480,6 +480,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		// Every transfer keeps the laptop awake and is retried when the
 		// connection breaks (M64.1).
 		Upload: func(ctx context.Context, root string, entries []store.ManifestEntry, dst transfer.Remote, progress func(transfer.Progress)) error {
+			dst.Sent = transfer.SentFiles{} // shared by the retries: a retry does not hash again what was sent
 			return transfer.WithRetry(ctx, progress, func(pr func(transfer.Progress)) error { return transfer.Upload(ctx, root, entries, dst, pr) })
 		},
 		Download: func(ctx context.Context, src transfer.Remote, paths []string, localDir string, progress func(transfer.Progress)) (w []string, err error) {
