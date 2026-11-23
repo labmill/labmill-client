@@ -31,6 +31,9 @@ import (
 // Settings > Labmill account): what the client sends.
 const Notice = "Labmill sends the job script, the last lines of the job output and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts."
 
+// FirstLinkNotice is shown before the first link completes: the jobs that are sent.
+const FirstLinkNotice = "When you connect for the first time, Labmill sends the jobs that ended in the last 24 hours, and then every new job. Jobs that ended earlier stay on your computer."
+
 // DefaultURL is the Labmill web app; LABMILL_ACCOUNT_URL overrides it (tests, staging).
 const DefaultURL = "https://app.labmill.org"
 
@@ -41,7 +44,7 @@ const tokenPrefix = "lmt_"
 type Link struct {
 	URL      string    `json:"url"`
 	Token    string    `json:"token"`
-	LinkedAt time.Time `json:"linked_at"` // jobs that ended more than a day before this are not sent
+	LinkedAt time.Time `json:"linked_at"` // jobs that ended before this are not sent (24 h earlier on the first link)
 }
 
 // Me is the answer of GET /api/me.

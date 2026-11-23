@@ -306,7 +306,7 @@ func TestJobsBeforeLinkNotSent(t *testing.T) {
 	defer srv.Close()
 	st := newStore(t)
 	addJob(t, st, store.StateCompleted, "")
-	// Linked 25 hours after the job ended: too old, even when it is saved again (results fetched).
+	// Linked 25 hours after the job ended: too old for the first-link grace.
 	p := link(t, srv.URL, time.Now().Add(linkGrace+time.Hour))
 	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
 	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
@@ -326,6 +326,26 @@ func TestJobEndedJustBeforeLinkIsSent(t *testing.T) {
 	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
 	if n, err := u.Pass(context.Background()); err != nil || n != 1 {
 		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestNoGraceAfterRelogin(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	if n, err := u.Pass(context.Background()); err != nil || n != 1 {
+		t.Fatalf("first pass: %d %v", n, err)
+	}
+	// Logout, a job ends while disconnected, login again 1 hour later: not sent (uploads exist).
+	id := addJob(t, st, store.StateCompleted, "")
+	p = link(t, srv.URL, time.Now().Add(time.Hour))
+	u.LinkPath = p
+	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
+		t.Fatalf("after relogin: %d %v (job %d)", n, err, id)
 	}
 }
 
