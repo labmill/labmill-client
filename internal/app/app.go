@@ -170,7 +170,9 @@ type Env struct {
 	// ResultsDir is where fetched results go by default
 	// (<home>/labmill-results/<job name>).
 	ResultsDir string
-	Now        func() time.Time // nil means time.Now
+	// ClientVersion is Labmill's version, saved in each job's run recipe.
+	ClientVersion string
+	Now           func() time.Time // nil means time.Now
 }
 
 // SiteInfo is what the system prompt says about the user's institution.
@@ -243,6 +245,8 @@ func (s SiteInfo) SlurmFor(cluster string) rules.SlurmHints {
 //	  ask_user {question, options[2-8]{label, description?}, allow_other?}
 //	                                                    a selection dialog through Env.Choose (question <= 300 runes; labels <= 60, unique; descriptions <= 300; allow_other defaults to true). Result: "The user chose: <label>", "The user answered: <text>" or "The user skipped the question.". It changes nothing, so it is not gated, and it never replaces an approval
 //	  job_worked {job_id, worked}                       the user's yes or no after an ended job that ran new code (asked with ask_user first); Env.Worked queues kind worked for the Labmill account; ungated, sends only yes or no.
+//	  job_recipe {job_id}                               how a submitted job was run: script, settings, extra files, software it names, and how to run it again; read-only (the saved "recipe" event, or one rebuilt for a job from before recipes).
+//	  rerun_job {job_id, name?}                         drafts a new job (state draft) from a submitted job's recipe: same cluster, script, settings, files and work folder; nothing is submitted, submit_job asks the user.
 //	Approval-gated:
 //	  upload_data {job_id, cluster, remote_dir?}        Proposal: "Upload N files (size) from <root> to <cluster>:<dir>"; Details: first a breakdown per top-level folder (file count and size each), then the file list (at most 200 lines, then "... and K more") and totals. remote_dir defaults to "labmill/<job name>", relative to the login home; SFTP clusters also accept a plain absolute folder (S3: relative to the prefix only). Run: Upload, then record the absolute remote dir on the job.
 //	  submit_job {job_id}                               Proposal (Editable): Details = the job's script exactly as drafted. Run: backend.Submit with the approved (possibly edited) script, record the remote ID, and save the script on the job (state submitted). Propose also runs a read-only pre-flight check (M64.2, preflight.go) and appends it to the Summary after preflightMark: Slurm `sbatch --test-only` ("Slurm accepts this script, expected start …" or "Slurm rejects this script: …"); "not available" when the cluster can't answer. It never blocks, and Run ignores that part when it compares the review (withoutPreflight).
@@ -286,7 +290,7 @@ func Tools(env *Env) []agent.Tool {
 	return guardSecrets([]agent.Tool{
 		t.listClusters(), t.clusterInfo(), t.findLocalData(), t.previewFile(), t.stageData(),
 		t.draftJob(), t.jobStatus(), t.listJobs(), t.clusterJobs(), t.jobLogs(), t.diagnoseJob(), t.askUser(), t.updateTodos(),
-		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.checkQuota(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(), t.requestAccount(), t.askRSE(), t.jobWorked(),
+		t.uploadData(), t.submitJob(), t.probeStorage(), t.probeQOS(), t.browseRemote(), t.checkQuota(), t.cancelJob(), t.fetchResults(), t.cleanupJob(), t.s3CredentialsToCluster(), t.remoteCommand(), t.addCluster(), t.setClusterAccount(), t.requestAccount(), t.askRSE(), t.jobWorked(), t.jobRecipe(), t.rerunJob(),
 	}, env.Warn)
 }
 
@@ -479,7 +483,7 @@ const skillToolMap = `How skill steps map to Labmill's tools (the skills were wr
 - A sample without a build or run script: the steps come from its README and build files; write them as draft_job files (labmill-build.sh, labmill-run.sh) so Labmill creates them in the job folder on the cluster, never on this computer; the job command calls them. Follow the skills' "The code has no run script" sections; the shell steps there (an ssh heredoc, chmod +x) are done by draft_job and submit_job.
 - A Snakemake or Nextflow pipeline (stage_data answers with a workflow note when it sees Snakefile, *.smk, *.nf or nextflow.config): do not write one script for the whole pipeline. Read the workflow files, then draft one small controller job (1 CPU, a few GB, a time limit longer than the pipeline) that runs "snakemake --executor slurm" or "nextflow run -profile slurm" and lets the manager submit the steps; work folder on shared scratch; follow the workflow-managers skill.
 - AskUserQuestion: ask_user (up to 8 options), with the recommended option first and the reason in each option's description; one question per call, so a two-question AskUserQuestion becomes two ask_user calls.
-- Sending a ticket to research computing support, or the user asks for a person: ask_rse (message in plain words, the failed job attached; the user approves the text). After a job that ran new code you wrote or changed ends, ask once "Did it work?" with ask_user (Yes, No), then job_worked with the answer; do not ask after a re-run of unchanged code.
+- Sending a ticket to research computing support, or the user asks for a person: ask_rse (message in plain words, the failed job attached; the user approves the text). After a job that ran new code you wrote or changed ends, ask once "Did it work?" with ask_user (Yes, No), then job_worked with the answer; do not ask after a re-run of unchanged code. To repeat a job, call rerun_job (never rebuild its script by hand), then submit_job; job_recipe shows how a job was run.
 - The user has no account on a cluster: request_account (reason in one or two sentences). It opens the site's mail draft or form after the user approves; the user presses send. Pass on the eligibility, approver and wait it returns. Do not try other names or passwords.
 - Using a cluster of another institution (adding a Host block to ~/.ssh/config, a new cluster in clusters.yaml): add_cluster, only when the user explicitly asks for that institution or one of its clusters; leave the account name empty (Labmill reuses the one the user has at that institution) and ask for one only if none is known or a sign-in rejected the reused one (then set_cluster_account).
 - aws configure, installing a CLI or rclone, editing ~/.bashrc, proxy or no_proxy fixes, keychain: Labmill handles routes and transfers itself. Never install anything. When a step truly needs the user, say so plainly.
@@ -498,6 +502,6 @@ const skillToolMap = `How skill steps map to Labmill's tools (the skills were wr
 // tools, or show commands to the user to run themselves, and never install
 // software.
 const SkillPreamble = "Note: this skill was written for an environment with a shell. In Labmill you cannot run shell commands on this computer. " +
-	"Carry out its steps with Labmill's tools as listed under \"How skill steps map to Labmill's tools\" in your instructions (list_clusters, cluster_info, cluster_jobs, find_local_data, preview_file, stage_data, upload_data, draft_job, submit_job, job_status, job_logs, diagnose_job, cancel_job, fetch_results, cleanup_job, s3_credentials_to_cluster, ask_user, add_cluster, set_cluster_account, request_account, ask_rse, job_worked), " +
+	"Carry out its steps with Labmill's tools as listed under \"How skill steps map to Labmill's tools\" in your instructions (list_clusters, cluster_info, cluster_jobs, find_local_data, preview_file, stage_data, upload_data, draft_job, submit_job, job_status, job_logs, diagnose_job, cancel_job, fetch_results, cleanup_job, s3_credentials_to_cluster, ask_user, add_cluster, set_cluster_account, request_account, ask_rse, job_worked, job_recipe, rerun_job), " +
 	"run a login-node step that no tool covers with remote_command (it asks the user before anything that isn't read-only), " +
 	"or show a command to the user so they can run it themselves. Never install software. Site-specific values come from the site skill."

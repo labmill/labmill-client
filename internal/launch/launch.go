@@ -533,9 +533,10 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		SecretPrompt: func(ctx context.Context, title string, fields []app.PromptField) ([]string, error) {
 			return askSecrets(ctx, ui, title, fields)
 		},
-		LocalRoots: []string{home},
-		Workspace:  ws,
-		ResultsDir: filepath.Join(home, "labmill-results"),
+		LocalRoots:    []string{home},
+		Workspace:     ws,
+		ResultsDir:    filepath.Join(home, "labmill-results"),
+		ClientVersion: Version,
 	}
 	// The profiles add_cluster can draw on: the home profile too, for a
 	// cluster it gained after this install was set up (M57.2).

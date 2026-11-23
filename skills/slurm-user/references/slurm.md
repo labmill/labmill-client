@@ -118,6 +118,14 @@ ssh <login-host> 'chmod +x <folder>/job-*.sh && cat <folder>/job-*.sh'
 5. Test the build on a short, small job first; a build failure is easier to
    read from the log of one short job than from a long run.
 
+## Run a job again
+
+Keep the recipe of every job: the exact script, the settings (partition, account, CPUs, memory, GPUs, time limit, work folder), any helper scripts, and the software the script names. In plain Slurm that is the script file itself plus the output of `module list` and `scontrol show job <id>` while the job is still known to `scontrol` (a few minutes after it ends); `sacct -j <id> --format=JobID,JobName,Partition,AllocCPUS,ReqMem,Timelimit,Submit` keeps the request for longer.
+
+To run it again, submit the same script from the same work folder: `cd <work folder> && sbatch <script>`. Check first that the input data is still there and that a new run may overwrite the old output (or change `--output` and the output folder). A module named without a version loads the cluster's current default, which can differ from the first run: load a pinned version (`module load name/1.2.3`) to repeat a result.
+
+Before a second run, check that no other job still runs in that work folder (`squeue --me -o "%i %Z"`). If the job was resubmitted with a changed script (more memory, another partition), repeat the current script, not the first one. In Labmill the recipe is saved when a job is submitted. job_recipe shows it; rerun_job drafts a new job from it, and the user approves the script again with submit_job.
+
 ## Partitions, accounts and QOS
 
 Partition access is usually gated by `AllowAccounts` (or groups/QOS) in the
