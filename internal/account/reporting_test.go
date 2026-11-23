@@ -382,3 +382,42 @@ func TestRevokedTokenReportedWithOnlyProblemsQueued(t *testing.T) {
 		t.Fatalf("the problem report was dropped: %d due", len(due))
 	}
 }
+
+// fullOutput is a backend that reads whole files.
+type fullOutput struct {
+	fakeOutput
+	full int
+}
+
+func (f *fullOutput) OutputFull(_ context.Context, _ string, head, max int) ([]string, []string, error) {
+	f.full = head
+	return f.stdout, f.stderr, f.err
+}
+
+func TestCollectOutputCondensesWholeFile(t *testing.T) {
+	st := newStore(t)
+	id := addJob(t, st, store.StateCompleted, "")
+	j, _ := st.Job(context.Background(), id)
+	var out []string
+	for i := 0; i < 10000; i++ {
+		out = append(out, "same line from /home/someone/run")
+	}
+	be := &fullOutput{fakeOutput: fakeOutput{stdout: out}}
+	if err := CollectOutput(context.Background(), st, be, j, NewRedactor("someone")); err != nil {
+		t.Fatal(err)
+	}
+	if be.full != 100 || be.calls != 0 {
+		t.Errorf("full head %d, short reads %d", be.full, be.calls)
+	}
+	evs, _ := st.Events(context.Background(), id, 0)
+	for _, e := range evs {
+		if e.Kind == EventOutput {
+			var o Output
+			if json.Unmarshal([]byte(e.Text), &o) != nil || len(o.Stdout) != 3 || strings.Contains(e.Text, "someone") {
+				t.Errorf("output event %s", e.Text)
+			}
+			return
+		}
+	}
+	t.Error("no output event")
+}

@@ -45,3 +45,61 @@ func TestOutput(t *testing.T) {
 		t.Error("bad job id accepted")
 	}
 }
+
+func TestOutputFull(t *testing.T) {
+	// A small file: all lines, progress-bar redraws split on carriage returns.
+	r := &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "20 /w/a.out\n"},
+		"cat":      {Stdout: "start\n10%\r20%\r30%\ndone\n"},
+	}}
+	out, errs, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 100, 1000)
+	if err != nil || strings.Join(out, ",") != "start,10%,20%,30%,done" || errs != nil {
+		t.Fatalf("small = %v %v %v", out, errs, err)
+	}
+	// A large file: head lines, a marker, the last bytes without the cut first line.
+	r = &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "5000000 /w/a.out\n"},
+		"head":     {Stdout: "h1\nh2\nh3\n"},
+		"tail":     {Stdout: "rtial\nt1\nt2\n"},
+	}}
+	out, _, err = (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 2, 1000)
+	if err != nil || strings.Join(out, ",") != "h1,h2,[... the middle of a large file was not read ...],t1,t2" {
+		t.Fatalf("large = %v %v", out, err)
+	}
+	if _, _, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8; rm", 1, 1); err == nil {
+		t.Error("bad job id accepted")
+	}
+}
+
+// head reads bytes, not lines, and a bad size from wc is an error, not an unbounded cat.
+func TestOutputFullBounds(t *testing.T) {
+	r := &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "5000000 /w/a.out\n"},
+		"head":     {Stdout: "h1\nh2\nh3\n"},
+		"tail":     {Stdout: "x\nt1\n"},
+	}}
+	out, _, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 2, 1000)
+	if err != nil || strings.Join(out, ",") != "h1,h2,[... the middle of a large file was not read ...],t1" {
+		t.Fatalf("%v %v", out, err)
+	}
+	for _, c := range r.calls {
+		if c[0] == "head" && (c[1] != "-c" || c[2] != "1000") {
+			t.Errorf("head call %v", c)
+		}
+	}
+	r = &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "oops\n"},
+	}}
+	if _, _, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 2, 1000); err == nil {
+		t.Error("bad wc answer accepted")
+	}
+	for _, c := range r.calls {
+		if c[0] == "cat" {
+			t.Error("cat ran after a bad size")
+		}
+	}
+}

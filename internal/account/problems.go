@@ -176,10 +176,11 @@ func ToolKind(tool, text string) string {
 	return KindTool
 }
 
-// CollectOutput saves the redacted first and last lines of the output of
+// CollectOutput saves the redacted, condensed output (start, end and error lines) of
 // job j's current run as an EventOutput event, once per run, when j has
-// ended, is not private and be can read output files. A failed job keeps
-// its first 100 lines too; every job its last 500 lines of stdout and stderr.
+// ended, is not private and be can read output files. A backend that reads
+// whole files gives the output condensed (Condense); another gives its first
+// 100 lines (failed job) and last 500.
 func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j store.Job, red Redactor) error {
 	or, ok := be.(backend.OutputReader)
 	if !ok || !Final(j.State) || j.RemoteID == "" {
@@ -195,15 +196,21 @@ func CollectOutput(ctx context.Context, st *store.Store, be backend.Backend, j s
 	if HasOutput(evs, j.RemoteID) {
 		return nil
 	}
-	head := 0
-	if j.State == store.StateFailed {
-		head = 100
+	var stdout, stderr []string
+	if fr, ok := be.(backend.FullOutputReader); ok {
+		stdout, stderr, err = fr.OutputFull(ctx, j.RemoteID, condenseHead, maxOutputRead)
+	} else {
+		head := 0
+		if j.State == store.StateFailed {
+			head = 100
+		}
+		stdout, stderr, err = or.Output(ctx, j.RemoteID, head, 500)
 	}
-	stdout, stderr, err := or.Output(ctx, j.RemoteID, head, 500)
 	if err != nil {
 		return err
 	}
-	b, err := json.Marshal(Output{RemoteID: j.RemoteID, Stdout: red.Lines(stdout), Stderr: red.Lines(stderr)})
+	stdout, stderr = CondenseOutput(red, stdout, stderr)
+	b, err := json.Marshal(Output{RemoteID: j.RemoteID, Stdout: stdout, Stderr: stderr})
 	if err != nil {
 		return err
 	}
