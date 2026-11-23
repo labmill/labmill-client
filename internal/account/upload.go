@@ -17,7 +17,7 @@ import (
 
 // Uploader sends job reports and problem reports to the linked account. Each
 // pass (1) queues a report for every submitted job that changed after the
-// link was made (waiting, running or ended; a job that ended before the link
+// link was made (waiting, running or ended; a job that ended more than a day before the link
 // is left out) and queues it again when it changed, (2) sends the due
 // reports, and (3) sends the due problem reports. The queues are the store's
 // uploads and client_events tables, so reports wait while the computer is
@@ -180,10 +180,15 @@ func lastHalf(l []string) []string {
 // (a job's report changes when its state or output changes, both right away).
 const reportWindow = 14 * 24 * time.Hour
 
+// linkGrace is how long before the link a job may have ended and still be sent: a first-time user runs a job,
+// then connects. Older jobs stay on the computer (assumed owner choice; the login is the consent).
+const linkGrace = 24 * time.Hour
+
 // enqueue queues or updates the report of each submitted job changed at or
 // after since (and in the last reportWindow). An ended job counts only when
-// it ended at or after since. full adds the script and the output lines.
-func (u *Uploader) enqueue(ctx context.Context, since time.Time, full bool) error {
+// it ended at or after the link time minus linkGrace. full adds the script and the output lines.
+func (u *Uploader) enqueue(ctx context.Context, linked time.Time, full bool) error {
+	since := linked.Add(-linkGrace)
 	from := since
 	if w := u.now().Add(-reportWindow); w.After(from) {
 		from = w
@@ -216,7 +221,7 @@ func (u *Uploader) enqueue(ctx context.Context, since time.Time, full bool) erro
 		}
 		rep, ok := BuildReport(j, evs, ref)
 		if !ok || (rep.EndedAt != nil && rep.EndedAt.Before(since)) {
-			continue // ended before the link was made
+			continue // ended more than linkGrace before the link was made
 		}
 		if full && rep.Shared == nil {
 			AddDetails(&rep, j, evs, u.redactor(j))

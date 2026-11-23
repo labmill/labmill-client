@@ -41,7 +41,7 @@ const tokenPrefix = "lmt_"
 type Link struct {
 	URL      string    `json:"url"`
 	Token    string    `json:"token"`
-	LinkedAt time.Time `json:"linked_at"` // jobs that end before this are not sent
+	LinkedAt time.Time `json:"linked_at"` // jobs that ended more than a day before this are not sent
 }
 
 // Me is the answer of GET /api/me.

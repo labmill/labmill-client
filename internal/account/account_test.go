@@ -306,12 +306,25 @@ func TestJobsBeforeLinkNotSent(t *testing.T) {
 	defer srv.Close()
 	st := newStore(t)
 	addJob(t, st, store.StateCompleted, "")
-	p := link(t, srv.URL, time.Now().Add(time.Second))
-	time.Sleep(1100 * time.Millisecond)
-	// The old job is saved again after the link (results fetched): still not sent.
+	// Linked 25 hours after the job ended: too old, even when it is saved again (results fetched).
+	p := link(t, srv.URL, time.Now().Add(linkGrace+time.Hour))
 	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
-	u := &Uploader{Store: st, LinkPath: p}
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
 	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
+		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestJobEndedJustBeforeLinkIsSent(t *testing.T) {
+	f := &fakeAPI{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	addJob(t, st, store.StateCompleted, "")
+	// The job ended, then the user connected 1 hour later.
+	p := link(t, srv.URL, time.Now().Add(time.Hour))
+	u := &Uploader{Store: st, LinkPath: p, Institution: func(string) string { return "Example University" }}
+	if n, err := u.Pass(context.Background()); err != nil || n != 1 {
 		t.Fatalf("pass: %d %v", n, err)
 	}
 }
