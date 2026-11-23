@@ -29,11 +29,20 @@ When you connect for the first time, Labmill sends the jobs that ended in the la
 
 ## Connect
 
+**Sign in with the browser** (the normal way):
+
+- **Desktop app:** the first-run welcome form has **Sign in with your browser**.
+- **Terminal:** run `labmill login`. Labmill opens your browser at app.labmill.org (the address is printed too, for example when you work over SSH). Sign in there and press **Connect this computer**. Then go back to Labmill. The sign-in code stays on your computer and the page never shows the token.
+
+Labmill waits up to 10 minutes for the browser.
+
+**With a program token** (when no browser is at hand):
+
 1. Sign in at [app.labmill.org](https://app.labmill.org) and open **Settings > Program tokens**.
 2. Make a token. The web app shows it once. It starts with `lmt_` and is valid for one year.
 3. Give it to Labmill:
     - **Desktop app:** open **Settings > Labmill account**, paste the token into **Program token** and click **Connect**.
-    - **Terminal:** run `labmill login` and paste the token when Labmill asks. The token is not shown while you paste it.
+    - **Terminal:** run `labmill login --token` and paste the token when Labmill asks. The token is not shown while you paste it.
 
 Labmill checks the token with your account before it keeps it. A wrong or revoked token is refused with a message. In the browser sign-in, a sign-in code that was already used or has expired, too many tries, and a sign-in you cancel in the browser each end with a message that says to run `labmill login` again.
 
