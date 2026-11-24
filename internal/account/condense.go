@@ -79,11 +79,16 @@ func Condense(lines []string, budget int) []string {
 		}
 	}
 	// Last resort: a few first lines and the end of the text, the head
-	// gets at most half the budget, the tail the rest.
+	// gets at most half the budget and never so much that the last line
+	// does not fit, the tail the rest.
+	headMax := budget/2 - 40
+	if len(lines) > 0 {
+		headMax = min(headMax, budget-len(lines[len(lines)-1])-1-40)
+	}
 	var head []string
 	n := 0
 	for i := 0; i < len(lines) && len(head) < lastResortHead; i++ {
-		if n+len(lines[i])+1 > budget/2-40 {
+		if n+len(lines[i])+1 > headMax {
 			break
 		}
 		n += len(lines[i]) + 1

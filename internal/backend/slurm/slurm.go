@@ -1190,7 +1190,7 @@ func (s *Slurm) readFull(ctx context.Context, path string, head, maxBytes int) (
 		lines = lines[1:] // the first one is cut in the middle
 	}
 	first := backend.SplitOutput(h)
-	if !strings.HasSuffix(h, "\n") && len(first) > 0 {
+	if !strings.HasSuffix(h, "\n") && !strings.HasSuffix(h, "\r") && len(first) > 0 {
 		first = first[:len(first)-1] // the last one is cut in the middle
 	}
 	if len(first) > head {

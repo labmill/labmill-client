@@ -146,3 +146,18 @@ func TestCondenseLastResortKeepsBigLastLine(t *testing.T) {
 		t.Errorf("the big last line must stay: size %d, %d lines", size(out), len(out))
 	}
 }
+
+func TestCondenseLastResortHeadLeavesRoomForLastLine(t *testing.T) {
+	var in []string
+	for i := 0; i < 49; i++ {
+		in = append(in, fmt.Sprintf("error %d: %s", i, strings.Repeat("x", 150)))
+	}
+	in = append(in, "error last: "+strings.Repeat("y", 3000))
+	out := Condense(in, 4000)
+	if size(out) > 4000 || out[len(out)-1] != in[len(in)-1] {
+		t.Errorf("the last line must stay: size %d, %d lines", size(out), len(out))
+	}
+	if out[0] != in[0] {
+		t.Errorf("the first line must stay too")
+	}
+}

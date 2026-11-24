@@ -471,3 +471,24 @@ func TestRevokedTokenKeepsQueuedReports(t *testing.T) {
 		t.Errorf("the queued report changed:\n%v\n%v", before, after)
 	}
 }
+
+func TestNothingSentWhileMeFails(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, jobFails: 1}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	addJob(t, st, store.StateCompleted, "")
+	u := uploader(st, p)
+	if _, err := u.Pass(context.Background()); err != nil { // the post fails, the full report waits
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	f.meFails = 1
+	f.mu.Unlock()
+	u.Now = func() time.Time { return time.Now().Add(2 * time.Hour) }
+	n := len(f.posts)
+	if sent, err := u.Pass(context.Background()); err != nil || sent != 0 || len(f.posts) != n {
+		t.Fatalf("sent %d, %d new posts, %v", sent, len(f.posts)-n, err)
+	}
+}

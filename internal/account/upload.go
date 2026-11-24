@@ -143,6 +143,13 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 			return 0, err
 		}
 	}
+	if meErr != nil {
+		// The queued reports were built under an earlier answer; the user may be private now.
+		if errors.Is(meErr, ErrRejected) {
+			return 0, meErr // the token is no longer valid: say so, the problem reports wait
+		}
+		return 0, nil // job and problem reports wait for an answer
+	}
 	due, err := u.Store.DueUploads(ctx, u.now(), 50)
 	if err != nil {
 		return 0, err
@@ -173,12 +180,6 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 		if errors.Is(err, ErrUnverified) {
 			return sent, err // every report gets the same answer: they stay queued
 		}
-	}
-	if meErr != nil {
-		if errors.Is(meErr, ErrRejected) {
-			return sent, meErr // the token is no longer valid: say so, the problem reports wait
-		}
-		return sent, nil // problem reports wait for an answer; dropping them would lose them for good
 	}
 	return sent, u.sendEvents(ctx, c, full)
 }
