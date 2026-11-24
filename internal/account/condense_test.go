@@ -116,3 +116,20 @@ func TestCondenseKeepsLastLineOfRun(t *testing.T) {
 		t.Errorf("last line of the run lost: %q", out)
 	}
 }
+
+func TestCondenseLastResortKeepsTheStart(t *testing.T) {
+	var in []string
+	for i := 0; i < 5000; i++ {
+		in = append(in, fmt.Sprintf("error %d: %s", i, strings.Repeat(string(rune('a'+i%26)), 400)))
+	}
+	out := Condense(in, 4000)
+	if size(out) > 4000 || len(out) > condenseLines {
+		t.Fatalf("size %d, %d lines", size(out), len(out))
+	}
+	if len(out) == 0 || out[0] != in[0] || out[len(out)-1] != in[len(in)-1] {
+		t.Errorf("the start and the end must stay: %q", out)
+	}
+	if len(Condense(nil, 4000)) != 0 {
+		t.Error("no lines must give no lines")
+	}
+}

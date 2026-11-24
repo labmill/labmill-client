@@ -421,3 +421,28 @@ func TestCollectOutputCondensesWholeFile(t *testing.T) {
 	}
 	t.Error("no output event")
 }
+
+func TestQueuedReportsKeptWhenMeFails(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, jobFails: 1}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	addJob(t, st, store.StateCompleted, "")
+	u := uploader(st, p)
+	if _, err := u.Pass(context.Background()); err != nil { // the job post fails, the row stays queued with its report
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	f.meFails = 1
+	f.mu.Unlock()
+	before, _ := st.Uploads(context.Background())
+	u.Now = func() time.Time { return time.Now().Add(2 * time.Hour) } // the cached /api/me answer is old
+	if _, err := u.Pass(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	after, _ := st.Uploads(context.Background())
+	if len(before) != 1 || len(after) != 1 || before[0].Payload != after[0].Payload {
+		t.Errorf("the queued report changed while /api/me was down:\n%v\n%v", before, after)
+	}
+}

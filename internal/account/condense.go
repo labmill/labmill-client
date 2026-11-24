@@ -56,6 +56,9 @@ func collapse(lines []string) []string {
 	return out
 }
 
+// lastResortHead is how many first lines the last-resort cut keeps.
+const lastResortHead = 10
+
 type condensePlan struct{ head, tail, blocks int } // blocks: error blocks kept (0: all)
 
 // condensePlans go from the full plan to smaller ones until the text fits.
@@ -67,7 +70,7 @@ var condensePlans = []condensePlan{
 // lines are collapsed, then the first 100 and the last 300 lines are kept
 // whole, and error lines with 3 lines around them from the middle; each cut
 // is marked "⋮ (N lines skipped)". When that is still too much, the plan
-// shrinks. The result is nil for no lines.
+// shrinks. The result is empty for no lines.
 func Condense(lines []string, budget int) []string {
 	lines = collapse(lines)
 	for _, p := range condensePlans {
@@ -75,22 +78,32 @@ func Condense(lines []string, budget int) []string {
 			return out
 		}
 	}
-	// Last resort: the end of the text.
-	var out []string
+	// Last resort: a few first lines and the end of the text, in half the
+	// budget each.
+	var head []string
 	n := 0
-	for i := len(lines) - 1; i >= 0 && len(out) < condenseLines-1; i-- {
-		if n += len(lines[i]) + 1; n > budget-40 {
+	for i := 0; i < len(lines) && len(head) < lastResortHead; i++ {
+		if n += len(lines[i]) + 1; n > budget/2-40 {
 			break
 		}
-		out = append(out, lines[i])
+		head = append(head, lines[i])
 	}
-	for i, j := 0, len(out)-1; i < j; i, j = i+1, j-1 {
-		out[i], out[j] = out[j], out[i]
+	var tail []string
+	n = 0
+	for i := len(lines) - 1; i >= len(head) && len(tail) < condenseLines-lastResortHead-1; i-- {
+		if n += len(lines[i]) + 1; n > budget/2-40 {
+			break
+		}
+		tail = append(tail, lines[i])
 	}
-	if skipped := len(lines) - len(out); skipped > 0 {
-		out = append([]string{fmt.Sprintf("⋮ (%d lines skipped)", skipped)}, out...)
+	for i, j := 0, len(tail)-1; i < j; i, j = i+1, j-1 {
+		tail[i], tail[j] = tail[j], tail[i]
 	}
-	return out
+	out := head
+	if skipped := len(lines) - len(head) - len(tail); skipped > 0 {
+		out = append(out, fmt.Sprintf("⋮ (%d lines skipped)", skipped))
+	}
+	return append(out, tail...)
 }
 
 func fits(lines []string, budget int) bool {

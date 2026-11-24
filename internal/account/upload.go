@@ -136,8 +136,11 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 	if has, err := u.Store.HasUploads(ctx); l.FirstLink && err == nil && !has {
 		since = since.Add(-linkGrace) // the first link: a job that just ended counts
 	}
-	if err := u.enqueue(ctx, since, full); err != nil {
-		return 0, err
+	// With /api/me down the contribution is unknown: the queued reports stay as they are (a rejected token is queued, it waits).
+	if meErr == nil || errors.Is(meErr, ErrRejected) {
+		if err := u.enqueue(ctx, since, full); err != nil {
+			return 0, err
+		}
 	}
 	due, err := u.Store.DueUploads(ctx, u.now(), 50)
 	if err != nil {
