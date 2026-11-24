@@ -78,20 +78,22 @@ func Condense(lines []string, budget int) []string {
 			return out
 		}
 	}
-	// Last resort: a few first lines and the end of the text, in half the
-	// budget each.
+	// Last resort: a few first lines and the end of the text, the head
+	// gets at most half the budget, the tail the rest.
 	var head []string
 	n := 0
 	for i := 0; i < len(lines) && len(head) < lastResortHead; i++ {
-		if n += len(lines[i]) + 1; n > budget/2-40 {
+		if n+len(lines[i])+1 > budget/2-40 {
 			break
 		}
+		n += len(lines[i]) + 1
 		head = append(head, lines[i])
 	}
 	var tail []string
+	headBytes := n
 	n = 0
 	for i := len(lines) - 1; i >= len(head) && len(tail) < condenseLines-lastResortHead-1; i-- {
-		if n += len(lines[i]) + 1; n > budget/2-40 {
+		if n += len(lines[i]) + 1; n > budget-headBytes-40 {
 			break
 		}
 		tail = append(tail, lines[i])

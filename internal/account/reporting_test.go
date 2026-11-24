@@ -446,3 +446,28 @@ func TestQueuedReportsKeptWhenMeFails(t *testing.T) {
 		t.Errorf("the queued report changed while /api/me was down:\n%v\n%v", before, after)
 	}
 }
+
+func TestRevokedTokenKeepsQueuedReports(t *testing.T) {
+	f := &fakeAPI{contributes: &yes, jobFails: 1}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	st := newStore(t)
+	p := link(t, srv.URL, time.Now().Add(-time.Minute))
+	addJob(t, st, store.StateCompleted, "")
+	u := uploader(st, p)
+	if _, err := u.Pass(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	f.meCode = http.StatusUnauthorized
+	f.mu.Unlock()
+	before, _ := st.Uploads(context.Background())
+	u.Now = func() time.Time { return time.Now().Add(2 * time.Hour) }
+	if _, err := u.Pass(context.Background()); !errors.Is(err, ErrRejected) {
+		t.Fatalf("revoked token: %v", err)
+	}
+	after, _ := st.Uploads(context.Background())
+	if len(before) != 1 || len(after) != 1 || before[0].Payload != after[0].Payload {
+		t.Errorf("the queued report changed:\n%v\n%v", before, after)
+	}
+}

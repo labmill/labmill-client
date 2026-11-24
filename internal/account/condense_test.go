@@ -133,3 +133,16 @@ func TestCondenseLastResortKeepsTheStart(t *testing.T) {
 		t.Error("no lines must give no lines")
 	}
 }
+
+func TestCondenseLastResortKeepsBigLastLine(t *testing.T) {
+	var in []string
+	for i := 0; i < 50; i++ {
+		in = append(in, fmt.Sprintf("error %d: %s", i, strings.Repeat("x", 200)))
+	}
+	in[0] = strings.Repeat("h", 3000) // too big for the head half: no head
+	in[len(in)-1] = "error last: " + strings.Repeat("y", 3000)
+	out := Condense(in, 4000)
+	if size(out) > 4000 || out[len(out)-1] != in[len(in)-1] {
+		t.Errorf("the big last line must stay: size %d, %d lines", size(out), len(out))
+	}
+}

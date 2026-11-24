@@ -56,8 +56,8 @@ type Uploader struct {
 const contribTTL = time.Hour
 
 // contributes asks the API whether the account contributes, at most once per
-// contribTTL. err is set when the API did not answer: job reports hold facts only for this pass, and
-// problem reports stay queued.
+// contribTTL. err is set when the API did not answer: no job report is queued or
+// changed in this pass, and problem reports stay queued.
 func (u *Uploader) contributes(ctx context.Context, c *Client) (full bool, err error) {
 	u.mu.Lock()
 	if !u.contribAt.IsZero() && u.now().Sub(u.contribAt) < contribTTL {
@@ -136,9 +136,10 @@ func (u *Uploader) Pass(ctx context.Context) (sent int, err error) {
 	if has, err := u.Store.HasUploads(ctx); l.FirstLink && err == nil && !has {
 		since = since.Add(-linkGrace) // the first link: a job that just ended counts
 	}
-	// With /api/me down the contribution is unknown: the queued reports stay as they are (a rejected token is queued, it waits).
-	if meErr == nil || errors.Is(meErr, ErrRejected) {
-		if err := u.enqueue(ctx, since, full); err != nil {
+	// With /api/me down the contribution is unknown: nothing is queued or changed. A rejected token
+	// still queues new jobs (facts only), so they wait for a new token; the queued ones stay as they are.
+	if rejected := errors.Is(meErr, ErrRejected); meErr == nil || rejected {
+		if err := u.enqueue(ctx, since, full, rejected); err != nil {
 			return 0, err
 		}
 	}
@@ -205,7 +206,8 @@ const linkGrace = 24 * time.Hour
 // enqueue queues or updates the report of each submitted job changed at or
 // after since (and in the last reportWindow). An ended job counts only when
 // it ended at or after since. full adds the script and the output lines.
-func (u *Uploader) enqueue(ctx context.Context, since time.Time, full bool) error {
+// addOnly leaves the reports already queued as they are.
+func (u *Uploader) enqueue(ctx context.Context, since time.Time, full, addOnly bool) error {
 	from := since
 	if w := u.now().Add(-reportWindow); w.After(from) {
 		from = w
@@ -255,6 +257,7 @@ func (u *Uploader) enqueue(ctx context.Context, since time.Time, full bool) erro
 		}
 		switch {
 		case has && old.Payload == string(b):
+		case has && addOnly:
 		case has:
 			if err := u.Store.ReplaceUpload(ctx, j.ID, j.RemoteID, string(b), u.now()); err != nil {
 				return err
