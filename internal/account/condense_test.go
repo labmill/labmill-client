@@ -150,7 +150,7 @@ func TestCondenseLastResortKeepsBigLastLine(t *testing.T) {
 func TestCondenseLastResortHeadLeavesRoomForLastLine(t *testing.T) {
 	var in []string
 	for i := 0; i < 49; i++ {
-		in = append(in, fmt.Sprintf("error %d: %s", i, strings.Repeat("x", 150)))
+		in = append(in, fmt.Sprintf("error %c%c: %s", 'a'+i%26, 'a'+i/26, strings.Repeat("x", 150))) // does not collapse
 	}
 	in = append(in, "error last: "+strings.Repeat("y", 3000))
 	out := Condense(in, 4000)

@@ -116,3 +116,16 @@ func TestOutputFullDropsCutHeadLine(t *testing.T) {
 		t.Fatalf("%v %v", out, err)
 	}
 }
+
+func TestOutputFullDropsCutHeadLineAfterCR(t *testing.T) {
+	r := &fakeRunner{replies: map[string]backend.Result{
+		"scontrol": {Stdout: "StdErr=/w/a.out StdOut=/w/a.out"},
+		"wc":       {Stdout: "5000000 /w/a.out\n"},
+		"head":     {Stdout: "h1\rh2\r"}, // ends on a line end: nothing is cut
+		"tail":     {Stdout: "x\nt1\n"},
+	}}
+	out, _, err := (&Slurm{Runner: r}).OutputFull(context.Background(), "8", 5, 1000)
+	if err != nil || strings.Join(out, ",") != "h1,h2,[... the middle of a large file was not read ...],t1" {
+		t.Fatalf("%v %v", out, err)
+	}
+}
