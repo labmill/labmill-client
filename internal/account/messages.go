@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,11 +29,11 @@ type Message struct {
 // UnmarshalJSON accepts an id that is a number or a string.
 func (m *Message) UnmarshalJSON(b []byte) error {
 	var in struct {
-		ID            any       `json:"id"`
-		Body          string    `json:"body"`
-		Tenant        string    `json:"tenant"`
-		CreatedAt     time.Time `json:"created_at"`
-		HelpRequestID any       `json:"help_request_id"`
+		ID            json.RawMessage `json:"id"`
+		Body          string          `json:"body"`
+		Tenant        string          `json:"tenant"`
+		CreatedAt     time.Time       `json:"created_at"`
+		HelpRequestID json.RawMessage `json:"help_request_id"`
 	}
 	if err := json.Unmarshal(b, &in); err != nil {
 		return err
@@ -44,12 +43,15 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func idString(v any) string {
-	switch x := v.(type) {
-	case string:
-		return x
-	case float64:
-		return fmt.Sprintf("%.0f", x)
+// idString reads an id that is a JSON string or number; a number keeps all its digits.
+func idString(raw json.RawMessage) string {
+	var s string
+	if json.Unmarshal(raw, &s) == nil {
+		return s
+	}
+	var n json.Number
+	if json.Unmarshal(raw, &n) == nil {
+		return n.String()
 	}
 	return ""
 }
@@ -79,20 +81,33 @@ func (c *Client) Messages(ctx context.Context, since time.Time) ([]Message, erro
 			}
 			list = wrapped.Messages
 		}
-		newest := since
+		newest, added, withID := since, 0, 0
 		for _, m := range list {
 			if m.CreatedAt.After(newest) {
 				newest = m.CreatedAt
 			}
-			if m.ID != "" && !seen[m.ID] {
+			if m.ID == "" {
+				continue
+			}
+			withID++
+			if !seen[m.ID] {
 				seen[m.ID] = true
 				all = append(all, m)
+				added++
 			}
+		}
+		if len(list) > 0 && withID == 0 {
+			return all, errors.New("the Labmill account sent messages without an id that Labmill can read")
 		}
 		if len(list) < messagePage || !newest.After(since) {
 			break
 		}
-		since = newest.Add(-5 * time.Second)
+		if added == 0 {
+			// A full page of ids seen already (the overlap is wider than a page): move on without it.
+			since = newest
+		} else {
+			since = newest.Add(-5 * time.Second)
+		}
 	}
 	sort.SliceStable(all, func(i, j int) bool { return all[i].CreatedAt.Before(all[j].CreatedAt) })
 	return all, nil
@@ -112,6 +127,7 @@ const maxSeen = 200
 type MessageReader struct {
 	LinkPath string
 	Every    time.Duration
+	First    time.Duration // wait before the first pass: the window may not be ready for a notice yet
 	HTTP     *http.Client
 	Notice   func(text string) // must not block
 	OnError  func(error)       // a failed pass, once while it repeats
@@ -129,6 +145,13 @@ func (r *MessageReader) Run(ctx context.Context) {
 		every = 2 * time.Minute
 	}
 	last := ""
+	if r.First > 0 {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(r.First):
+		}
+	}
 	for {
 		_, err := r.Pass(ctx)
 		if err != nil && ctx.Err() == nil && err.Error() != last && r.OnError != nil {

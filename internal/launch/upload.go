@@ -3,6 +3,7 @@ package launch
 import (
 	"context"
 	"sync"
+	"time"
 
 	"labmill-client/internal/account"
 	"labmill-client/internal/store"
@@ -42,7 +43,7 @@ func startMessages(notice func(string), logLine func(string)) func() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		(&account.MessageReader{LinkPath: path, Notice: notice,
+		(&account.MessageReader{LinkPath: path, Notice: notice, First: 15 * time.Second,
 			OnError: func(err error) { logLine("messages not read: " + err.Error()) }}).Run(ctx)
 	}()
 	return func() { cancel(); wg.Wait() }

@@ -121,3 +121,31 @@ func TestMessageReaderNeedsALinkAndReportsErrors(t *testing.T) {
 		t.Fatalf("revoked token: %v %q", err, got)
 	}
 }
+
+func TestMessagesWideOverlapAndBigIDs(t *testing.T) {
+	base := time.Now().Add(-time.Hour).Truncate(time.Second)
+	f := &fakeMessages{}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	for i := 0; i < 60; i++ { // 60 messages in one second: more than a page
+		f.add(i+1, fmt.Sprintf("m%d", i), base)
+	}
+	f.add(json.Number("9007199254740993"), "big", base.Add(time.Second))
+	ms, err := (&Client{URL: srv.URL, Token: goodToken}).Messages(context.Background(), base.Add(-time.Minute))
+	if err != nil || len(ms) < 51 {
+		t.Fatalf("%d messages, %v", len(ms), err)
+	}
+	if last := ms[len(ms)-1]; last.ID != "9007199254740993" {
+		t.Errorf("big id became %q", last.ID)
+	}
+}
+
+func TestMessagesWithoutIDsFail(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`[{"body":"x","created_at":"2026-11-24T10:00:00Z"}]`))
+	}))
+	defer srv.Close()
+	if _, err := (&Client{URL: srv.URL, Token: goodToken}).Messages(context.Background(), time.Now().Add(-time.Hour)); err == nil {
+		t.Fatal("want an error")
+	}
+}
