@@ -87,6 +87,10 @@ func apiState(j store.Job) (state, category string) {
 		return st, "timeout"
 	case "OUT_OF_MEMORY":
 		return st, "out_of_memory"
+	case "NODE_FAIL":
+		return st, "node_fail"
+	case "PREEMPTED":
+		return st, "preempted"
 	}
 	return st, ""
 }
@@ -142,6 +146,12 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	// Facts of an earlier run (the job was resubmitted) are left out.
 	if f := j.Facts; f.RemoteID == j.RemoteID {
 		in.ExitCode = fmt.Sprintf("%d:%d", f.ExitCode, f.Signal)
+		if in.FailureCategory == "" && in.State == "FAILED" && f.ExitCode != 0 {
+			in.FailureCategory = "exit_nonzero"
+			if f.ExitCode == 127 {
+				in.FailureCategory = "exit_127"
+			}
+		}
 		in.Used = usedJSON(f)
 		in.Alloc, in.Usage = allocUsage(f)
 		// The scheduler's times win over the times this computer saw.

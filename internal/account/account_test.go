@@ -497,7 +497,8 @@ func TestBuildReportStates(t *testing.T) {
 	}{
 		{store.StateFetched, "", "COMPLETED", ""},
 		{store.StateFailed, "TIMEOUT", "TIMEOUT", "timeout"},
-		{store.StateFailed, "NODE_FAIL", "NODE_FAIL", ""},
+		{store.StateFailed, "NODE_FAIL", "NODE_FAIL", "node_fail"},
+		{store.StateFailed, "PREEMPTED", "PREEMPTED", "preempted"},
 		{store.StateFailed, "exit 1 in /home/x/run.sh", "FAILED", ""},
 		{store.StateCanceled, "", "CANCELLED", ""},
 	} {
@@ -639,5 +640,17 @@ func TestOldJobSavedAgainAfterLinkNotSent(t *testing.T) {
 	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
 	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
 		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestBuildReportExitClasses(t *testing.T) {
+	for _, c := range []struct {
+		code int
+		want string
+	}{{1, "exit_nonzero"}, {127, "exit_127"}} {
+		j := store.Job{State: store.StateFailed, Message: "FAILED", RemoteID: "1", Facts: store.Facts{RemoteID: "1", ExitCode: c.code}}
+		if in, ok := BuildReport(j, nil, "r"); !ok || in.FailureCategory != c.want {
+			t.Errorf("exit %d: %+v", c.code, in)
+		}
 	}
 }
