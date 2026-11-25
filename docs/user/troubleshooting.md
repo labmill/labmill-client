@@ -2,7 +2,7 @@
 
 ## Labmill says it has no assistant
 
-`ANTHROPIC_API_KEY` is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run `labmill login`), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. On macOS an app started from Finder does not read the variables of your shell profile: start the program file inside the app bundle (in its `Contents/MacOS` folder) from a terminal window where the variable is set (`open` does not pass the variable on). Or, if you are an invited tester, connect it with a Labmill account in **Settings > Labmill account** (after you verify your institution email).
+`ANTHROPIC_API_KEY` is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run `labmill login`: it opens your browser), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. On macOS an app started from Finder does not read the variables of your shell profile: start the program file inside the app bundle (in its `Contents/MacOS` folder) from a terminal window where the variable is set (`open` does not pass the variable on). Or, if you are an invited tester, connect it with a Labmill account in **Settings > Labmill account** (after you verify your institution email).
 
 ## macOS or Windows blocks the program
 

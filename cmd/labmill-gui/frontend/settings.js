@@ -636,7 +636,20 @@
         box.appendChild(row);
         return;
       }
-      box.appendChild(el('p', '', 'Not connected. Labmill sends nothing to a Labmill account. To connect, make a program token at ' + a.url + ' (Settings > Program tokens) and paste it here. When you connect for the first time, Labmill sends the jobs that ended in the last 24 hours, and then every new job; jobs that ended earlier stay on your computer. When connected, Labmill sends the job script, the job output, condensed (start, end and error lines), and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.'));
+      box.appendChild(el('p', '', 'Not connected. Labmill sends nothing to a Labmill account. To connect, sign in with your browser. When no browser is at hand, make a program token at ' + a.url + ' (Settings > Program tokens) and paste it below. When you connect for the first time, Labmill sends the jobs that ended in the last 24 hours, and then every new job; jobs that ended earlier stay on your computer. When connected, Labmill sends the job script, the job output, condensed (start, end and error lines), and error reports to your Labmill account so you and your RSE team can help; mark a job private to send only the scheduler facts.'));
+      var brow = el('div', 'buttons');
+      var signin = btn('Sign in with your browser', 'primary', function () {
+        signin.disabled = true;
+        setStatus('Your browser opens. Sign in there and press Connect this computer. Labmill waits up to 5 minutes.', false);
+        api().AccountSignIn().then(function (r) {
+          signin.disabled = false;
+          if (r.ok) { setStatus(r.message, false); render(false); return; }
+          setStatus(r.error, true);
+        }, function (e) { signin.disabled = false; setStatus(errText(e), true); });
+      });
+      signin.id = 'settings-account-signin';
+      brow.appendChild(signin);
+      box.appendChild(brow);
       var form = el('form');
       form.id = 'settings-account-form';
       form.addEventListener('submit', function (e) { e.preventDefault(); });

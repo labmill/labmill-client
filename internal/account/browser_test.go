@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -73,7 +74,7 @@ func TestBrowserLogin(t *testing.T) {
 	// A cancelled wait returns at once and saves nothing new.
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if _, err := BrowserLogin(ctx, filepath.Join(t.TempDir(), "a.json"), api.URL, "", func(string) error { return nil }, nil, time.Now()); err == nil || strings.Contains(err.Error(), "10 minutes") {
+	if _, err := BrowserLogin(ctx, filepath.Join(t.TempDir(), "a.json"), api.URL, "", func(string) error { return nil }, nil, time.Now()); err == nil || strings.Contains(err.Error(), "5 minutes") {
 		t.Fatalf("cancelled: %v", err)
 	}
 }
@@ -200,5 +201,86 @@ func TestDetailKeepsServerText(t *testing.T) {
 	}
 	if got := Detail(&StatusError{Code: 409, Text: "x"}); got != (&StatusError{Code: 409, Text: "x"}).Error() {
 		t.Errorf("%q", got)
+	}
+}
+
+// The first good callback closes the door: a second one, with the same state and a code, gets 400 while the
+// token trade is still running. The token is saved with mode 0600, and the connect URL carries a PKCE challenge of
+// 43 characters and a name of 40 at most.
+func TestBrowserLoginOneCallbackOnly(t *testing.T) {
+	const tok = "lmt_onceonceonceonceonceonce"
+	again := make(chan string, 1) // the callback URL, for a second try
+	second := make(chan int, 1)
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/me" {
+			w.Write([]byte(`{"person_id":"p1","role":"user"}`))
+			return
+		}
+		// The listener is still open here: try the callback again.
+		if resp, err := http.Get(<-again); err == nil {
+			second <- resp.StatusCode
+			resp.Body.Close()
+		} else {
+			second <- -1
+		}
+		w.Write([]byte(`{"token":"` + tok + `"}`))
+	}))
+	defer api.Close()
+	path := filepath.Join(t.TempDir(), "account.json")
+	browser := func(raw string) error {
+		u, _ := url.Parse(raw)
+		q := u.Query()
+		if n := len(q.Get("challenge")); n != 43 {
+			t.Errorf("challenge length %d", n)
+		}
+		if n := len([]rune(q.Get("name"))); n != 40 {
+			t.Errorf("name length %d", n)
+		}
+		cb := "http://127.0.0.1:" + q.Get("port") + "/callback?" + url.Values{"state": {q.Get("state")}, "code": {"c1"}}.Encode()
+		again <- cb
+		go func() {
+			if r, err := http.Get(cb); err == nil {
+				r.Body.Close()
+			}
+		}()
+		return nil
+	}
+	if _, err := BrowserLogin(context.Background(), path, api.URL, strings.Repeat("n", 90), browser, nil, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if got := <-second; got != http.StatusBadRequest {
+		t.Errorf("second callback: status %d, want 400", got)
+	}
+	st, err := os.Stat(path)
+	if err != nil || st.Mode().Perm() != 0o600 {
+		t.Errorf("account.json: %v %v", st, err)
+	}
+	if l, ok, _ := Load(path); !ok || l.Token != tok {
+		t.Errorf("saved link %+v", l)
+	}
+}
+
+func TestBrowserLoginTooManyTokens(t *testing.T) {
+	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, `{"error":"too many program tokens"}`, 409)
+	}))
+	defer api.Close()
+	browser := func(raw string) error {
+		u, _ := url.Parse(raw)
+		q := u.Query()
+		go func() {
+			if r, err := http.Get("http://127.0.0.1:" + q.Get("port") + "/callback?" + url.Values{"state": {q.Get("state")}, "code": {"c"}}.Encode()); err == nil {
+				r.Body.Close()
+			}
+		}()
+		return nil
+	}
+	path := filepath.Join(t.TempDir(), "a.json")
+	_, err := BrowserLogin(context.Background(), path, api.URL, "", browser, nil, time.Now())
+	if err == nil || !strings.Contains(err.Error(), "revoke one in Settings") || !strings.Contains(err.Error(), "labmill login") {
+		t.Fatalf("%v", err)
+	}
+	if _, ok, _ := Load(path); ok {
+		t.Error("a link was saved")
 	}
 }

@@ -42,7 +42,7 @@ The welcome form starts with a sign-in to your Labmill account (step 0): your br
 
 1. Sign in at [app.labmill.org](https://app.labmill.org) and **verify your institution email** (the web app sends a link). Until you verify, the account is a guest account: the web app refuses job records. Labmill keeps them on your computer, tries again later and sends them after you verify. This needs the Labmill client version that knows the guest case; an older one tells you to make a new token, which does not help.
 2. Check the link with `labmill whoami`: it shows the account and how many records were sent or wait.
-3. To connect again later (for example after `labmill logout`), run `labmill login` or use **Settings > Labmill account** in the desktop app.
+3. To connect again later (for example after `labmill logout`), run `labmill login` (browser sign-in) or use **Settings > Labmill account > Sign in with your browser** in the desktop app. Labmill waits 5 minutes for the browser. With no browser (for example over SSH), `labmill login` prints the address to open elsewhere, or use `labmill login --token`.
 
 Without a connected account Labmill sends nothing to Labmill.
 
