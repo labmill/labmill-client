@@ -89,6 +89,11 @@ in the trap: killing just the subshell leaves the real program running), and wri
 
 ## Cleaning up after a verified download
 
+When you copy data to a scratch that has a purge time (the site skill names it),
+say so: files older than that are deleted, so keep the originals elsewhere and
+pull the results soon. Labmill adds this warning to the `upload_data` result
+when the site profile gives `purge_days`.
+
 Cleanup is optional on a global scratch (its purge policy removes old files
 anyway), and never needed on node-local scratch (the job removed it). If the
 user wants the scratch space back, remove **the job's own working files, and
