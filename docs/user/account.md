@@ -53,6 +53,10 @@ The token is kept on this computer only, in `account.json` next to `clusters.yam
 - **Desktop app:** **Settings > Labmill account > Check connection**.
 - **Terminal:** `labmill whoami` shows the account, since when it is connected, and how many job records were sent or are waiting.
 
+## Replies from your research computing team
+
+When your team answers a request for help, the reply shows in the chat as a notice, while Labmill is open. Labmill asks your account for new messages about every 2 minutes, and shows each message once. A message that arrived while Labmill was closed shows the next time you open it. Labmill keeps the place it stopped at in `messages.json` next to `account.json`. The file holds no token and no message text. You can also read the messages in the web app.
+
 ## When the computer is offline
 
 Labmill keeps the records and the problem reports in its job database on your computer and sends them when it can reach your account again. It tries again after 1 minute, then after longer pauses, up to 6 hours. Sending never stops your work. The same job is never stored twice in your account, also when two Labmill windows are open. At most 2,000 problem reports wait; newer ones are not kept.

@@ -777,6 +777,9 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 	}, func(line string) {
 		appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{line})
 	})
+	stopMessages := startMessages(ui.JobNotice, func(line string) {
+		appendLog(filepath.Join(filepath.Dir(dbPath), "labmill.log"), "Labmill account", []string{line})
+	})
 	startup.Mark("build: done")
 	report(StartReady)
 	rt := &Runtime{
@@ -788,6 +791,7 @@ func BuildWithProgress(ctx context.Context, ui UI, setup SetupFunc, progress Pro
 		close: func() error {
 			stopSync()
 			stopUpload()
+			stopMessages()
 			mon.Close() // first: it uses the connections and the store
 			conns.closeAll()
 			return db.Close()
