@@ -63,3 +63,11 @@ The log is `labmill.log` in the folder of the job database (`~/.local/state/labm
 ## Labmill says my account is a guest account (or: did not accept the token)
 
 Your Labmill account is a guest account until you verify your institution email: the web app sends a link to it. Until then the web app refuses job records from Labmill. Labmill keeps them on your computer, tries again later, and sends them after you verify. Nothing is lost, and your work in Labmill is not affected. Open [app.labmill.org](https://app.labmill.org), verify the institution email, and wait a few minutes (the retry pause grows up to 6 hours).
+
+## Labmill says the token was rejected
+
+The Labmill account no longer accepts the program token. Run `labmill login` again. If the sign-in says that ten tokens exist, revoke one in **Settings** on [app.labmill.org](https://app.labmill.org), then run `labmill login` again.
+
+## Job records wait and do not arrive
+
+Run `labmill whoami`. It shows how many records wait to be sent. Read `labmill.log` (see Logs above) for the reason. A guest account keeps the records until you verify your institution email. They are then sent by themselves.
