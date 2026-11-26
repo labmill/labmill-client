@@ -1628,7 +1628,7 @@ func (t *toolset) uploadData() agent.Tool {
 			if p.s3 != nil {
 				return withTransfer(fmt.Sprintf("Uploaded %s (%s) to %s. The data is in S3, not on the cluster's disks. When you draft the job, give work_dir as an absolute folder on the cluster. %s", plural(files, "file", "files"), humanSize(size), sanitize(remoteDir), s3Hint(sanitize(remoteDir))), summary, p.rclone), nil
 			}
-			msg := fmt.Sprintf("Uploaded %s (%s) to %s:%s.", plural(files, "file", "files"), humanSize(size), c.Name, remoteDir) + replacedNote(replaced) + presentNote(present)
+			msg := fmt.Sprintf("Uploaded %s (%s) to %s:%s.", plural(files, "file", "files"), humanSize(size), c.Name, remoteDir) + replacedNote(replaced) + presentNote(present) + purgeNote(t.env.Site.SlurmFor(c.Name), remoteDir)
 			return withTransfer(msg, summary, p.rclone), nil
 		},
 	}
