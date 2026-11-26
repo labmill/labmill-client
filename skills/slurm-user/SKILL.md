@@ -34,6 +34,10 @@ avail`) or the site's own documentation rather than guessing.
 (a site skill or web page), use the live value and tell the user what the
 docs say.
 
+**Answer in the user's language.** Reply in the language the user writes in and
+switch when they switch. Keep commands, paths, job scripts, scheduler states and
+quoted error text exactly as they are; translate only your own explanation.
+
 ## Fast facts
 
 - **Log in:** `ssh <user>@<login-host>`. Some sites put the login host behind a
