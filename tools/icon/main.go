@@ -83,7 +83,9 @@ func render(n int, glyph *color.RGBA) *image.NRGBA {
 
 func pngBytes(im image.Image) []byte {
 	var b bytes.Buffer
-	png.Encode(&b, im)
+	if err := png.Encode(&b, im); err != nil {
+		panic(err)
+	}
 	return b.Bytes()
 }
 
