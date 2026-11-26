@@ -11,12 +11,14 @@ import (
 // The classes of a job that did not complete. The scheduler states NODE_FAIL
 // and PREEMPTED have their own names in the report (node_fail, preempted).
 const (
-	Timeout         = "timeout"
-	OutOfMemory     = "out_of_memory"
-	ExitNonzero     = "exit_nonzero"
-	SubmitRejected  = "submit_rejected"
-	MissingSoftware = "missing_software"
-	DataMissing     = "data_missing"
+	Timeout          = "timeout"
+	OutOfMemory      = "out_of_memory"
+	ExitNonzero      = "exit_nonzero"
+	SubmitRejected   = "submit_rejected"
+	MissingSoftware  = "missing_software"
+	DataMissing      = "data_missing"
+	DiskQuota        = "disk_quota"
+	PermissionDenied = "permission_denied"
 )
 
 // Input is what is known of one job. The text is redacted output of the job.
@@ -30,6 +32,8 @@ type Input struct {
 var (
 	oomRE     = regexp.MustCompile(`(?i)oom-kill|out of memory|MemoryError|Cannot allocate memory`)
 	missingRE = regexp.MustCompile(`(?i)command not found|env: .[^ ]*.: No such file|No module named|ModuleNotFoundError|module: command|Lmod has detected`)
+	quotaRE   = regexp.MustCompile(`(?i)Disk quota exceeded|No space left on device|EDQUOT`)
+	permRE    = regexp.MustCompile(`(?i)Permission denied|PermissionError|Operation not permitted`)
 	dataRE    = regexp.MustCompile(`(?i)No such file or directory|FileNotFoundError`)
 )
 
@@ -49,6 +53,10 @@ func Of(in Input) string {
 		return OutOfMemory
 	case missingRE.MatchString(in.Output), in.ExitCode == 127 && state == "FAILED":
 		return MissingSoftware
+	case quotaRE.MatchString(in.Output):
+		return DiskQuota
+	case permRE.MatchString(in.Output):
+		return PermissionDenied
 	case dataRE.MatchString(in.Output):
 		return DataMissing
 	case state != "" && state != "FAILED" && in.ExitCode != 0, state == "FAILED" && in.ExitCode != 0:

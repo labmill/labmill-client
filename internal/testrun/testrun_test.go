@@ -30,6 +30,8 @@ func TestClass(t *testing.T) {
 		{"missing", Observation{JobState: "FAILED", ExitCode: 127, OutputTail: "bwa: command not found"}, "missing_software"},
 		{"py module", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "ModuleNotFoundError: No module named 'x'"}, "missing_software"},
 		{"data", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "cat: in.csv: No such file or directory"}, "data_missing"},
+		{"quota", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "Disk quota exceeded"}, "disk_quota"},
+		{"permission", Observation{JobState: "FAILED", ExitCode: 126, OutputTail: "bash: ./run.sh: Permission denied"}, "permission_denied"},
 		{"exit", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "bye"}, "exit_nonzero"},
 	}
 	for _, tt := range tests {

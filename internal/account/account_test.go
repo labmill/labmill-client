@@ -663,6 +663,8 @@ func TestBuildReportFailureClass(t *testing.T) {
 		{"no facts", store.Job{State: store.StateFailed, RemoteID: "9"}, nil, "exit_nonzero", "exit_nonzero"},
 		{"missing file", failed(2), out("9", "cat: in.csv: No such file or directory"), "exit_nonzero", "data_missing"},
 		{"missing tool", failed(1), out("9", "run.sh: line 2: nosuchtool: command not found"), "exit_nonzero", "missing_software"},
+		{"quota", failed(1), out("9", "write error: Disk quota exceeded"), "exit_nonzero", "disk_quota"},
+		{"permission", failed(126), out("9", "./run.sh: Permission denied"), "exit_nonzero", "permission_denied"},
 		{"output of an earlier run", failed(1), out("8", "No such file or directory"), "exit_nonzero", "exit_nonzero"},
 		{"completed", store.Job{State: store.StateCompleted, RemoteID: "9"}, nil, "", ""},
 	}
