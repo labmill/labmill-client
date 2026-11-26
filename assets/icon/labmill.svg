@@ -7,9 +7,8 @@
     </linearGradient>
   </defs>
   <rect width="1024" height="1024" rx="225" fill="url(#bg)"/>
-  <g fill="none" stroke="#FFFFFF" stroke-width="97" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M225 338 L410 614 L297 881"/>
-    <path d="M410 614 Q512 225 758 256"/>
+  <g fill="#FFFFFF">
+    <rect x="300" y="214" width="178" height="596" rx="34"/>
+    <rect x="300" y="632" width="460" height="178" rx="34"/>
   </g>
-  <polygon points="937,278 685,388 719,110" fill="#FFFFFF"/>
 </svg>

@@ -66,7 +66,7 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 }
 
 // usage is the help text.
-const usage = `labmill - describe it, yeet it, compute it
+const usage = `labmill - describe it, run it, get the results
 
 Usage:
   Labmill                start Labmill
