@@ -41,7 +41,7 @@ var (
 	oomRE     = regexp.MustCompile(`(?i)oom-kill|out of memory|MemoryError|Cannot allocate memory`)
 	missingRE = regexp.MustCompile(`(?i)command not found|No module named|ModuleNotFoundError|module: command|Lmod has detected`)
 	quotaRE   = regexp.MustCompile(`(?i)Disk quota exceeded|No space left on device|EDQUOT`)
-	permRE    = regexp.MustCompile(`(?i)Permission denied|PermissionError|Operation not permitted`)
+	permRE    = regexp.MustCompile(`(?im)PermissionError|Permission denied\s*(:|$)|\[Errno 13\]|EACCES`)
 	dataRE    = regexp.MustCompile(`(?i)No such file or directory|FileNotFoundError`)
 )
 

@@ -32,6 +32,8 @@ func TestClass(t *testing.T) {
 		{"data", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "cat: in.csv: No such file or directory"}, "data_missing"},
 		{"quota", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "Disk quota exceeded"}, "disk_quota"},
 		{"permission", Observation{JobState: "FAILED", ExitCode: 126, OutputTail: "bash: ./run.sh: Permission denied"}, "permission_denied"},
+		{"ssh denial is not permission", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "Permission denied (publickey).\ncat: in.csv: No such file or directory"}, "data_missing"},
+		{"permission before missing file", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "mkdir out: Permission denied\nout/x: No such file or directory"}, "permission_denied"},
 		{"exit", Observation{JobState: "FAILED", ExitCode: 1, OutputTail: "bye"}, "exit_nonzero"},
 	}
 	for _, tt := range tests {
