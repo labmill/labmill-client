@@ -288,7 +288,8 @@ func (e *Env) AutoFetch(ctx context.Context, jobID int64, logf func(string)) Aut
 	}
 	logf(fmt.Sprintf("job #%d: %s, %s to download into %s (%d left out)", j.ID, plural(len(files), "file", "files"), transfer.FormatBytes(total), p.localDir, leftOut))
 	if limit := e.autoFetchLimit(); total > limit {
-		return skip(fmt.Sprintf("they total %s, more than the %s limit for automatic downloads (max_auto_download_gb).", transfer.FormatBytes(total), transfer.FormatBytes(limit)))
+		return skip(fmt.Sprintf("they total %s, more than the %s limit for automatic downloads (max_auto_download_gb). They stay on the cluster in %s; the largest: %s.",
+			transfer.FormatBytes(total), transfer.FormatBytes(limit), sanitize(j.RemoteDir), largestFiles(files, 3)))
 	}
 	if e.FreeSpace != nil {
 		if free, err := e.FreeSpace(existingParent(p.localDir)); err == nil && float64(total) > float64(free)*autoFetchFreeShare {
@@ -454,4 +455,18 @@ func (e *Env) autoFetchLimit() int64 {
 		return e.MaxAutoDownloadBytes
 	}
 	return AutoFetchMaxBytes
+}
+
+// largestFiles names the n largest files with their sizes, for a sentence.
+func largestFiles(files []transfer.RemoteFile, n int) string {
+	big := append([]transfer.RemoteFile(nil), files...)
+	sort.SliceStable(big, func(i, k int) bool { return big[i].Size > big[k].Size })
+	if len(big) > n {
+		big = big[:n]
+	}
+	parts := make([]string, len(big))
+	for i, f := range big {
+		parts[i] = fmt.Sprintf("%s (%s)", sanitize(f.Path), transfer.FormatBytes(f.Size))
+	}
+	return strings.Join(parts, ", ")
 }

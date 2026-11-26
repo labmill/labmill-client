@@ -443,3 +443,13 @@ func (t *toolset) autoPreemptible(ctx context.Context, c config.Cluster, limit t
 	}
 	return nil
 }
+
+// purgeNote is the sentence appended to an upload result when the data went into a shared scratch that the
+// site profile says is purged ("" otherwise).
+func purgeNote(h rules.SlurmHints, dir string) string {
+	g := h.GlobalScratch
+	if g == nil || g.PurgeDays <= 0 || !g.Covers(path.Clean(dir)) {
+		return ""
+	}
+	return fmt.Sprintf(" Warning: this folder is on a scratch that is purged after %d days. Download results soon and keep the originals elsewhere.", g.PurgeDays)
+}

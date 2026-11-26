@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"labmill-client/internal/backend"
+	"labmill-client/internal/failclass"
 	"labmill-client/internal/store"
 )
 
@@ -88,6 +89,10 @@ func apiState(j store.Job) (state, category string) {
 		return st, "timeout"
 	case "OUT_OF_MEMORY":
 		return st, "out_of_memory"
+	case "NODE_FAIL":
+		return st, "node_fail"
+	case "PREEMPTED":
+		return st, "preempted"
 	}
 	return st, ""
 }
@@ -187,6 +192,10 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 			in.Partition = spec.Partition
 		}
 		in.Software = modules(spec)
+	}
+	// A private job sends no class. The exit code alone decides here; AddDetails refines it from the output.
+	if in.Shared == nil && in.FailureCategory == "" && in.State == "FAILED" {
+		in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: exitCode(j)})
 	}
 	return in, true
 }
@@ -313,6 +322,10 @@ func AddDetails(in *JobIn, j store.Job, evs []store.Event, red Redactor) {
 			break
 		}
 	}
+	// The output tells more about a plain failure; only a contributing account gets here.
+	if in.State == "FAILED" && (in.FailureCategory == "" || in.FailureCategory == failclass.ExitNonzero) {
+		in.FailureCategory = failclass.Of(failclass.Input{State: in.State, ExitCode: exitCode(j), Output: outputText(evs, j.RemoteID)})
+	}
 }
 
 // tresTextRE is what the API accepts in a text of alloc or usage.
@@ -397,3 +410,24 @@ var (
 	toolNameRE = regexp.MustCompile(`^[a-z0-9_]{1,64}$`)
 	versionRE  = regexp.MustCompile(`^[A-Za-z0-9._+-]{1,64}$`)
 )
+
+// exitCode is the exit code of j's current run; -1 when the scheduler gave none
+// (an ended job without a code is a plain failure).
+func exitCode(j store.Job) int {
+	if j.Facts.RemoteID == j.RemoteID {
+		return j.Facts.ExitCode
+	}
+	return -1
+}
+
+// outputText is the collected output (stderr first, then stdout) of the
+// current run of a job, or "" when none was collected.
+func outputText(evs []store.Event, remoteID string) string {
+	for i := len(evs) - 1; i >= 0; i-- {
+		var o Output
+		if evs[i].Kind == EventOutput && json.Unmarshal([]byte(evs[i].Text), &o) == nil && o.RemoteID == remoteID {
+			return strings.Join(append(o.Stderr, o.Stdout...), "\n")
+		}
+	}
+	return ""
+}

@@ -87,6 +87,13 @@ program returns, which is why the program runs in the background with
 (`set -m` before starting it in the background, then `kill -TERM -- -$PID`
 in the trap: killing just the subshell leaves the real program running), and write checkpoints to shared storage regularly.
 
+## Copying data to a purged scratch
+
+When you copy data to a scratch that has a purge time (the site skill names it;
+compare the destination path with the global scratch path there), say so: files older than that are deleted, so keep the originals
+elsewhere and pull the results soon. Labmill adds this warning to the `upload_data` result
+when the site profile gives `purge_days`.
+
 ## Cleaning up after a verified download
 
 Cleanup is optional on a global scratch (its purge policy removes old files

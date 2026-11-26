@@ -40,6 +40,8 @@ type Verdict struct {
 var (
 	oomRE     = regexp.MustCompile(`(?i)oom-kill|out of memory|MemoryError|Cannot allocate memory`)
 	missingRE = regexp.MustCompile(`(?i)command not found|No module named|ModuleNotFoundError|module: command|Lmod has detected`)
+	quotaRE   = regexp.MustCompile(`(?i)Disk quota exceeded|No space left on device|EDQUOT`)
+	permRE    = regexp.MustCompile(`(?im)PermissionError|Permission denied\s*(:|$)|\[Errno 13\]|EACCES`)
 	dataRE    = regexp.MustCompile(`(?i)No such file or directory|FileNotFoundError`)
 )
 
@@ -58,6 +60,10 @@ func Class(o Observation) string {
 		return "out_of_memory"
 	case missingRE.MatchString(o.OutputTail), o.ExitCode == 127 && state == "FAILED":
 		return "missing_software"
+	case quotaRE.MatchString(o.OutputTail):
+		return "disk_quota"
+	case permRE.MatchString(o.OutputTail):
+		return "permission_denied"
 	case dataRE.MatchString(o.OutputTail):
 		return "data_missing"
 	case state != "" && o.ExitCode != 0, state == "FAILED":
