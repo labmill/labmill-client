@@ -22,6 +22,7 @@ import (
 type JobIn struct {
 	ClientJobRef    string          `json:"client_job_ref"`
 	HPCSystemID     string          `json:"hpc_system_id"`
+	SchedulerJobID  string          `json:"scheduler_job_id,omitempty"` // digits only: the scheduler job ID, the array parent for an array task
 	Backend         string          `json:"backend"`
 	State           string          `json:"state"`
 	ExitCode        string          `json:"exit_code,omitempty"`
@@ -106,6 +107,18 @@ func Reported(s store.JobState) bool {
 	return Final(s)
 }
 
+var schedulerIDRE = regexp.MustCompile(`^(\d+)(?:[_.+\[].*)?$`)
+
+// schedulerJobID is the digits the server accepts: the leading number of a
+// remote ID, so "12345678_3" (an array task) gives "12345678" and "123.head"
+// gives "123". "" when the ID does not start with a number.
+func schedulerJobID(remoteID string) string {
+	if m := schedulerIDRE.FindStringSubmatch(remoteID); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
 // BuildReport makes the report of job j from its events (the "spec" event
 // of its draft and the "state" events) and the scheduler's facts of its last
 // run (exit code, start and end, use), without hpc_system_id. ok is false
@@ -114,7 +127,7 @@ func BuildReport(j store.Job, evs []store.Event, ref string) (JobIn, bool) {
 	if !Reported(j.State) || j.RemoteID == "" {
 		return JobIn{}, false
 	}
-	in := JobIn{ClientJobRef: ref, Backend: cmp.Or(j.Backend, "slurm")}
+	in := JobIn{ClientJobRef: ref, Backend: cmp.Or(j.Backend, "slurm"), SchedulerJobID: schedulerJobID(j.RemoteID)}
 	in.State, in.FailureCategory = apiState(j)
 	var spec backend.JobSpec
 	var haveSpec bool

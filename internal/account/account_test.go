@@ -290,7 +290,7 @@ func TestUploadSendsSchemaWithoutPrivateData(t *testing.T) {
 		}
 	}
 	// The API refuses unknown fields: every key must be one it knows.
-	known := "client_job_ref hpc_system_id tenant_id backend state exit_code failure_category submitted_at started_at ended_at req used partition constraints queue_wait_sec domain_field shared software log_lines redact_words"
+	known := "client_job_ref hpc_system_id tenant_id backend state exit_code failure_category submitted_at started_at ended_at req used partition constraints queue_wait_sec domain_field shared software log_lines redact_words scheduler_job_id"
 	for k := range got {
 		if !strings.Contains(" "+known+" ", " "+k+" ") {
 			t.Errorf("unknown field %s", k)
@@ -640,6 +640,21 @@ func TestOldJobSavedAgainAfterLinkNotSent(t *testing.T) {
 	st.UpdateJob(context.Background(), 1, func(j *store.Job) error { j.State = store.StateFetched; return nil })
 	if n, err := u.Pass(context.Background()); err != nil || n != 0 {
 		t.Fatalf("pass: %d %v", n, err)
+	}
+}
+
+func TestSchedulerJobID(t *testing.T) {
+	for in, want := range map[string]string{
+		"12345678": "12345678", "12345678_3": "12345678", "12345678_[1-4]": "12345678",
+		"123.head": "123", "123+1": "123", "": "", "abc": "", "x12": "", "12 34": "",
+	} {
+		if got := schedulerJobID(in); got != want {
+			t.Errorf("schedulerJobID(%q) = %q, want %q", in, got, want)
+		}
+	}
+	j := store.Job{State: store.StateCompleted, RemoteID: "777_2", Backend: "slurm"}
+	if in, ok := BuildReport(j, nil, "ref"); !ok || in.SchedulerJobID != "777" {
+		t.Errorf("report = %+v, ok %v", in, ok)
 	}
 }
 
