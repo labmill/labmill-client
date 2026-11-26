@@ -20,6 +20,7 @@ import (
 var classes = map[string]bool{
 	"timeout": true, "out_of_memory": true, "exit_nonzero": true,
 	"submit_rejected": true, "missing_software": true, "data_missing": true,
+	"disk_quota": true, "permission_denied": true,
 }
 
 var agentShould = map[string]bool{"explain": true, "fix_and_resubmit": true, "ask_user": true}
