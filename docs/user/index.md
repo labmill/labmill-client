@@ -1,6 +1,6 @@
 # User guide
 
-Labmill lets you describe a compute job in plain language and then does the rest: it finds your data, sends it to a cluster, starts the job, watches it, and brings the results back. You don't write job scripts and you don't need to know the terminal.
+Labmill lets you describe a compute job in plain language and then does the rest: it finds your data, sends it to a cluster, starts the job, watches it, and brings the results back. You don't write job scripts and you don't need to know the terminal. Write in your own language: Labmill answers in it and switches when you switch. Commands, file paths, job scripts and error messages stay as they are.
 
 !!! note "Where Labmill stands today"
     The text-based chat window (the "TUI") works on macOS and Linux. The desktop app (GUI) is built and being tested on Windows and Linux; this guide describes the text window, and the desktop app has the same approvals. The "Hey Labmill" voice feature and the headless Agent mode are planned, not available yet. See [Voice](voice.md).
