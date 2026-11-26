@@ -805,6 +805,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#labmill-says-the-token-was-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Labmill says the token was rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-records-wait-and-do-not-arrive" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Job records wait and do not arrive
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1606,6 +1628,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#labmill-says-the-token-was-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Labmill says the token was rejected
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-records-wait-and-do-not-arrive" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Job records wait and do not arrive
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1625,7 +1669,7 @@
 
 <h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
 <h2 id="labmill-says-it-has-no-assistant">Labmill says it has no assistant<a class="headerlink" href="#labmill-says-it-has-no-assistant" title="Permanent link">&para;</a></h2>
-<p><code>ANTHROPIC_API_KEY</code> is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run <code>labmill login</code>), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. On macOS an app started from Finder does not read the variables of your shell profile: start the program file inside the app bundle (in its <code>Contents/MacOS</code> folder) from a terminal window where the variable is set (<code>open</code> does not pass the variable on). Or, if you are an invited tester, connect it with a Labmill account in <strong>Settings &gt; Labmill account</strong> (after you verify your institution email).</p>
+<p><code>ANTHROPIC_API_KEY</code> is not set in the program's environment, and the client is not connected to a Labmill account. Set the key (or, if you are an invited tester, run <code>labmill login</code>: it opens your browser), then start Labmill again. On Windows, set a user environment variable and open a new window. A desktop app started from the Start menu needs the variable set before you log in. On macOS an app started from Finder does not read the variables of your shell profile: start the program file inside the app bundle (in its <code>Contents/MacOS</code> folder) from a terminal window where the variable is set (<code>open</code> does not pass the variable on). Or, if you are an invited tester, connect it with a Labmill account in <strong>Settings &gt; Labmill account</strong> (after you verify your institution email).</p>
 <h2 id="macos-or-windows-blocks-the-program">macOS or Windows blocks the program<a class="headerlink" href="#macos-or-windows-blocks-the-program" title="Permanent link">&para;</a></h2>
 <p>The programs are not signed at first. See <a href="../install/">Install</a>.</p>
 <h2 id="no-two-factor-push-arrives">No two-factor push arrives<a class="headerlink" href="#no-two-factor-push-arrives" title="Permanent link">&para;</a></h2>
@@ -1659,6 +1703,10 @@
 <p>The log is <code>labmill.log</code> in the folder of the job database (<code>~/.local/state/labmill/</code> by default). In the desktop app, <strong>Settings &gt; About and diagnostics &gt; Open logs folder</strong> opens it. <strong>Copy diagnostics</strong> makes a short report without passwords, keys, codes or user names. Send it with your question to <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#104;&#101;&#108;&#112;&#64;&#108;&#97;&#98;&#109;&#105;&#108;&#108;&#46;&#111;&#114;&#103;">&#104;&#101;&#108;&#112;&#64;&#108;&#97;&#98;&#109;&#105;&#108;&#108;&#46;&#111;&#114;&#103;</a>.</p>
 <h2 id="labmill-says-my-account-is-a-guest-account-or-did-not-accept-the-token">Labmill says my account is a guest account (or: did not accept the token)<a class="headerlink" href="#labmill-says-my-account-is-a-guest-account-or-did-not-accept-the-token" title="Permanent link">&para;</a></h2>
 <p>Your Labmill account is a guest account until you verify your institution email: the web app sends a link to it. Until then the web app refuses job records from Labmill. Labmill keeps them on your computer, tries again later, and sends them after you verify. Nothing is lost, and your work in Labmill is not affected. Open <a href="https://app.labmill.org">app.labmill.org</a>, verify the institution email, and wait a few minutes (the retry pause grows up to 6 hours).</p>
+<h2 id="labmill-says-the-token-was-rejected">Labmill says the token was rejected<a class="headerlink" href="#labmill-says-the-token-was-rejected" title="Permanent link">&para;</a></h2>
+<p>The Labmill account no longer accepts the program token. Run <code>labmill login</code> again. If the sign-in says that ten tokens exist, revoke one in <strong>Settings</strong> on <a href="https://app.labmill.org">app.labmill.org</a>, then run <code>labmill login</code> again.</p>
+<h2 id="job-records-wait-and-do-not-arrive">Job records wait and do not arrive<a class="headerlink" href="#job-records-wait-and-do-not-arrive" title="Permanent link">&para;</a></h2>
+<p>Run <code>labmill whoami</code>. It shows how many records wait to be sent. Read <code>labmill.log</code> (see Logs above) for the reason. A guest account keeps the records until you verify your institution email. They are then sent by themselves.</p>
 
 
 

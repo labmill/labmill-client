@@ -1608,7 +1608,7 @@
 <ol>
 <li>Sign in at <a href="https://app.labmill.org">app.labmill.org</a> and <strong>verify your institution email</strong> (the web app sends a link). Until you verify, the account is a guest account: the web app refuses job records. Labmill keeps them on your computer, tries again later and sends them after you verify. This needs the Labmill client version that knows the guest case; an older one tells you to make a new token, which does not help.</li>
 <li>Check the link with <code>labmill whoami</code>: it shows the account and how many records were sent or wait.</li>
-<li>To connect again later (for example after <code>labmill logout</code>), run <code>labmill login</code> or use <strong>Settings &gt; Labmill account</strong> in the desktop app.</li>
+<li>To connect again later (for example after <code>labmill logout</code>), run <code>labmill login</code> (browser sign-in) or use <strong>Settings &gt; Labmill account &gt; Sign in with your browser</strong> in the desktop app. Labmill waits 5 minutes for the browser. With no browser (for example over SSH), <code>labmill login</code> prints the address to open elsewhere, or use <code>labmill login --token</code>.</li>
 </ol>
 <p>Without a connected account Labmill sends nothing to Labmill.</p>
 <h2 id="the-first-login">The first login<a class="headerlink" href="#the-first-login" title="Permanent link">&para;</a></h2>
