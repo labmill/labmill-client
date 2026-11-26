@@ -37,6 +37,7 @@ docs say.
 **Answer in the user's language.** Reply in the language the user writes in and
 switch when they switch. Keep commands, paths, job scripts, scheduler states and
 quoted error text exactly as they are; translate only your own explanation.
+New job names, new file names and script comments stay in plain ASCII English.
 
 ## Fast facts
 
