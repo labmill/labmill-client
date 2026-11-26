@@ -10,11 +10,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
+	"sync/atomic"
 	"time"
 )
 
 // BrowserTimeout is how long BrowserLogin waits for the browser.
-const BrowserTimeout = 10 * time.Minute
+const BrowserTimeout = 5 * time.Minute
 
 // BrowserLogin signs in through the browser (owner, 2026-11-12): it listens on 127.0.0.1, calls open with the
 // account's /connect page, waits for the one-time code on /callback, trades it with the PKCE verifier for a program
@@ -37,6 +39,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 	if err != nil {
 		return Me{}, fmt.Errorf("can't wait for the browser: %w", err)
 	}
+	var done atomic.Bool // the first good callback closes the door: a second one is refused
 	codes := make(chan string, 1)
 	refused := make(chan string, 1)
 	srv := &http.Server{ReadHeaderTimeout: 10 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +52,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 			}
 			return
 		}
-		if r.URL.Path != "/callback" || q.Get("state") != state || q.Get("code") == "" {
+		if r.URL.Path != "/callback" || q.Get("state") != state || q.Get("code") == "" || !done.CompareAndSwap(false, true) {
 			http.Error(w, "This is not the sign-in Labmill is waiting for. Start it again from the Labmill program.", http.StatusBadRequest)
 			return
 		}
@@ -64,7 +67,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 	defer srv.Close()
 	q := url.Values{"port": {fmt.Sprint(ln.Addr().(*net.TCPAddr).Port)}, "state": {state},
 		"challenge": {base64.RawURLEncoding.EncodeToString(sum[:])}}
-	if name != "" {
+	if name = strings.TrimSuffix(oneLine(name, 40), "..."); name != "" {
 		q.Set("name", name)
 	}
 	if err := open(baseURL + "/connect?" + q.Encode()); err != nil {
@@ -79,7 +82,7 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 		return Me{}, fmt.Errorf("the sign-in in the browser was not completed (%s): run labmill login to try again", oneLine(why, 64))
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return Me{}, errors.New("the sign-in in the browser did not finish in 10 minutes: run labmill login to try again")
+			return Me{}, errors.New("the sign-in in the browser did not finish in 5 minutes: run labmill login to try again")
 		}
 		return Me{}, ctx.Err()
 	}
@@ -92,6 +95,8 @@ func BrowserLogin(ctx context.Context, path, baseURL, name string, open func(url
 		switch {
 		case errors.As(err, &se) && se.Code == http.StatusTooManyRequests:
 			return Me{}, errors.New("too many sign-in tries: wait a minute, then run labmill login again")
+		case errors.As(err, &se) && se.Code == http.StatusConflict:
+			return Me{}, errors.New("this account has the most program tokens it can have: revoke one in Settings > Program tokens in the Labmill account, then run labmill login again")
 		case errors.As(err, &se) && se.Code == 400 && plainText(se.Text) != "":
 			// Maybe a used code, maybe a request fault: show the server's reason.
 			return Me{}, fmt.Errorf("the sign-in code was refused (%s): run labmill login again", plainText(se.Text))

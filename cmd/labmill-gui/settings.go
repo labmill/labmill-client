@@ -5,13 +5,16 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"labmill-client/internal/account"
 	"labmill-client/internal/gui"
 	"labmill-client/internal/launch"
+	"labmill-client/internal/mailreq"
 	"labmill-client/internal/settings"
 )
 
@@ -318,6 +321,38 @@ func (s *SettingsAPI) AccountConnect(token string) settings.Result {
 		}
 	}
 	return settings.Result{Errors: []settings.FieldError{{Field: "token", Message: err.Error()}}}
+}
+
+var (
+	signInMu     sync.Mutex
+	signInCancel context.CancelFunc
+)
+
+// AccountSignIn connects in the browser (account.BrowserLogin, the same function as the welcome form and
+// labmill login). It waits until the browser sign-in ends, up to account.BrowserTimeout. A new click ends an
+// earlier attempt that is still waiting (for example after the user closed the browser tab).
+func (s *SettingsAPI) AccountSignIn() settings.Result {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	signInMu.Lock()
+	if signInCancel != nil {
+		signInCancel()
+	}
+	signInCancel = cancel
+	signInMu.Unlock()
+	base, err := account.BaseURL()
+	if err == nil {
+		var me account.Me
+		host, _ := os.Hostname()
+		me, err = account.BrowserLogin(ctx, s.accountPath(), base, host, mailreq.Open, nil, time.Now())
+		if err == nil {
+			return settings.Result{OK: true, Errors: []settings.FieldError{}, Message: "Connected to the Labmill account of " + accountName(me) + ". New jobs are sent to it."}
+		}
+		if errors.Is(err, context.Canceled) {
+			err = errors.New("this sign-in was replaced by a newer one")
+		}
+	}
+	return settings.Result{Error: err.Error(), Errors: []settings.FieldError{}}
 }
 
 // AccountCheck asks the account who the saved token belongs to.

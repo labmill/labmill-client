@@ -114,6 +114,10 @@ rclone is linked in as a library (`internal/transfer`); no `rclone` binary is ru
 
 Every fenced code block in the GUI chat also has a Copy button (`md.js` `copyButton`, aria-label "Copy", attached with `addEventListener`; the CSP still allows no inline handlers).
 
+## Browser sign-in for the Labmill account
+
+`account.BrowserLogin` (PKCE, loopback) is the one function behind `labmill login`, the welcome form and Settings > Labmill account (`SettingsAPI.AccountSignIn`). It makes a verifier, a challenge (SHA-256, base64url, 43 characters) and a state, listens on `127.0.0.1` on a free port, and opens `<account URL>/connect?port&state&challenge&name` (the name is cut to 40 characters). The first callback with the right state and a code wins; a wrong state is ignored and a second callback gets 400. After a callback, or after 5 minutes, the listener closes. The code and the verifier go in `POST /api/client-auth/token` (no auth header): 200 gives the token, saved like a pasted one (`account.json`, mode 0600); 400 means the code was used or has expired; 409 means the account has the most program tokens it can have. Code, verifier and token are never logged. When the browser can not open, the address is printed, and `labmill login --token` (token on stdin) stays the fallback. Settings starts a new attempt in place of one that still waits.
+
 ## Job records for the Labmill account
 
 Owner decision 2026-11-01: the client sends every job's script, condensed output and the session's problems, so the user and the tenant's RSEs can help. `launch.Build` starts `account.Uploader` (`internal/launch/upload.go`) next to the job monitor; `Runtime.Close` stops it before the store closes. Every 60 s a pass reads `account.json`; with no file it does nothing (no request, no queue row). Otherwise it:
