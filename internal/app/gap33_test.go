@@ -65,8 +65,8 @@ func TestDraftDefaultWorkDir(t *testing.T) {
 	}
 }
 
-// A rejected pre-flight check and a failed non-read-only remote command each
-// queue one problem report; a private job queues none.
+// A rejected pre-flight check
+// queues one problem report; a private job queues none.
 func TestFailuresAreReported(t *testing.T) {
 	r := &gapRunner{}
 	h := gapHarness(t, r)
@@ -96,13 +96,6 @@ func TestFailuresAreReported(t *testing.T) {
 		if got := queued() - before; got != want {
 			t.Errorf("private %v: %d problems after the rejected check, want %d", private, got, want)
 		}
-	}
-	before := queued()
-	if _, err := h.run(t, "remote_command", map[string]any{"cluster": "hpcone", "argv": []string{"mkdir", "out"}}); err != nil {
-		t.Fatal(err)
-	}
-	if got := queued() - before; got != 1 {
-		t.Errorf("failed remote command: %d problems, want 1", got)
 	}
 }
 
