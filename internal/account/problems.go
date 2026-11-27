@@ -112,6 +112,9 @@ func (p *Problems) record(kind, tool, cluster string, jobID int64, msg string) {
 	p.mu.Unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	if kind == KindQuestion && p.privateJobActive(ctx) { // a question has no job: hold it back while any private job is active
+		return
+	}
 	var j store.Job
 	if jobID != 0 {
 		var err error
@@ -242,6 +245,21 @@ const EventOutputUnread = "output_unread"
 func OutputGaveUp(evs []store.Event, remoteID string) bool {
 	for _, e := range evs {
 		if e.Kind == EventOutputUnread && e.Text == remoteID {
+			return true
+		}
+	}
+	return false
+}
+
+// privateJobActive tells whether a job that has not ended is private. On a
+// read error it answers true: nothing is sent when in doubt.
+func (p *Problems) privateJobActive(ctx context.Context) bool {
+	jobs, err := p.Store.Jobs(ctx, store.JobFilter{ActiveOnly: true})
+	if err != nil {
+		return true
+	}
+	for _, j := range jobs {
+		if evs, err := p.Store.Events(ctx, j.ID, 0); err != nil || Private(evs) {
 			return true
 		}
 	}

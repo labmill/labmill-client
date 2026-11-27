@@ -421,3 +421,32 @@ func TestCollectOutputCondensesWholeFile(t *testing.T) {
 	}
 	t.Error("no output event")
 }
+
+// A question has no job, so it is held back while a private job is active,
+// and sent again once that job ended.
+func TestQuestionHeldBackForPrivateJob(t *testing.T) {
+	st := newStore(t)
+	p := link(t, "https://app.example.org", time.Now().Add(-time.Minute))
+	pr := &Problems{Store: st, LinkPath: p, Version: "1.0", OS: "linux"}
+	queued := func() int {
+		evs, _ := st.DueClientEvents(context.Background(), time.Now().Add(time.Hour), 50)
+		return len(evs)
+	}
+	id := addJob(t, st, store.StateRunning, "")
+	pr.Record(KindQuestion, "ask_user", "", 0, "Which partition?")
+	if queued() != 1 {
+		t.Fatalf("no private job: %d events, want 1", queued())
+	}
+	st.AddEvent(context.Background(), id, EventPrivate, "")
+	pr.Record(KindQuestion, "ask_user", "", 0, "Which partition?")
+	if queued() != 1 {
+		t.Errorf("private job active: %d events, want 1", queued())
+	}
+	if err := st.UpdateJob(context.Background(), id, func(j *store.Job) error { j.State = store.StateFailed; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	pr.Record(KindQuestion, "ask_user", "", 0, "Which partition?")
+	if queued() != 2 {
+		t.Errorf("private job ended: %d events, want 2", queued())
+	}
+}
